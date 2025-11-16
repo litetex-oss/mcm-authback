@@ -15,6 +15,14 @@
   "license": "${license_spdx_id}",
   "icon": "assets/icon.png",
   "environment": "*",
+  "entrypoints": {
+    "client": [
+      "net.litetex.authback.client.init.AuthBackClientInitializer"
+    ],
+    "server": [
+      "net.litetex.authback.server.init.AuthBackServerInitializer"
+    ]
+  },
   "mixins": [
     "authback.mixins.json"
   ],
