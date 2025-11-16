@@ -32,6 +32,45 @@ configurations.checkstyle {
     }
 }
 
+repositories {
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = "Terraformers"
+                url = "https://maven.terraformersmc.com/"
+            }
+        }
+        filter {
+            includeGroup 'com.terraformersmc'
+        }
+    }
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = "DevAuth"
+                url = "https://pkgs.dev.azure.com/djtheredstoner/DevAuth/_packaging/public/maven/v1"
+            }
+        }
+        filter {
+            includeGroup 'me.djtheredstoner'
+        }
+    }
+    // https://support.modrinth.com/en/articles/8801191-modrinth-maven
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = "Modrinth"
+                url = "https://api.modrinth.com/maven"
+            }
+        }
+        filter {
+            includeGroup 'maven.modrinth'
+        }
+    }
+    // Fallback (fixes Renovate)
+    mavenCentral()
+}
+
 dependencies {
     checkstyle "com.puppycrawl.tools:checkstyle:${checkstyleVersion}"
 
@@ -41,6 +80,13 @@ dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
     mappings loom.officialMojangMappings()
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+    modImplementation fabricApi.module("fabric-networking-api-v1", project.fabric_api_version)
+
+    // Only needed during development
+    modLocalRuntime "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+    modLocalRuntime "me.djtheredstoner:DevAuth-fabric:1.2.1"
+    modLocalRuntime "maven.modrinth:no-chat-reports:Fabric-1.21.10-v2.16.0"
 }
 
 processResources {
