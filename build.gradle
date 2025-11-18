@@ -86,6 +86,7 @@ dependencies {
 
     // Only needed during development
     modLocalRuntime "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+    modLocalRuntime "com.terraformersmc:modmenu:${project.modmenu_version}"
     modLocalRuntime "me.djtheredstoner:DevAuth-fabric:1.2.1"
     modLocalRuntime "maven.modrinth:no-chat-reports:Fabric-1.21.10-v2.16.0"
 }
@@ -98,7 +99,9 @@ processResources {
                 "desc": project.mod_desc,
                 "license_spdx_id": project.mod_license_spdx_id,
                 "minecraft_version": project.minecraft_version,
-                "loader_version": project.loader_version
+                "loader_version": project.loader_version,
+                "fabric_api_version": project.fabric_api_version,
+                "modmenu_version": project.modmenu_version
     }
 }
 

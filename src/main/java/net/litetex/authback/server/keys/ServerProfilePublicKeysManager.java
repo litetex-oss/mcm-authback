@@ -1,5 +1,7 @@
 package net.litetex.authback.server.keys;
 
+import static net.litetex.authback.shared.collections.AdvancedCollectors.toLinkedHashMap;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.PublicKey;
@@ -34,14 +36,14 @@ public class ServerProfilePublicKeysManager
 {
 	private static final Logger LOG = LoggerFactory.getLogger(ServerProfilePublicKeysManager.class);
 	
-	private static final Duration DELETE_AFTER_UNUSED_EXECUTION_INTERVAL = Duration.ofHours(1);
+	private static final Duration DELETE_AFTER_UNUSED_EXECUTION_INTERVAL = Duration.ofHours(12);
 	
 	private final Path file;
 	
 	private final int maxKeysPerUser;
 	private final Duration deleteAfterUnused;
 	
-	private Instant lastDeletedAfterUnusedExecuted = Instant.MIN;
+	private Instant nextDeleteAfterUnusedExecutionTime = Instant.now().plus(DELETE_AFTER_UNUSED_EXECUTION_INTERVAL);
 	
 	private Map<String, Map<Integer, KeyInfo>> profileUUIDKeys = new HashMap<>();
 	
@@ -87,6 +89,72 @@ public class ServerProfilePublicKeysManager
 		this.saveAsync();
 	}
 	
+	// Quick check if there are any keys without validating if a key is valid
+	public boolean hasAnyKeyQuickCheck(final String profileUUID)
+	{
+		return this.profileUUIDKeys.get(profileUUID) != null;
+	}
+	
+	public PublicKey find(final String profileUUID, final byte[] encodedPublicKey)
+	{
+		final Map<Integer, KeyInfo> keyInfos = this.profileUUIDKeys.get(profileUUID);
+		if(keyInfos == null)
+		{
+			return null;
+		}
+		
+		this.cleanUpIfRequired();
+		
+		final int hashedPublicKey = Arrays.hashCode(encodedPublicKey);
+		final KeyInfo keyInfo = keyInfos.get(hashedPublicKey);
+		if(keyInfo == null)
+		{
+			return null;
+		}
+		
+		try
+		{
+			return keyInfo.publicKeySupplier().get();
+		}
+		catch(final Exception ex)
+		{
+			LOG.warn("Failed to deserialize public key", ex);
+			keyInfos.remove(hashedPublicKey);
+			if(keyInfos.isEmpty())
+			{
+				this.profileUUIDKeys.remove(profileUUID);
+			}
+			
+			return null;
+		}
+	}
+	
+	private synchronized void cleanUpIfRequired()
+	{
+		final Instant now = Instant.now();
+		if(this.nextDeleteAfterUnusedExecutionTime.isBefore(now))
+		{
+			this.nextDeleteAfterUnusedExecutionTime = now.plus(DELETE_AFTER_UNUSED_EXECUTION_INTERVAL);
+			
+			final Instant deleteBefore = now.minus(this.deleteAfterUnused);
+			
+			this.profileUUIDKeys.values()
+				.forEach(publicKeys -> publicKeys.entrySet()
+					.stream()
+					.filter(e -> e.getValue().lastUsedAt().isBefore(deleteBefore))
+					.map(Map.Entry::getKey)
+					.toList() // Collect to prevent modification
+					.forEach(publicKeys::remove));
+			
+			this.profileUUIDKeys.entrySet()
+				.stream()
+				.filter(e -> e.getValue().isEmpty())
+				.map(Map.Entry::getKey)
+				.toList() // Collect to prevent modification
+				.forEach(this.profileUUIDKeys::remove);
+		}
+	}
+	
 	private void readFile()
 	{
 		if(!Files.exists(this.file))
@@ -101,17 +169,18 @@ public class ServerProfilePublicKeysManager
 			
 			final PersistentState persistentState =
 				JSONSerializer.GSON.fromJson(Files.readString(this.file), PersistentState.class);
-			this.profileUUIDKeys = Collections.synchronizedMap(persistentState.getV1()
+			this.profileUUIDKeys = Collections.synchronizedMap(persistentState.ensureProfileUUIDKeys()
 				.entrySet()
 				.stream()
-				.collect(Collectors.toMap(
+				.filter(e -> e.getValue() != null)
+				.collect(toLinkedHashMap(
 					Map.Entry::getKey,
 					e -> Collections.synchronizedMap(e.getValue().stream()
-						.filter(e2 -> e2.getLastUsedAt().isAfter(deleteBefore))
+						.filter(e2 -> e2.lastUsedAt().isAfter(deleteBefore))
 						.map(e2 -> {
 							try
 							{
-								return Map.entry(Hex.decodeHex(e2.getPublicKey()), e2);
+								return Map.entry(Hex.decodeHex(e2.publicKey()), e2);
 							}
 							catch(final DecoderException ex)
 							{
@@ -120,17 +189,14 @@ public class ServerProfilePublicKeysManager
 							}
 						})
 						.filter(Objects::nonNull)
-						.collect(Collectors.toMap(
+						.collect(toLinkedHashMap(
 							e3 -> Arrays.hashCode(e3.getKey()),
 							e3 -> new KeyInfo(
 								e3.getKey(),
 								Suppliers.memoize(() -> new Ed25519KeyDecoder().decodePublic(e3.getKey())),
-								e3.getValue().getLastUsedAt()
-							),
-							(l, r) -> r,
-							LinkedHashMap::new))),
-					(l, r) -> r,
-					LinkedHashMap::new)));
+								e3.getValue().lastUsedAt()
+							))))
+				)));
 			LOG.debug(
 				"Took {}ms to read keys for {}x profiles",
 				System.currentTimeMillis() - startMs,
@@ -151,34 +217,18 @@ public class ServerProfilePublicKeysManager
 	{
 		final long startMs = System.currentTimeMillis();
 		
-		final Instant now = Instant.now();
-		if(this.lastDeletedAfterUnusedExecuted.isBefore(now.minus(DELETE_AFTER_UNUSED_EXECUTION_INTERVAL)))
-		{
-			this.lastDeletedAfterUnusedExecuted = Instant.now();
-			
-			final Instant deleteBefore = now.minus(this.deleteAfterUnused);
-			
-			this.profileUUIDKeys.values()
-				.forEach(publicKeys -> publicKeys.entrySet()
-					.stream()
-					.filter(e -> e.getValue().lastUsedAt().isBefore(deleteBefore))
-					.map(Map.Entry::getKey)
-					.toList() // Collect to prevent modification
-					.forEach(publicKeys::remove));
-		}
+		this.cleanUpIfRequired();
 		
 		try
 		{
 			final PersistentState persistentState = new PersistentState(this.profileUUIDKeys.entrySet()
 				.stream()
-				.collect(Collectors.toMap(
+				.collect(toLinkedHashMap(
 					Map.Entry::getKey,
 					e -> e.getValue().values()
 						.stream()
 						.map(KeyInfo::persist)
-						.collect(Collectors.toCollection(LinkedHashSet::new)),
-					(l, r) -> r,
-					LinkedHashMap::new
+						.collect(Collectors.toCollection(LinkedHashSet::new))
 				)));
 			
 			Files.writeString(this.file, JSONSerializer.GSON.toJson(persistentState));
@@ -214,63 +264,20 @@ public class ServerProfilePublicKeysManager
 	}
 	
 	
-	static class PersistentState
+	record PersistentState(
+		Map<String, Set<PersistentKeyInfo>> profileUUIDKeys
+	)
 	{
-		private Map<String, Set<PersistentKeyInfo>> v1 = new HashMap<>();
-		
-		public PersistentState()
+		Map<String, Set<PersistentKeyInfo>> ensureProfileUUIDKeys()
 		{
+			return this.profileUUIDKeys != null ? this.profileUUIDKeys : Map.of();
 		}
 		
-		public PersistentState(final Map<String, Set<PersistentKeyInfo>> v1)
+		record PersistentKeyInfo(
+			String publicKey,
+			Instant lastUsedAt
+		)
 		{
-			this.v1 = v1;
-		}
-		
-		public Map<String, Set<PersistentKeyInfo>> getV1()
-		{
-			return this.v1;
-		}
-		
-		public void setV1(final Map<String, Set<PersistentKeyInfo>> v1)
-		{
-			this.v1 = v1;
-		}
-		
-		static class PersistentKeyInfo
-		{
-			private String publicKey;
-			private Instant lastUsedAt;
-			
-			public PersistentKeyInfo()
-			{
-			}
-			
-			public PersistentKeyInfo(final String publicKey, final Instant lastUsedAt)
-			{
-				this.publicKey = publicKey;
-				this.lastUsedAt = lastUsedAt;
-			}
-			
-			public String getPublicKey()
-			{
-				return this.publicKey;
-			}
-			
-			public void setPublicKey(final String publicKey)
-			{
-				this.publicKey = publicKey;
-			}
-			
-			public Instant getLastUsedAt()
-			{
-				return this.lastUsedAt;
-			}
-			
-			public void setLastUsedAt(final Instant lastUsedAt)
-			{
-				this.lastUsedAt = lastUsedAt;
-			}
 		}
 	}
 }

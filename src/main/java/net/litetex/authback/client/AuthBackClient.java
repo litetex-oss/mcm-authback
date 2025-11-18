@@ -1,31 +1,27 @@
 package net.litetex.authback.client;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.KeyPair;
-import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.netty.buffer.Unpooled;
 import net.fabricmc.fabric.api.client.networking.v1.ClientConfigurationNetworking;
-import net.fabricmc.loader.api.FabricLoader;
-import net.litetex.authback.client.keys.KeyPairManager;
-import net.litetex.authback.client.state.KeyStates;
-import net.litetex.authback.shared.config.Configuration;
+import net.fabricmc.fabric.api.client.networking.v1.ClientLoginNetworking;
+import net.litetex.authback.client.keys.ClientKeysManager;
+import net.litetex.authback.shared.AuthBack;
 import net.litetex.authback.shared.crypto.Ed25519Signature;
-import net.litetex.authback.shared.json.JSONSerializer;
+import net.litetex.authback.shared.network.ChannelNames;
 import net.litetex.authback.shared.network.configuration.ConfigurationRegistrySetup;
 import net.litetex.authback.shared.network.configuration.SyncPayloadC2S;
 import net.litetex.authback.shared.network.configuration.SyncPayloadS2C;
-import net.minecraft.client.Minecraft;
+import net.litetex.authback.shared.network.login.LoginCompatibility;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket;
 
 
-public class AuthBackClient
+public class AuthBackClient extends AuthBack
 {
 	private static final Logger LOG = LoggerFactory.getLogger(AuthBackClient.class);
 	
@@ -41,26 +37,71 @@ public class AuthBackClient
 		AuthBackClient.instance = instance;
 	}
 	
-	private final Configuration config;
+	private final ClientKeysManager clientKeysManager;
 	
-	private final KeyPair keyPair;
+	// Replaces the server blocklist check with a dummy that will do no initial fetching
+	private final boolean blockAddressCheck;
+	// Will block fetching of profile/chat-signing keys
+	// This will result in not being able to join servers that have enforce-secure-profile set to true (default value)
+	private final boolean blockFetchingProfileKeys;
+	// Blocks initial fetching of Realms news, notifications, etc
+	private final boolean blockRealmsFetching;
+	// Suppresses all joinServer errors
+	// WARNING: Allows to join servers with possibly invalid session data
+	private final boolean suppressAllServerJoinErrors;
 	
-	public AuthBackClient(final Configuration config)
+	public AuthBackClient()
 	{
-		this.config = config;
+		super("client");
+		this.clientKeysManager = new ClientKeysManager(this.authbackDir);
 		
-		final Path authbackDir = this.ensureAuthbackDir(config);
+		this.setupProtoLogin();
+		this.setupProtoConfiguration();
 		
-		final Path keyStatesFile = authbackDir.resolve("key-states.json");
-		final KeyStates keyStates = this.readKeyStatesFile(keyStatesFile);
+		this.blockFetchingProfileKeys = this.config.getBoolean("block-profile-keys-fetching", false);
+		this.blockAddressCheck = this.config.getBoolean("block-address-check", false);
+		this.blockRealmsFetching = this.config.getBoolean("block-realms-fetching", false);
+		this.suppressAllServerJoinErrors = this.config.getBoolean("suppress-all-server-join-errors", false);
 		
-		this.keyPair = new KeyPairManager(
-			keyStates.getV1(),
-			Minecraft.getInstance().getUser().getProfileId().toString())
-			.getOrCreateKeyPair();
-		
-		this.saveKeyStatesFile(keyStatesFile, keyStates);
-		
+		LOG.debug("Initialized");
+	}
+	
+	private void setupProtoLogin()
+	{
+		ClientLoginNetworking.registerGlobalReceiver(
+			ChannelNames.FALLBACK_AUTH,
+			(client, handler, buf, callbacksConsumer) -> {
+				
+				LOG.debug("Fallback auth request from server");
+				
+				final int serverCompatibilityVersion = buf.readInt();
+				if(serverCompatibilityVersion != LoginCompatibility.S2C)
+				{
+					LOG.warn(
+						"Fallback auth request from server failed - Compatibility mismatch[server={}, client={}]",
+						serverCompatibilityVersion,
+						LoginCompatibility.S2C);
+					return null;
+				}
+				
+				final byte[] challenge = buf.readByteArray();
+				
+				final KeyPair keyPair = this.clientKeysManager.currentKeyPair();
+				
+				final FriendlyByteBuf responseBuf = new FriendlyByteBuf(Unpooled.buffer());
+				responseBuf.writeInt(LoginCompatibility.C2S);
+				responseBuf.writeByteArray(Ed25519Signature.createSignature(
+					challenge,
+					keyPair.getPrivate()));
+				responseBuf.writeByteArray(keyPair.getPublic().getEncoded());
+				
+				return CompletableFuture.completedFuture(responseBuf);
+			}
+		);
+	}
+	
+	private void setupProtoConfiguration()
+	{
 		ConfigurationRegistrySetup.setup();
 		
 		ClientConfigurationNetworking.registerGlobalReceiver(
@@ -72,61 +113,34 @@ public class AuthBackClient
 					return;
 				}
 				
+				LOG.debug("Synchronizing with server");
+				final KeyPair keyPair = this.clientKeysManager.currentKeyPair();
 				context.networkHandler().send(new ServerboundCustomPayloadPacket(new SyncPayloadC2S(
-					Ed25519Signature.createSignature(payload.challenge(), this.keyPair.getPrivate()),
-					this.keyPair.getPublic().getEncoded()
+					Ed25519Signature.createSignature(
+						payload.challenge(),
+						keyPair.getPrivate()),
+					keyPair.getPublic().getEncoded()
 				)));
 			});
-		
-		LOG.debug("Done");
 	}
 	
-	private Path ensureAuthbackDir(final Configuration config)
+	public boolean isBlockFetchingProfileKeys()
 	{
-		final Path dir = Optional.ofNullable(config.getString("authback-client-dir", null))
-			.map(Paths::get)
-			.orElseGet(() -> FabricLoader.getInstance().getGameDir().resolve(".authback-client"));
-		if(!Files.exists(dir))
-		{
-			try
-			{
-				Files.createDirectories(dir);
-			}
-			catch(final IOException e)
-			{
-				throw new UncheckedIOException(e);
-			}
-		}
-		return dir;
+		return this.blockFetchingProfileKeys;
 	}
 	
-	private KeyStates readKeyStatesFile(final Path keyStatesFile)
+	public boolean isBlockAddressCheck()
 	{
-		if(!Files.exists(keyStatesFile))
-		{
-			return new KeyStates();
-		}
-		
-		try
-		{
-			return JSONSerializer.GSON.fromJson(Files.readString(keyStatesFile), KeyStates.class);
-		}
-		catch(final Exception ex)
-		{
-			LOG.warn("Failed to read keyStatesFile['{}']", keyStatesFile, ex);
-			return new KeyStates();
-		}
+		return this.blockAddressCheck;
 	}
 	
-	private void saveKeyStatesFile(final Path keyStatesFile, final KeyStates keyStates)
+	public boolean isBlockRealmsFetching()
 	{
-		try
-		{
-			Files.writeString(keyStatesFile, JSONSerializer.GSON.toJson(keyStates));
-		}
-		catch(final Exception ex)
-		{
-			LOG.warn("Failed to write keyStatesFile['{}']", keyStatesFile, ex);
-		}
+		return this.blockRealmsFetching;
+	}
+	
+	public boolean isSuppressAllServerJoinErrors()
+	{
+		return this.suppressAllServerJoinErrors;
 	}
 }

@@ -2,9 +2,21 @@ package net.litetex.authback.shared.config;
 
 import java.util.List;
 
+import net.fabricmc.loader.api.FabricLoader;
+
 
 public interface Configuration
 {
+	static Configuration standard(final String variant)
+	{
+		return Configuration.combining(
+			RuntimeConfiguration.environmentVariables("AUTHBACK"),
+			RuntimeConfiguration.environmentVariables("AUTHBACK_" + variant.toUpperCase()),
+			RuntimeConfiguration.systemProperties("authback"),
+			RuntimeConfiguration.systemProperties("authback." + variant),
+			new FileConfiguration(FabricLoader.getInstance().getConfigDir().resolve("authback-" + variant + ".json")));
+	}
+	
 	static Configuration combining(final Configuration... configurations)
 	{
 		return new CombinedConfiguration(configurations);

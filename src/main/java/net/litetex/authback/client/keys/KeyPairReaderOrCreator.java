@@ -1,6 +1,5 @@
 package net.litetex.authback.client.keys;
 
-import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
@@ -16,14 +15,14 @@ import net.litetex.authback.shared.crypto.Ed25519Signature;
 import net.litetex.authback.shared.crypto.SecureRandomByteArrayCreator;
 
 
-public class KeyPairManager
+class KeyPairReaderOrCreator
 {
-	private static final Logger LOG = LoggerFactory.getLogger(KeyPairManager.class);
+	private static final Logger LOG = LoggerFactory.getLogger(KeyPairReaderOrCreator.class);
 	
 	private final Map<String, KeyState> keyStates;
 	private final String uuid;
 	
-	public KeyPairManager(
+	KeyPairReaderOrCreator(
 		final Map<String, KeyState> keyStates,
 		final String uuid)
 	{
@@ -83,13 +82,15 @@ public class KeyPairManager
 		final KeyPair keyPair = createKeyPairGenerator().generateKeyPair();
 		
 		final Instant now = Instant.now();
+		final String publicKeyHex = Hex.encodeHexString(keyPair.getPublic().getEncoded());
 		this.keyStates.put(
 			this.uuid,
 			new KeyState(
 				Hex.encodeHexString(keyPair.getPrivate().getEncoded()),
-				Hex.encodeHexString(keyPair.getPublic().getEncoded()),
+				publicKeyHex,
 				now,
 				now));
+		LOG.info("Generated new keypair - Public key: {}", publicKeyHex);
 		
 		return keyPair;
 	}
@@ -99,18 +100,6 @@ public class KeyPairManager
 		try
 		{
 			return KeyPairGenerator.getInstance("Ed25519");
-		}
-		catch(final NoSuchAlgorithmException e)
-		{
-			throw new IllegalStateException("Failed to find ED25519 algorithm", e);
-		}
-	}
-	
-	private static KeyFactory createKeyFactory()
-	{
-		try
-		{
-			return KeyFactory.getInstance("Ed25519");
 		}
 		catch(final NoSuchAlgorithmException e)
 		{

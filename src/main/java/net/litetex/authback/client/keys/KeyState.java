@@ -3,7 +3,7 @@ package net.litetex.authback.client.keys;
 import java.time.Instant;
 
 
-public record KeyState(
+record KeyState(
 	String privateKey,
 	String publicKey,
 	Instant createdAt,
