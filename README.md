@@ -13,10 +13,10 @@ Allows you play normally even when authentication servers are down.
 
 #### How does it work?
 
-1. The responses from Mojang's webservices are locally cached for some time.<br/>
+1. The responses from Mojang's webservices are cached locally for some time.<br/>
 If an outage occurs the previously cached responses are used.<br/>
-For example this allows for your skin to be displayed.
-2. Every client locally stores (or generates if not present) a keypair, which will be used as a fallback to authenticate with servers when Mojang's authentication server are down (see [Public-key cryptography](https://en.wikipedia.org/wiki/Public-key_cryptography)).<br/>
+For example this allows for your skin to be displayed properly.
+2. Every client locally stores (or generates if not present) a keypair, which will be used as a fallback to authenticate with servers when Mojang's authentication servers are down (see [Public-key cryptography](https://en.wikipedia.org/wiki/Public-key_cryptography)).<br/>
 Please note:
     * The server also needs to have the mod installed
     * You must have already joined the server once (during the past 36 days)
