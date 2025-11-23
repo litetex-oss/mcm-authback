@@ -9,7 +9,7 @@
 
 _UNSTABLE: Currently still in development_
 
-Allows you play normally even when authentication servers are down.
+Allows you play as normal even when Mojang's authentication servers are down.
 
 #### How does it work?
 
