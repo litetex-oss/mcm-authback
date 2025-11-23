@@ -7,6 +7,8 @@
 
 <!-- modrinth_exclude.end -->
 
+_UNSTABLE: Currently still in development_
+
 Allows you play normally even when authentication servers are down.
 
 #### How does it work?
