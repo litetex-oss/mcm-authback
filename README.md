@@ -21,6 +21,9 @@ Please note:
     * The server also needs to have the mod installed
     * You must have already joined the server once (during the past 36 days)
 
+The mod is optional for the client and server.
+However if one side lacks the mod joining a server will be impossible when Mojang's authentication servers are down.
+
 <!-- modrinth_exclude.start -->
 
 TODO/WIP:
