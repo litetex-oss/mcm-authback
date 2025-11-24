@@ -15,13 +15,28 @@
   "license": "${license_spdx_id}",
   "icon": "assets/icon.png",
   "environment": "*",
+  "entrypoints": {
+    "preLaunch": [
+      "net.litetex.authback.common.init.AuthBackCommonInitializer"
+    ],
+    "client": [
+      "net.litetex.authback.client.init.AuthBackClientInitializer"
+    ],
+    "server": [
+      "net.litetex.authback.server.init.AuthBackServerInitializer"
+    ]
+  },
   "mixins": [
-    "template-placeholder.mixins.json"
+    "authback.mixins.json"
   ],
-  "accessWidener": "template-placeholder.accesswidener",
+  "accessWidener": "authback.accesswidener",
+  "requires": {
+    "fabric-api": "*"
+  },
   "recommends": {
     "fabricloader": ">=${loader_version}",
-    "minecraft": ">=${minecraft_version}"
+    "minecraft": ">=${minecraft_version}",
+    "fabric-api": ">=${fabric_api_version}"
   },
   "custom": {
     "modmenu": {

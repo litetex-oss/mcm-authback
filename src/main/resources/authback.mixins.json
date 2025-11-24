@@ -1,0 +1,25 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "net.litetex.authback.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "common.YggdrasilMinecraftSessionServiceMixin",
+    "common.YggdrasilServicesKeyInfoMixin"
+  ],
+  "client": [
+    "client.AccountProfileKeyPairManagerMixin",
+    "client.AddressCheckMixin",
+    "client.ClientHandshakePacketListenerImplMixin",
+    "client.RealmsClientMixin",
+    "client.TitleScreenMixin"
+  ],
+  "server": [
+    "server.DedicatedServerMixin",
+    "server.OldUsersConverterMixin",
+    "server.ServerLoginPacketListenerImplUserAuthenticatorMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
