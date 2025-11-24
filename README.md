@@ -1,6 +1,6 @@
 <!-- modrinth_exclude.start -->
 
-[![Version](https://img.shields.io/modrinth/v/mcm-authback)](https://modrinth.com/mod/mcm-authback)
+[![Version](https://img.shields.io/modrinth/v/authback)](https://modrinth.com/mod/authback)
 [![Build](https://img.shields.io/github/actions/workflow/status/litetex-oss/mcm-authback/check-build.yml?branch=dev)](https://github.com/litetex-oss/mcm-authback/actions/workflows/check-build.yml?query=branch%3Adev)
 
 # AuthBack
