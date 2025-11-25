@@ -82,7 +82,7 @@ public class FallbackUserAuthenticationAdapter
 			defaultAction.run();
 			return;
 		}
-		if(!this.serverProfilePublicKeysManager.hasAnyKeyQuickCheck(gameProfile.id().toString()))
+		if(!this.serverProfilePublicKeysManager.hasAnyKeyQuickCheck(gameProfile.id()))
 		{
 			LOG.debug("No public key");
 			defaultAction.run();
@@ -168,7 +168,7 @@ public class FallbackUserAuthenticationAdapter
 		final byte[] publicKeyEncoded = buf.readByteArray();
 		
 		final PublicKey publicKey =
-			this.serverProfilePublicKeysManager.find(gameProfile.id().toString(), publicKeyEncoded);
+			this.serverProfilePublicKeysManager.find(gameProfile.id(), publicKeyEncoded);
 		if(publicKey == null)
 		{
 			customDisconnectAction.accept("Received invalid public key");

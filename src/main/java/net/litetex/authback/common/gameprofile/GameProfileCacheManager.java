@@ -8,7 +8,9 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
@@ -100,6 +102,16 @@ public class GameProfileCacheManager
 			this.remove(id); // Remove corrupted container
 			return null;
 		}
+	}
+	
+	public Set<UUID> uuids()
+	{
+		return new HashSet<>(this.uuidUsernames.keySet());
+	}
+	
+	public Set<String> names()
+	{
+		return new HashSet<>(this.usernameUuids.keySet());
 	}
 	
 	private void cleanUpIfRequired()

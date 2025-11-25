@@ -11,11 +11,14 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -26,7 +29,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Suppliers;
-import com.mojang.authlib.GameProfile;
 
 import net.litetex.authback.shared.crypto.Ed25519KeyDecoder;
 import net.litetex.authback.shared.json.JSONSerializer;
@@ -45,7 +47,7 @@ public class ServerProfilePublicKeysManager
 	
 	private Instant nextDeleteAfterUnusedExecutionTime = Instant.now().plus(DELETE_AFTER_UNUSED_EXECUTION_INTERVAL);
 	
-	private Map<String, Map<Integer, KeyInfo>> profileUUIDKeys = new HashMap<>();
+	private Map<UUID, Map<Integer, KeyInfo>> profileUUIDKeys = new HashMap<>();
 	
 	public ServerProfilePublicKeysManager(final Path file, final int maxKeysPerUser, final Duration deleteAfterUnused)
 	{
@@ -55,10 +57,10 @@ public class ServerProfilePublicKeysManager
 		this.readFile();
 	}
 	
-	public void syncFromClient(final GameProfile profile, final byte[] encodedPublicKey, final PublicKey publicKey)
+	public void add(final UUID uuid, final byte[] encodedPublicKey, final PublicKey publicKey)
 	{
 		final Map<Integer, KeyInfo> publicKeys = this.profileUUIDKeys.computeIfAbsent(
-			profile.id().toString(),
+			uuid,
 			ignored -> Collections.synchronizedMap(new LinkedHashMap<>()));
 		
 		final int hash = Arrays.hashCode(encodedPublicKey);
@@ -90,12 +92,12 @@ public class ServerProfilePublicKeysManager
 	}
 	
 	// Quick check if there are any keys without validating if a key is valid
-	public boolean hasAnyKeyQuickCheck(final String profileUUID)
+	public boolean hasAnyKeyQuickCheck(final UUID profileUUID)
 	{
 		return this.profileUUIDKeys.get(profileUUID) != null;
 	}
 	
-	public PublicKey find(final String profileUUID, final byte[] encodedPublicKey)
+	public PublicKey find(final UUID profileUUID, final byte[] encodedPublicKey)
 	{
 		final Map<Integer, KeyInfo> keyInfos = this.profileUUIDKeys.get(profileUUID);
 		if(keyInfos == null)
@@ -127,6 +129,69 @@ public class ServerProfilePublicKeysManager
 			
 			return null;
 		}
+	}
+	
+	public int removeAll(final UUID uuid)
+	{
+		final Map<Integer, KeyInfo> keyInfos = this.profileUUIDKeys.remove(uuid);
+		if(keyInfos == null)
+		{
+			return 0;
+		}
+		
+		return keyInfos.size();
+	}
+	
+	public boolean remove(final UUID uuid, final String publicKeyEncoded)
+	{
+		final Map<Integer, KeyInfo> keyInfos = this.profileUUIDKeys.get(uuid);
+		if(keyInfos == null)
+		{
+			return false;
+		}
+		
+		try
+		{
+			if(keyInfos.remove(Arrays.hashCode(Hex.decodeHex(publicKeyEncoded))) == null)
+			{
+				return false;
+			}
+		}
+		catch(final DecoderException dex)
+		{
+			return false;
+		}
+		
+		if(keyInfos.isEmpty())
+		{
+			this.profileUUIDKeys.remove(uuid);
+		}
+		return true;
+	}
+	
+	public Set<UUID> profileUUIDs()
+	{
+		return new HashSet<>(this.profileUUIDKeys.keySet());
+	}
+	
+	public Map<UUID, List<PublicKeyInfo>> uuidPublicKeyHex()
+	{
+		return this.profileUUIDKeys.entrySet()
+			.stream()
+			.collect(Collectors.toMap(
+				Map.Entry::getKey,
+				e -> e.getValue().values()
+					.stream()
+					.map(k -> new PublicKeyInfo(Hex.encodeHexString(k.publicKeyEncoded()), k.lastUsedAt()))
+					.sorted(Comparator.comparing(PublicKeyInfo::lastUse))
+					.toList()
+			));
+	}
+	
+	public record PublicKeyInfo(
+		String hex,
+		Instant lastUse)
+	{
 	}
 	
 	private synchronized void cleanUpIfRequired()
@@ -174,7 +239,7 @@ public class ServerProfilePublicKeysManager
 				.stream()
 				.filter(e -> e.getValue() != null)
 				.collect(toLinkedHashMap(
-					Map.Entry::getKey,
+					e -> UUID.fromString(e.getKey()),
 					e -> Collections.synchronizedMap(e.getValue().stream()
 						.filter(e2 -> e2.lastUsedAt().isAfter(deleteBefore))
 						.map(e2 -> {
@@ -224,7 +289,7 @@ public class ServerProfilePublicKeysManager
 			final PersistentState persistentState = new PersistentState(this.profileUUIDKeys.entrySet()
 				.stream()
 				.collect(toLinkedHashMap(
-					Map.Entry::getKey,
+					e -> e.getKey().toString(),
 					e -> e.getValue().values()
 						.stream()
 						.map(KeyInfo::persist)

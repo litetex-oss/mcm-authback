@@ -12,10 +12,12 @@ import org.slf4j.LoggerFactory;
 
 import com.mojang.authlib.GameProfile;
 
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.networking.v1.ServerConfigurationConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerConfigurationNetworking;
 import net.litetex.authback.common.AuthBackCommon;
 import net.litetex.authback.common.gameprofile.GameProfileCacheManager;
+import net.litetex.authback.server.command.FallbackCommand;
 import net.litetex.authback.server.fallbackauth.FallbackAuthRateLimiter;
 import net.litetex.authback.server.fallbackauth.FallbackUserAuthenticationAdapter;
 import net.litetex.authback.server.keys.ServerProfilePublicKeysManager;
@@ -87,6 +89,10 @@ public class AuthBackServer extends AuthBack
 		
 		this.setupProtoConfiguration();
 		
+		CommandRegistrationCallback.EVENT.register((dispatcher, buildContext, selection) ->
+			new FallbackCommand(this.serverProfilePublicKeysManager, this.gameProfileCacheManager)
+				.register(dispatcher));
+		
 		LOG.debug("Initialized");
 	}
 	
@@ -134,7 +140,7 @@ public class AuthBackServer extends AuthBack
 					return;
 				}
 				
-				this.serverProfilePublicKeysManager.syncFromClient(profile, payload.publicKey(), publicKey);
+				this.serverProfilePublicKeysManager.add(profile.id(), payload.publicKey(), publicKey);
 			}
 		);
 	}
