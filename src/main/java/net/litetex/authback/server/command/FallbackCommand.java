@@ -17,7 +17,9 @@ import org.slf4j.LoggerFactory;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 
 import net.litetex.authback.common.gameprofile.GameProfileCacheManager;
@@ -42,7 +44,7 @@ public class FallbackCommand
 	private static final DateTimeFormatter INSTANT_BASIC_DATE_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
 		.withZone(ZoneId.systemDefault());
 	
-	private static final int REQUIRED_PERMISSION = 3; // 3 -> Admin
+	private static final int PERMISSION_ADMIN = 3;
 	
 	private final ServerProfilePublicKeysManager serverProfilePublicKeysManager;
 	private final GameProfileCacheManager gameProfileCacheManager;
@@ -58,11 +60,9 @@ public class FallbackCommand
 	public void register(final CommandDispatcher<CommandSourceStack> dispatcher)
 	{
 		dispatcher.register(Commands.literal("authback")
-			.requires(src -> src.hasPermission(REQUIRED_PERMISSION))
 			.then(Commands.literal("public_key")
 				.then(this.registerAdd())
 				.then(this.registerRemove())
-				.then(this.registerGet())
 				.then(this.registerList())
 			)
 		);
@@ -71,30 +71,32 @@ public class FallbackCommand
 	private LiteralArgumentBuilder<CommandSourceStack> registerAdd()
 	{
 		return Commands.literal("add")
-			.then(Commands.literal("id")
-				.then(Commands.argument("id", UuidArgument.uuid())
+			// Do not add "self" cmd here as it might lead to players accidentally back-dooring themselves
+			.requires(src -> src.hasPermission(PERMISSION_ADMIN))
+			.then(cmdId()
+				.then(cmdArgId()
 					.suggests((ctx, builder) -> SharedSuggestionProvider.suggest(
 						this.gameProfileCacheManager.uuids()
 							.stream()
 							.map(UUID::toString),
 						builder
 					))
-					.then(Commands.argument("publicKeyHex", StringArgumentType.word())
+					.then(cmdArgPKH()
 						.executes(ctx -> this.execAdd(
 							ctx,
-							UuidArgument.getUuid(ctx, "id"),
-							StringArgumentType.getString(ctx, "publicKeyHex"))))))
-			.then(Commands.literal("name")
-				.then(Commands.argument("name", StringArgumentType.word())
+							resolveArgId(ctx),
+							resolveArgPKH(ctx))))))
+			.then(cmdName()
+				.then(cmdArgName()
 					.suggests((ctx, builder) -> SharedSuggestionProvider.suggest(
 						this.gameProfileCacheManager.names(),
 						builder
 					))
-					.then(Commands.argument("publicKeyHex", StringArgumentType.word())
+					.then(cmdArgPKH()
 						.executes(ctx -> this.execAdd(
 							ctx,
-							StringArgumentType.getString(ctx, "name"),
-							StringArgumentType.getString(ctx, "publicKeyHex"))))));
+							resolveArgName(ctx),
+							resolveArgPKH(ctx))))));
 	}
 	
 	private int execAdd(
@@ -135,30 +137,45 @@ public class FallbackCommand
 	private LiteralArgumentBuilder<CommandSourceStack> registerRemove()
 	{
 		return Commands.literal("remove")
-			.then(Commands.literal("id")
-				.then(Commands.argument("id", UuidArgument.uuid())
+			.then(cmdSelf()
+				.then(cmdAll()
+					.executes(this::execRemoveAllSelf))
+				.then(cmdArgPKH()
+					.executes(ctx -> this.execRemoveSelf(ctx, resolveArgPKH(ctx)))))
+			.then(cmdId()
+				.requires(src -> src.hasPermission(PERMISSION_ADMIN))
+				.then(cmdArgId()
 					.suggests(this.suggestExistingPublicKeyUserUUIDs())
-					.then(Commands.literal("*")
+					.then(cmdAll()
 						.executes(ctx -> this.execRemoveAll(
 							ctx,
-							UuidArgument.getUuid(ctx, "id"))))
-					.then(Commands.argument("publicKeyHex", StringArgumentType.word())
+							resolveArgId(ctx))))
+					.then(cmdArgPKH()
 						.executes(ctx -> this.execRemove(
 							ctx,
-							UuidArgument.getUuid(ctx, "id"),
-							StringArgumentType.getString(ctx, "publicKeyHex"))))))
-			.then(Commands.literal("name")
-				.then(Commands.argument("name", StringArgumentType.word())
+							resolveArgId(ctx),
+							resolveArgPKH(ctx))))))
+			.then(cmdName()
+				.requires(src -> src.hasPermission(PERMISSION_ADMIN))
+				.then(cmdArgName()
 					.suggests(this.suggestExistingPublicKeyUserNames())
-					.then(Commands.literal("*")
+					.then(cmdAll()
 						.executes(ctx -> this.execRemoveAll(
 							ctx,
-							StringArgumentType.getString(ctx, "name"))))
-					.then(Commands.argument("publicKeyHex", StringArgumentType.word())
+							resolveArgName(ctx))))
+					.then(cmdArgPKH()
 						.executes(ctx -> this.execRemove(
 							ctx,
-							StringArgumentType.getString(ctx, "name"),
-							StringArgumentType.getString(ctx, "publicKeyHex"))))));
+							resolveArgName(ctx),
+							resolveArgPKH(ctx))))));
+	}
+	
+	private int execRemoveSelf(
+		final CommandContext<CommandSourceStack> ctx,
+		final String publicKeyHex
+	) throws CommandSyntaxException
+	{
+		return this.execRemove(ctx, uuidFromCtx(ctx), publicKeyHex);
 	}
 	
 	private int execRemove(
@@ -189,6 +206,11 @@ public class FallbackCommand
 		return 0;
 	}
 	
+	private int execRemoveAllSelf(final CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException
+	{
+		return this.execRemoveAll(ctx, uuidFromCtx(ctx));
+	}
+	
 	private int execRemoveAll(
 		final CommandContext<CommandSourceStack> ctx,
 		final String name)
@@ -210,46 +232,52 @@ public class FallbackCommand
 	
 	// region Read
 	
-	private LiteralArgumentBuilder<CommandSourceStack> registerGet()
+	private LiteralArgumentBuilder<CommandSourceStack> registerList()
 	{
-		return Commands.literal("get")
-			.then(Commands.literal("id")
-				.then(Commands.argument("id", UuidArgument.uuid())
+		return Commands.literal("list")
+			.then(cmdSelf()
+				.executes(this::execListSelf))
+			.then(cmdAll()
+				.requires(src -> src.hasPermission(PERMISSION_ADMIN))
+				.executes(this::execListAll))
+			.then(cmdId()
+				.requires(src -> src.hasPermission(PERMISSION_ADMIN))
+				.then(cmdArgId()
 					.suggests(this.suggestExistingPublicKeyUserUUIDs())
-					.executes(ctx -> this.execGet(
+					.executes(ctx -> this.execList(
 						ctx,
-						UuidArgument.getUuid(ctx, "id")))))
-			.then(Commands.literal("name")
-				.then(Commands.argument("name", StringArgumentType.word())
+						resolveArgId(ctx)))))
+			.then(cmdName()
+				.requires(src -> src.hasPermission(PERMISSION_ADMIN))
+				.then(cmdArgName()
 					.suggests(this.suggestExistingPublicKeyUserNames())
-					.executes(ctx -> this.execGet(
+					.executes(ctx -> this.execList(
 						ctx,
-						StringArgumentType.getString(ctx, "name")))));
+						resolveArgName(ctx)))));
 	}
 	
-	private int execGet(final CommandContext<CommandSourceStack> ctx, final String name)
+	private int execListSelf(final CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException
 	{
-		return this.execForName(ctx, name, uuid -> this.execGet(ctx, uuid));
+		return this.execList(ctx, uuidFromCtx(ctx));
 	}
 	
-	private int execGet(final CommandContext<CommandSourceStack> ctx, final UUID uuid)
+	private int execListAll(final CommandContext<CommandSourceStack> ctx)
+	{
+		return this.execListing(ctx, this.serverProfilePublicKeysManager.uuidPublicKeyHex());
+	}
+	
+	private int execList(final CommandContext<CommandSourceStack> ctx, final String name)
+	{
+		return this.execForName(ctx, name, uuid -> this.execList(ctx, uuid));
+	}
+	
+	private int execList(final CommandContext<CommandSourceStack> ctx, final UUID uuid)
 	{
 		return this.execListing(
 			ctx,
 			Optional.ofNullable(this.serverProfilePublicKeysManager.uuidPublicKeyHex().get(uuid))
 				.map(val -> Map.of(uuid, val))
 				.orElseGet(Map::of));
-	}
-	
-	private LiteralArgumentBuilder<CommandSourceStack> registerList()
-	{
-		return Commands.literal("list")
-			.executes(this::execList);
-	}
-	
-	private int execList(final CommandContext<CommandSourceStack> ctx)
-	{
-		return this.execListing(ctx, this.serverProfilePublicKeysManager.uuidPublicKeyHex());
 	}
 	
 	private int execListing(
@@ -358,6 +386,64 @@ public class FallbackCommand
 	{
 		return ctx.getSource().getServer().services().nameToIdCache().get(name)
 			.map(NameAndId::id);
+	}
+	
+	private static UUID uuidFromCtx(final CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException
+	{
+		return ctx.getSource().getPlayerOrException().nameAndId().id();
+	}
+	
+	// endregion
+	// region Commands
+	
+	private static LiteralArgumentBuilder<CommandSourceStack> cmdAll()
+	{
+		return Commands.literal("*");
+	}
+	
+	private static LiteralArgumentBuilder<CommandSourceStack> cmdName()
+	{
+		return Commands.literal("name");
+	}
+	
+	private static LiteralArgumentBuilder<CommandSourceStack> cmdId()
+	{
+		return Commands.literal("id");
+	}
+	
+	private static LiteralArgumentBuilder<CommandSourceStack> cmdSelf()
+	{
+		return Commands.literal("self");
+	}
+	
+	private static String resolveArgName(final CommandContext<CommandSourceStack> ctx)
+	{
+		return StringArgumentType.getString(ctx, "name");
+	}
+	
+	private static RequiredArgumentBuilder<CommandSourceStack, String> cmdArgName()
+	{
+		return Commands.argument("name", StringArgumentType.word());
+	}
+	
+	private static UUID resolveArgId(final CommandContext<CommandSourceStack> ctx)
+	{
+		return UuidArgument.getUuid(ctx, "id");
+	}
+	
+	private static RequiredArgumentBuilder<CommandSourceStack, UUID> cmdArgId()
+	{
+		return Commands.argument("id", UuidArgument.uuid());
+	}
+	
+	private static String resolveArgPKH(final CommandContext<CommandSourceStack> ctx)
+	{
+		return StringArgumentType.getString(ctx, "publicKeyHex");
+	}
+	
+	private static RequiredArgumentBuilder<CommandSourceStack, String> cmdArgPKH()
+	{
+		return Commands.argument("publicKeyHex", StringArgumentType.word());
 	}
 	
 	// endregion
