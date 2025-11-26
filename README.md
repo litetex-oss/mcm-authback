@@ -24,11 +24,26 @@ Please note:
 The mod is optional for the client and server.
 However if one side lacks the mod joining a server will be impossible when Mojang's authentication servers are down.
 
+## Usage
+
+### Command
+
+You can use the ``/authback`` command to e.g. manage your public keys or those of other players if you are an admin.
+
+## FAQ
+
+### The authentification servers are down, my friend got the mod but they can't join my server
+
+This is because they never joined with the mod before.
+You can fix this in the following way if you are an Admin:
+1. Tell your friend to launch the game with the mod
+2. Tell them to send their public key to you <!-- ! TODO (can be found in the UI under ...) -->
+3. Associate the public key on the server with them by running `/authback public_key add name <yourFriendsPlayerName> <yourFriendsPublicKey>`
+
 <!-- modrinth_exclude.start -->
 
 TODO/WIP:
 * Config UI for client
-* Command for server ops to manage public keys
 * Describe configuration options
 
 ## Installation
