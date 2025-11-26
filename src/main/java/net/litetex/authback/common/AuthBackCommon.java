@@ -42,7 +42,8 @@ public class AuthBackCommon extends AuthBack
 		this.gameProfileCacheManager = new GameProfileCacheManager(
 			this.authbackDir.resolve("game-profiles.json"),
 			// When a player changes their username the name will be unavailable for 37 days
-			Duration.ofDays(this.config.getInteger("game-profiles.delete-after-days", 36)));
+			Duration.ofDays(this.config.getInteger("game-profiles.delete-after-days", 36)),
+			this.config.getInteger("game-profiles.max-cache-size", 250));
 		
 		this.skipExtractProfileActionTypes = this.config.getBoolean("skip-extract-profile-action-types", false);
 		

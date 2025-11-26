@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -15,6 +16,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +33,7 @@ public class GameProfileCacheManager
 	private static final Logger LOG = LoggerFactory.getLogger(GameProfileCacheManager.class);
 	
 	private static final Duration DELETE_AFTER_EXECUTION_INTERVAL = Duration.ofHours(12);
+	private static final float TARGET_PROFILE_COUNT_PERCENT = 0.8f;
 	
 	private final ObjectMapper objectMapper = ObjectMapper.create();
 	
@@ -39,14 +42,27 @@ public class GameProfileCacheManager
 	private final Duration deleteAfter;
 	private Instant nextDeletedAfterExecuteTime = Instant.now().plus(DELETE_AFTER_EXECUTION_INTERVAL);
 	
+	private final int maxTargetedProfileCount;
+	private final int targetedProfileCount;
+	
 	private Map<String, UUID> usernameUuids = new HashMap<>();
 	private Map<UUID, String> uuidUsernames = new HashMap<>(); // Reverse map for tracking when deleting
 	private Map<UUID, ProfileContainer> uuidProfileContainers = new HashMap<>();
 	
-	public GameProfileCacheManager(final Path file, final Duration deleteAfter)
+	public GameProfileCacheManager(
+		final Path file,
+		final Duration deleteAfter,
+		final int maxTargetedProfileCount)
 	{
+		// TODO Only cache profiles on supported servers?
 		this.file = file;
 		this.deleteAfter = deleteAfter;
+		if(maxTargetedProfileCount <= 0)
+		{
+			throw new IllegalArgumentException("maxTargetedProfileCount needs to be > 1");
+		}
+		this.maxTargetedProfileCount = maxTargetedProfileCount;
+		this.targetedProfileCount = Math.max(Math.round(maxTargetedProfileCount * TARGET_PROFILE_COUNT_PERCENT), 1);
 		this.readFile();
 	}
 	
@@ -117,20 +133,36 @@ public class GameProfileCacheManager
 	private void cleanUpIfRequired()
 	{
 		final Instant now = Instant.now();
-		if(this.nextDeletedAfterExecuteTime.isBefore(now))
+		if(this.nextDeletedAfterExecuteTime.isBefore(now)
+			|| this.uuidProfileContainers.size() > this.maxTargetedProfileCount)
 		{
 			LOG.debug("Executing cleanup");
 			this.nextDeletedAfterExecuteTime = now.plus(DELETE_AFTER_EXECUTION_INTERVAL);
 			
 			final Instant deleteBefore = now.minus(this.deleteAfter);
 			
-			this.uuidProfileContainers.entrySet()
+			this.removeAll(this.uuidProfileContainers.entrySet()
 				.stream()
-				.filter(e -> e.getValue().createdAt().isBefore(deleteBefore))
-				.map(Map.Entry::getKey)
-				.toList() // Collect to prevent modification
-				.forEach(this::remove);
+				.filter(e -> e.getValue().createdAt().isBefore(deleteBefore)));
+			
+			if(this.uuidProfileContainers.size() > this.targetedProfileCount)
+			{
+				final var comparator =
+					Comparator.<Map.Entry<UUID, ProfileContainer>, Instant>comparing(e -> e.getValue().createdAt())
+						.reversed();
+				this.removeAll(this.uuidProfileContainers.entrySet()
+					.stream()
+					.sorted(comparator)
+					.skip(this.targetedProfileCount));
+			}
 		}
+	}
+	
+	private void removeAll(final Stream<Map.Entry<UUID, ProfileContainer>> stream)
+	{
+		stream.map(Map.Entry::getKey)
+			.toList() // Collect to prevent modification
+			.forEach(this::remove);
 	}
 	
 	private void remove(final UUID uuid)
