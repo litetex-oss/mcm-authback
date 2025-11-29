@@ -26,6 +26,7 @@ import com.mojang.authlib.yggdrasil.response.ProfileAction;
 import com.mojang.util.UndashedUuid;
 
 import net.litetex.authback.common.AuthBackCommon;
+import net.litetex.authback.common.gameprofile.GameProfileCacheManager;
 
 
 @Mixin(value = YggdrasilMinecraftSessionService.class, remap = false)
@@ -84,7 +85,7 @@ public abstract class YggdrasilMinecraftSessionServiceMixin
 			
 			if(requireSecure)
 			{
-				AuthBackCommon.instance().gameProfileCacheManager().add(profile);
+				this.gameProfileCacheManager().add(profile);
 			}
 			
 			final Set<ProfileActionType> profileActions =
@@ -97,8 +98,7 @@ public abstract class YggdrasilMinecraftSessionServiceMixin
 		{
 			if(e instanceof MinecraftClientException)
 			{
-				final GameProfile cachedProfile =
-					AuthBackCommon.instance().gameProfileCacheManager().findByUUID(profileId);
+				final GameProfile cachedProfile = this.gameProfileCacheManager().findByUUID(profileId);
 				if(cachedProfile != null)
 				{
 					LOG.info("Failed to look up profile properties for {} but used cache instead", profileId, e);
@@ -110,6 +110,12 @@ public abstract class YggdrasilMinecraftSessionServiceMixin
 			LOG.warn("Couldn't look up profile properties for {}", profileId, e);
 			cir.setReturnValue(null);
 		}
+	}
+	
+	@Unique
+	private GameProfileCacheManager gameProfileCacheManager()
+	{
+		return AuthBackCommon.instance().gameProfileCacheManagerSupplier().get();
 	}
 	
 	@Inject(

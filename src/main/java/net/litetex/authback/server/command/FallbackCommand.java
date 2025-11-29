@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import org.apache.commons.codec.binary.Hex;
@@ -46,15 +47,25 @@ public class FallbackCommand
 	
 	private static final int PERMISSION_ADMIN = 3;
 	
-	private final ServerProfilePublicKeysManager serverProfilePublicKeysManager;
-	private final GameProfileCacheManager gameProfileCacheManager;
+	private final Supplier<ServerProfilePublicKeysManager> serverProfilePublicKeysManagerSupplier;
+	private final Supplier<GameProfileCacheManager> gameProfileCacheManagerSupplier;
 	
 	public FallbackCommand(
-		final ServerProfilePublicKeysManager serverProfilePublicKeysManager,
-		final GameProfileCacheManager gameProfileCacheManager)
+		final Supplier<ServerProfilePublicKeysManager> serverProfilePublicKeysManagerSupplier,
+		final Supplier<GameProfileCacheManager> gameProfileCacheManagerSupplier)
 	{
-		this.serverProfilePublicKeysManager = serverProfilePublicKeysManager;
-		this.gameProfileCacheManager = gameProfileCacheManager;
+		this.serverProfilePublicKeysManagerSupplier = serverProfilePublicKeysManagerSupplier;
+		this.gameProfileCacheManagerSupplier = gameProfileCacheManagerSupplier;
+	}
+	
+	private ServerProfilePublicKeysManager serverProfilePublicKeysManager()
+	{
+		return this.serverProfilePublicKeysManagerSupplier.get();
+	}
+	
+	private GameProfileCacheManager gameProfileCacheManager()
+	{
+		return this.gameProfileCacheManagerSupplier.get();
 	}
 	
 	public void register(final CommandDispatcher<CommandSourceStack> dispatcher)
@@ -76,7 +87,7 @@ public class FallbackCommand
 			.then(cmdId()
 				.then(cmdArgId()
 					.suggests((ctx, builder) -> SharedSuggestionProvider.suggest(
-						this.gameProfileCacheManager.uuids()
+						this.gameProfileCacheManager().uuids()
 							.stream()
 							.map(UUID::toString),
 						builder
@@ -89,7 +100,7 @@ public class FallbackCommand
 			.then(cmdName()
 				.then(cmdArgName()
 					.suggests((ctx, builder) -> SharedSuggestionProvider.suggest(
-						this.gameProfileCacheManager.names(),
+						this.gameProfileCacheManager().names(),
 						builder
 					))
 					.then(cmdArgPKH()
@@ -126,7 +137,7 @@ public class FallbackCommand
 			return 0;
 		}
 		
-		this.serverProfilePublicKeysManager.add(uuid, encodedKeyData, publicKey);
+		this.serverProfilePublicKeysManager().add(uuid, encodedKeyData, publicKey);
 		final MutableComponent root = Component.empty()
 			.append("Add public key for ")
 			.append(this.renderPlayer(ctx, uuid));
@@ -191,7 +202,7 @@ public class FallbackCommand
 		final UUID uuid,
 		final String publicKeyHex)
 	{
-		if(this.serverProfilePublicKeysManager.remove(uuid, publicKeyHex))
+		if(this.serverProfilePublicKeysManager().remove(uuid, publicKeyHex))
 		{
 			final MutableComponent root = Component.empty()
 				.append("Removed public key from ")
@@ -222,7 +233,7 @@ public class FallbackCommand
 		final CommandContext<CommandSourceStack> ctx,
 		final UUID uuid)
 	{
-		final int keyCount = this.serverProfilePublicKeysManager.removeAll(uuid);
+		final int keyCount = this.serverProfilePublicKeysManager().removeAll(uuid);
 		final MutableComponent root = Component.empty()
 			.append("Removed " + keyCount + " public key(s) from ")
 			.append(this.renderPlayer(ctx, uuid));
@@ -263,7 +274,7 @@ public class FallbackCommand
 	
 	private int execListAll(final CommandContext<CommandSourceStack> ctx)
 	{
-		return this.execListing(ctx, this.serverProfilePublicKeysManager.uuidPublicKeyHex());
+		return this.execListing(ctx, this.serverProfilePublicKeysManager().uuidPublicKeyHex());
 	}
 	
 	private int execList(final CommandContext<CommandSourceStack> ctx, final String name)
@@ -275,7 +286,7 @@ public class FallbackCommand
 	{
 		return this.execListing(
 			ctx,
-			Optional.ofNullable(this.serverProfilePublicKeysManager.uuidPublicKeyHex().get(uuid))
+			Optional.ofNullable(this.serverProfilePublicKeysManager().uuidPublicKeyHex().get(uuid))
 				.map(val -> Map.of(uuid, val))
 				.orElseGet(Map::of));
 	}
@@ -354,7 +365,7 @@ public class FallbackCommand
 	private SuggestionProvider<CommandSourceStack> suggestExistingPublicKeyUserUUIDs()
 	{
 		return (ctx, builder) -> SharedSuggestionProvider.suggest(
-			this.serverProfilePublicKeysManager.profileUUIDs()
+			this.serverProfilePublicKeysManager().profileUUIDs()
 				.stream()
 				.map(UUID::toString)
 				.sorted(),
@@ -366,7 +377,7 @@ public class FallbackCommand
 	{
 		return (ctx, builder) -> SharedSuggestionProvider.suggest(
 			
-			this.serverProfilePublicKeysManager.profileUUIDs()
+			this.serverProfilePublicKeysManager().profileUUIDs()
 				.stream()
 				.map(uuid -> this.findNameForUUID(ctx, uuid))
 				.filter(Optional::isPresent)

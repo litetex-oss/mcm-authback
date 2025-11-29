@@ -1,9 +1,13 @@
 package net.litetex.authback.common;
 
 import java.time.Duration;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Suppliers;
 
 import net.litetex.authback.common.config.AuthBackCommonConfig;
 import net.litetex.authback.common.gameprofile.GameProfileCacheManager;
@@ -27,7 +31,7 @@ public class AuthBackCommon extends AuthBack
 	}
 	
 	private final GlobalPublicKeysCache globalPublicKeysCache;
-	private final GameProfileCacheManager gameProfileCacheManager;
+	private final Supplier<GameProfileCacheManager> gameProfileCacheManagerSupplier;
 	
 	private final AuthBackCommonConfig config;
 	
@@ -40,11 +44,13 @@ public class AuthBackCommon extends AuthBack
 			this.authbackDir.resolve("global-public-keys.json"),
 			this.lowLevelConfig.getInteger("global-public-keys-cache.default-reuse-minutes", 120));
 		
-		this.gameProfileCacheManager = new GameProfileCacheManager(
-			this.authbackDir.resolve("game-profiles.json"),
-			// When a player changes their username the name will be unavailable for 37 days
-			Duration.ofDays(this.lowLevelConfig.getInteger("game-profiles.delete-after-days", 36)),
-			this.lowLevelConfig.getInteger("game-profiles.max-cache-size", 250));
+		final CompletableFuture<GameProfileCacheManager> cfGameProfileCacheManager =
+			CompletableFuture.supplyAsync(() -> new GameProfileCacheManager(
+				this.authbackDir.resolve("game-profiles.json"),
+				// When a player changes their username the name will be unavailable for 37 days
+				Duration.ofDays(this.lowLevelConfig.getInteger("game-profiles.delete-after-days", 36)),
+				this.lowLevelConfig.getInteger("game-profiles.max-cache-size", 250)));
+		this.gameProfileCacheManagerSupplier = Suppliers.memoize(cfGameProfileCacheManager::join);
 		
 		this.config = new AuthBackCommonConfig(this.lowLevelConfig);
 		
@@ -56,9 +62,9 @@ public class AuthBackCommon extends AuthBack
 		return this.globalPublicKeysCache;
 	}
 	
-	public GameProfileCacheManager gameProfileCacheManager()
+	public Supplier<GameProfileCacheManager> gameProfileCacheManagerSupplier()
 	{
-		return this.gameProfileCacheManager;
+		return this.gameProfileCacheManagerSupplier;
 	}
 	
 	public AuthBackCommonConfig config()

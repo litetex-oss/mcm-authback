@@ -2,6 +2,7 @@ package net.litetex.authback.server.network;
 
 import java.security.PublicKey;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,16 +28,21 @@ public class AuthBackServerNetworking
 	private static final Logger LOG = LoggerFactory.getLogger(AuthBackServerNetworking.class);
 	
 	private final Set<Connection> connectionsToSkipUpToDateCheck;
-	private final ServerProfilePublicKeysManager serverProfilePublicKeysManager;
+	private final Supplier<ServerProfilePublicKeysManager> serverProfilePublicKeysManagerSupplier;
 	
 	public AuthBackServerNetworking(
 		final Set<Connection> connectionsToSkipUpToDateCheck,
-		final ServerProfilePublicKeysManager serverProfilePublicKeysManager)
+		final Supplier<ServerProfilePublicKeysManager> serverProfilePublicKeysManagerSupplier)
 	{
 		this.connectionsToSkipUpToDateCheck = connectionsToSkipUpToDateCheck;
-		this.serverProfilePublicKeysManager = serverProfilePublicKeysManager;
+		this.serverProfilePublicKeysManagerSupplier = serverProfilePublicKeysManagerSupplier;
 		
 		this.setupProtoConfiguration();
+	}
+	
+	private ServerProfilePublicKeysManager serverProfilePublicKeysManager()
+	{
+		return this.serverProfilePublicKeysManagerSupplier.get();
 	}
 	
 	private void setupProtoConfiguration()
@@ -83,7 +89,7 @@ public class AuthBackServerNetworking
 					return;
 				}
 				
-				this.serverProfilePublicKeysManager.add(profile.id(), payload.publicKey(), publicKey);
+				this.serverProfilePublicKeysManager().add(profile.id(), payload.publicKey(), publicKey);
 			}
 		);
 	}

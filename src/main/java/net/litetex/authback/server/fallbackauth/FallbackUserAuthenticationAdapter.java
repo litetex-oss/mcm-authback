@@ -5,6 +5,7 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.security.PublicKey;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -29,19 +30,29 @@ public class FallbackUserAuthenticationAdapter
 {
 	private static final Logger LOG = LoggerFactory.getLogger(FallbackUserAuthenticationAdapter.class);
 	
-	private final ServerProfilePublicKeysManager serverProfilePublicKeysManager;
-	private final GameProfileCacheManager gameProfileCacheManager;
+	private final Supplier<ServerProfilePublicKeysManager> serverProfilePublicKeysManagerSupplier;
+	private final Supplier<GameProfileCacheManager> gameProfileCacheManagerSupplier;
 	@Nullable
 	private final FallbackAuthRateLimiter rateLimiter;
 	
 	public FallbackUserAuthenticationAdapter(
-		final ServerProfilePublicKeysManager serverProfilePublicKeysManager,
-		final GameProfileCacheManager gameProfileCacheManager,
+		final Supplier<ServerProfilePublicKeysManager> serverProfilePublicKeysManagerSupplier,
+		final Supplier<GameProfileCacheManager> gameProfileCacheManagerSupplier,
 		@Nullable final FallbackAuthRateLimiter rateLimiter)
 	{
-		this.serverProfilePublicKeysManager = serverProfilePublicKeysManager;
-		this.gameProfileCacheManager = gameProfileCacheManager;
+		this.serverProfilePublicKeysManagerSupplier = serverProfilePublicKeysManagerSupplier;
+		this.gameProfileCacheManagerSupplier = gameProfileCacheManagerSupplier;
 		this.rateLimiter = rateLimiter;
+	}
+	
+	private ServerProfilePublicKeysManager serverProfilePublicKeysManager()
+	{
+		return this.serverProfilePublicKeysManagerSupplier.get();
+	}
+	
+	private GameProfileCacheManager gameProfileCacheManager()
+	{
+		return this.gameProfileCacheManagerSupplier.get();
 	}
 	
 	public void doFallbackAuth(
@@ -75,14 +86,14 @@ public class FallbackUserAuthenticationAdapter
 		final String requestedUsername = loginPacketListener.requestedUsername;
 		LOG.debug("Trying fallback auth for username={}", requestedUsername);
 		
-		final GameProfile gameProfile = this.gameProfileCacheManager.findByName(requestedUsername);
+		final GameProfile gameProfile = this.gameProfileCacheManager().findByName(requestedUsername);
 		if(gameProfile == null)
 		{
 			LOG.debug("Unable to find matching profile");
 			defaultAction.run();
 			return;
 		}
-		if(!this.serverProfilePublicKeysManager.hasAnyKeyQuickCheck(gameProfile.id()))
+		if(!this.serverProfilePublicKeysManager().hasAnyKeyQuickCheck(gameProfile.id()))
 		{
 			LOG.debug("No public key");
 			defaultAction.run();
@@ -168,7 +179,7 @@ public class FallbackUserAuthenticationAdapter
 		final byte[] publicKeyEncoded = buf.readByteArray();
 		
 		final PublicKey publicKey =
-			this.serverProfilePublicKeysManager.find(gameProfile.id(), publicKeyEncoded);
+			this.serverProfilePublicKeysManager().find(gameProfile.id(), publicKeyEncoded);
 		if(publicKey == null)
 		{
 			customDisconnectAction.accept("Received invalid public key");

@@ -4,11 +4,14 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.Set;
 import java.util.WeakHashMap;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Suppliers;
 import com.mojang.authlib.GameProfile;
 
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
@@ -40,8 +43,8 @@ public class AuthBackServer extends AuthBack
 		AuthBackServer.instance = instance;
 	}
 	
-	private final ServerProfilePublicKeysManager serverProfilePublicKeysManager;
-	private final GameProfileCacheManager gameProfileCacheManager;
+	private final Supplier<ServerProfilePublicKeysManager> serverProfilePublicKeysManagerSupplier;
+	private final Supplier<GameProfileCacheManager> gameProfileCacheManagerSupplier;
 	private final FallbackUserAuthenticationAdapter fallbackUserAuthenticationAdapter;
 	
 	// Temporarily marks connections that should not execute an up-to-date check
@@ -63,26 +66,32 @@ public class AuthBackServer extends AuthBack
 		this.connectionsToSkipUpToDateCheck =
 			Collections.synchronizedSet(Collections.newSetFromMap(new WeakHashMap<>()));
 		
-		this.serverProfilePublicKeysManager = new ServerProfilePublicKeysManager(
-			this.authbackDir.resolve("profiles-public-keys.json"),
-			this.lowLevelConfig.getInteger("keys.max-keys-per-user", 5),
-			// When a player changes their username the name will be unavailable for 37 days
-			Duration.ofDays(this.lowLevelConfig.getInteger("keys.delete-after-unused-days", 36))
-		);
-		this.gameProfileCacheManager = AuthBackCommon.instance().gameProfileCacheManager();
+		final CompletableFuture<ServerProfilePublicKeysManager> cfServerProfilePublicKeysManager =
+			CompletableFuture.supplyAsync(() -> new ServerProfilePublicKeysManager(
+				this.authbackDir.resolve("profiles-public-keys.json"),
+				this.lowLevelConfig.getInteger("keys.max-keys-per-user", 5),
+				// When a player changes their username the name will be unavailable for 37 days
+				Duration.ofDays(this.lowLevelConfig.getInteger("keys.delete-after-unused-days", 36))
+			));
+		this.serverProfilePublicKeysManagerSupplier = Suppliers.memoize(cfServerProfilePublicKeysManager::join);
+		this.gameProfileCacheManagerSupplier = AuthBackCommon.instance().gameProfileCacheManagerSupplier();
 		this.fallbackUserAuthenticationAdapter = new FallbackUserAuthenticationAdapter(
-			this.serverProfilePublicKeysManager,
-			this.gameProfileCacheManager,
+			this.serverProfilePublicKeysManagerSupplier,
+			this.gameProfileCacheManagerSupplier,
 			FallbackAuthRateLimiter.create(this.lowLevelConfig)
 		);
 		this.alwaysAllowFallbackAuth = this.lowLevelConfig.getBoolean("fallback-auth.allow-always", true);
 		
 		this.skipOldUserConversion = this.lowLevelConfig.getBoolean("skip-old-user-conversion", true);
 		
-		new AuthBackServerNetworking(this.connectionsToSkipUpToDateCheck, this.serverProfilePublicKeysManager);
+		new AuthBackServerNetworking(
+			this.connectionsToSkipUpToDateCheck,
+			this.serverProfilePublicKeysManagerSupplier);
 		
 		CommandRegistrationCallback.EVENT.register((dispatcher, buildContext, selection) ->
-			new FallbackCommand(this.serverProfilePublicKeysManager, this.gameProfileCacheManager)
+			new FallbackCommand(
+				this.serverProfilePublicKeysManagerSupplier,
+				this.gameProfileCacheManagerSupplier)
 				.register(dispatcher));
 		
 		LOG.debug("Initialized");
@@ -90,7 +99,7 @@ public class AuthBackServer extends AuthBack
 	
 	public void handleJoinSuccess(final GameProfile profile)
 	{
-		this.gameProfileCacheManager.add(profile);
+		this.gameProfileCacheManagerSupplier.get().add(profile);
 	}
 	
 	public void doFallbackAuth(
