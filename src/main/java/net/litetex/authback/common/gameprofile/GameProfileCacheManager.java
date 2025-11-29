@@ -54,7 +54,6 @@ public class GameProfileCacheManager
 		final Duration deleteAfter,
 		final int maxTargetedProfileCount)
 	{
-		// TODO Only cache profiles on supported servers?
 		this.file = file;
 		this.deleteAfter = deleteAfter;
 		if(maxTargetedProfileCount <= 0)
