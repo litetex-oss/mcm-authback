@@ -41,7 +41,7 @@ public abstract class RealmsClientMixin
 		final Executor executor,
 		final Operation<CompletableFuture<U>> original)
 	{
-		if(AuthBackClient.instance().isBlockRealmsFetching())
+		if(AuthBackClient.instance().config().blockRealmsFetching().value())
 		{
 			LOG.debug("Delaying realms feature flag fetch");
 			this.fetchRealmsFeatureFlagsAction = () -> original.call(supplier, executor);

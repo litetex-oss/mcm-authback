@@ -49,7 +49,7 @@ public abstract class ClientHandshakePacketListenerImplMixin
 		}
 		catch(final AuthenticationException ex)
 		{
-			if(!AuthBackClient.instance().isSuppressAllServerJoinErrors()
+			if(!AuthBackClient.instance().config().suppressAllServerJoinErrors().value()
 				&& (ex instanceof InvalidCredentialsException
 				|| ex instanceof InsufficientPrivilegesException
 				|| ex instanceof ForcedUsernameChangeException

@@ -11,6 +11,7 @@
     "client.AccountProfileKeyPairManagerMixin",
     "client.AddressCheckMixin",
     "client.ClientHandshakePacketListenerImplMixin",
+    "client.OnlineOptionsScreenMixin",
     "client.RealmsClientMixin",
     "client.TitleScreenMixin"
   ],

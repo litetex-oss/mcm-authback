@@ -1,3 +1,3 @@
-# 0.0.X
+# 0.X.X
 
-_Initial unstable releases_
+_Initial preview releases_

@@ -1,24 +1,13 @@
 package net.litetex.authback.client;
 
-import java.security.KeyPair;
-import java.util.concurrent.CompletableFuture;
-
+import org.apache.commons.codec.binary.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.netty.buffer.Unpooled;
-import net.fabricmc.fabric.api.client.networking.v1.ClientConfigurationNetworking;
-import net.fabricmc.fabric.api.client.networking.v1.ClientLoginNetworking;
+import net.litetex.authback.client.config.AuthBackClientConfig;
 import net.litetex.authback.client.keys.ClientKeysManager;
+import net.litetex.authback.client.network.AuthBackClientNetworking;
 import net.litetex.authback.shared.AuthBack;
-import net.litetex.authback.shared.crypto.Ed25519Signature;
-import net.litetex.authback.shared.network.ChannelNames;
-import net.litetex.authback.shared.network.configuration.ConfigurationRegistrySetup;
-import net.litetex.authback.shared.network.configuration.SyncPayloadC2S;
-import net.litetex.authback.shared.network.configuration.SyncPayloadS2C;
-import net.litetex.authback.shared.network.login.LoginCompatibility;
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket;
 
 
 public class AuthBackClient extends AuthBack
@@ -38,109 +27,33 @@ public class AuthBackClient extends AuthBack
 	}
 	
 	private final ClientKeysManager clientKeysManager;
-	
-	// Replaces the server blocklist check with a dummy that will do no initial fetching
-	private final boolean blockAddressCheck;
-	// Will block fetching of profile/chat-signing keys
-	// This will result in not being able to join servers that have enforce-secure-profile set to true (default value)
-	private final boolean blockFetchingProfileKeys;
-	// Blocks initial fetching of Realms news, notifications, etc
-	private final boolean blockRealmsFetching;
-	// Suppresses all joinServer errors
-	// WARNING: Allows to join servers with possibly invalid session data
-	private final boolean suppressAllServerJoinErrors;
+	private final AuthBackClientConfig config;
 	
 	public AuthBackClient()
 	{
 		super("client");
 		this.clientKeysManager = new ClientKeysManager(this.authbackDir);
 		
-		this.setupProtoLogin();
-		this.setupProtoConfiguration();
+		this.config = new AuthBackClientConfig(this.lowLevelConfig);
 		
-		this.blockFetchingProfileKeys = this.config.getBoolean("block-profile-keys-fetching", false);
-		this.blockAddressCheck = this.config.getBoolean("block-address-check", false);
-		this.blockRealmsFetching = this.config.getBoolean("block-realms-fetching", false);
-		this.suppressAllServerJoinErrors = this.config.getBoolean("suppress-all-server-join-errors", false);
+		// Create and setup
+		new AuthBackClientNetworking(this.clientKeysManager);
 		
 		LOG.debug("Initialized");
 	}
 	
-	private void setupProtoLogin()
+	public AuthBackClientConfig config()
 	{
-		ClientLoginNetworking.registerGlobalReceiver(
-			ChannelNames.FALLBACK_AUTH,
-			(client, handler, buf, callbacksConsumer) -> {
-				
-				LOG.debug("Fallback auth request from server");
-				
-				final int serverCompatibilityVersion = buf.readInt();
-				if(serverCompatibilityVersion != LoginCompatibility.S2C)
-				{
-					LOG.warn(
-						"Fallback auth request from server failed - Compatibility mismatch[server={}, client={}]",
-						serverCompatibilityVersion,
-						LoginCompatibility.S2C);
-					return null;
-				}
-				
-				final byte[] challenge = buf.readByteArray();
-				
-				final KeyPair keyPair = this.clientKeysManager.currentKeyPair();
-				
-				final FriendlyByteBuf responseBuf = new FriendlyByteBuf(Unpooled.buffer());
-				responseBuf.writeInt(LoginCompatibility.C2S);
-				responseBuf.writeByteArray(Ed25519Signature.createSignature(
-					challenge,
-					keyPair.getPrivate()));
-				responseBuf.writeByteArray(keyPair.getPublic().getEncoded());
-				
-				return CompletableFuture.completedFuture(responseBuf);
-			}
-		);
+		return this.config;
 	}
 	
-	private void setupProtoConfiguration()
+	public String currentPublicKeyHex()
 	{
-		ConfigurationRegistrySetup.setup();
-		
-		ClientConfigurationNetworking.registerGlobalReceiver(
-			SyncPayloadS2C.ID,
-			(payload, context) -> {
-				if(!ClientConfigurationNetworking.canSend(SyncPayloadC2S.ID))
-				{
-					LOG.debug("Unable to send {}", SyncPayloadC2S.ID);
-					return;
-				}
-				
-				LOG.debug("Synchronizing with server");
-				final KeyPair keyPair = this.clientKeysManager.currentKeyPair();
-				context.networkHandler().send(new ServerboundCustomPayloadPacket(new SyncPayloadC2S(
-					Ed25519Signature.createSignature(
-						payload.challenge(),
-						keyPair.getPrivate()),
-					keyPair.getPublic().getEncoded()
-				)));
-			});
+		return Hex.encodeHexString(this.clientKeysManager.currentKeyPair().getPublic().getEncoded());
 	}
 	
-	public boolean isBlockFetchingProfileKeys()
+	public void regenerateKeys()
 	{
-		return this.blockFetchingProfileKeys;
-	}
-	
-	public boolean isBlockAddressCheck()
-	{
-		return this.blockAddressCheck;
-	}
-	
-	public boolean isBlockRealmsFetching()
-	{
-		return this.blockRealmsFetching;
-	}
-	
-	public boolean isSuppressAllServerJoinErrors()
-	{
-		return this.suppressAllServerJoinErrors;
+		this.clientKeysManager.regenerate();
 	}
 }

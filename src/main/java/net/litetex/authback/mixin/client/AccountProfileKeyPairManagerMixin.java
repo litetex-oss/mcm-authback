@@ -29,7 +29,7 @@ public abstract class AccountProfileKeyPairManagerMixin
 		final UserApiService userApiService,
 		final CallbackInfoReturnable<ProfileKeyPair> cir)
 	{
-		if(AuthBackClient.instance().isBlockFetchingProfileKeys())
+		if(AuthBackClient.instance().config().blockFetchingProfileKeys().value())
 		{
 			LOG.debug("Blocked fetching of profile/chat-signing keys");
 			cir.setReturnValue(null);

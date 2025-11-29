@@ -24,6 +24,9 @@
     ],
     "server": [
       "net.litetex.authback.server.init.AuthBackServerInitializer"
+    ],
+    "modmenu": [
+      "net.litetex.authback.client.compat.ModMenuCompatibility"
     ]
   },
   "mixins": [

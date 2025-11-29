@@ -56,6 +56,13 @@ public class ClientKeysManager
 		return Objects.requireNonNull(this.keyPair, "No keypair");
 	}
 	
+	public void regenerate()
+	{
+		this.keyStates.getV1().remove(Minecraft.getInstance().getUser().getProfileId().toString());
+		this.loadCurrentKeypair();
+		this.saveKeyStatesFileAsync();
+	}
+	
 	private void loadCurrentKeypair()
 	{
 		this.keyPair = new KeyPairReaderOrCreator(

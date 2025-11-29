@@ -5,6 +5,7 @@ import java.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.litetex.authback.common.config.AuthBackCommonConfig;
 import net.litetex.authback.common.gameprofile.GameProfileCacheManager;
 import net.litetex.authback.shared.AuthBack;
 
@@ -28,7 +29,7 @@ public class AuthBackCommon extends AuthBack
 	private final GlobalPublicKeysCache globalPublicKeysCache;
 	private final GameProfileCacheManager gameProfileCacheManager;
 	
-	private final boolean skipExtractProfileActionTypes;
+	private final AuthBackCommonConfig config;
 	
 	@SuppressWarnings("checkstyle:MagicNumber")
 	public AuthBackCommon(final String envType)
@@ -37,15 +38,15 @@ public class AuthBackCommon extends AuthBack
 		
 		this.globalPublicKeysCache = new GlobalPublicKeysCache(
 			this.authbackDir.resolve("global-public-keys.json"),
-			this.config.getInteger("global-public-keys-cache.default-reuse-minutes", 120));
+			this.lowLevelConfig.getInteger("global-public-keys-cache.default-reuse-minutes", 120));
 		
 		this.gameProfileCacheManager = new GameProfileCacheManager(
 			this.authbackDir.resolve("game-profiles.json"),
 			// When a player changes their username the name will be unavailable for 37 days
-			Duration.ofDays(this.config.getInteger("game-profiles.delete-after-days", 36)),
-			this.config.getInteger("game-profiles.max-cache-size", 250));
+			Duration.ofDays(this.lowLevelConfig.getInteger("game-profiles.delete-after-days", 36)),
+			this.lowLevelConfig.getInteger("game-profiles.max-cache-size", 250));
 		
-		this.skipExtractProfileActionTypes = this.config.getBoolean("skip-extract-profile-action-types", false);
+		this.config = new AuthBackCommonConfig(this.lowLevelConfig);
 		
 		LOG.debug("Initialized");
 	}
@@ -60,8 +61,8 @@ public class AuthBackCommon extends AuthBack
 		return this.gameProfileCacheManager;
 	}
 	
-	public boolean isSkipExtractProfileActionTypes()
+	public AuthBackCommonConfig config()
 	{
-		return this.skipExtractProfileActionTypes;
+		return this.config;
 	}
 }

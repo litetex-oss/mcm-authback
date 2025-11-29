@@ -7,8 +7,6 @@
 
 <!-- modrinth_exclude.end -->
 
-_UNSTABLE: Currently still in development_
-
 Allows you play as normal even when Mojang's authentication servers are down.
 
 #### How does it work?
@@ -30,6 +28,26 @@ However if one side lacks the mod joining a server will be impossible when Mojan
 
 You can use the ``/authback`` command to e.g. manage your public keys or those of other players if you are an admin.
 
+### Configuration
+
+#### General
+
+The configuration is dynamically loaded from
+* Environment variables prefixed with ``AUTHBACK_<variant>`` 
+    * where ``variant`` is either ``SERVER`` OR ``CLIENT``
+* Environment variables prefixed with ``AUTHBACK_``
+* Environment variables prefixed with ``authback.<variant>`` 
+    * where ``variant`` is either ``server`` OR ``client``
+* System properties prefixed with ``authback.``
+* A configuration file located in ``.config/authback-<variant>.json``
+    * where ``variant`` is either ``server`` OR ``client``
+
+#### Client
+
+You can edit the most important configuration via the game options in the UI via
+* ``Options > Online... > AuthBack...``
+* If ModMenu is installed: ``Mods > AuthBack > Click Icon/Settings``
+
 ## FAQ
 
 ### The authentification servers are down, my friend got the mod but they can't join my server
@@ -40,11 +58,11 @@ You can fix this in the following way if you are an Admin:
 2. Tell them to send their public key to you <!-- ! TODO (can be found in the UI under ...) -->
 3. Associate the public key on the server with them by running `/authback public_key add name <yourFriendsPlayerName> <yourFriendsPublicKey>`
 
-<!-- modrinth_exclude.start -->
+### Where is the mod data stored?
 
-TODO/WIP:
-* Config UI for client
-* Describe configuration options
+In the game directory (e.g. `%APDDATA%\.minecraft`) inside the ``.authback`` directory
+
+<!-- modrinth_exclude.start -->
 
 ## Installation
 [Installation guide for the latest release](https://github.com/litetex-oss/mcm-authback/releases/latest#Installation)

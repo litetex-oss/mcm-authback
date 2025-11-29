@@ -29,7 +29,7 @@ public interface AddressCheckMixin
 		cancellable = true)
 	private static void supplyDummy(final CallbackInfoReturnable<AddressCheck> cir)
 	{
-		if(AuthBackClient.instance().isBlockAddressCheck())
+		if(AuthBackClient.instance().config().blockAddressCheck().value())
 		{
 			LoggerFactory.getLogger(AddressCheckMixin.class).debug("Blocking address check");
 			cir.setReturnValue(new AddressCheck()

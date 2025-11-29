@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -188,12 +189,17 @@ public class GameProfileCacheManager
 			
 			final PersistentState persistentState =
 				JSONSerializer.GSON.fromJson(Files.readString(this.file), PersistentState.class);
+			
+			final Map<String, UUID> stringToUUIDCache = new HashMap<>(persistentState.ensureIdProfiles().size());
+			final Function<String, UUID> stringToUUIDFunc =
+				s -> stringToUUIDCache.computeIfAbsent(s, UUID::fromString);
+			
 			this.uuidProfileContainers = Collections.synchronizedMap(persistentState.ensureIdProfiles()
 				.entrySet()
 				.stream()
 				.filter(e -> e.getValue().createdAt().isAfter(deleteBefore))
 				.collect(toLinkedHashMap(
-					e -> UUID.fromString(e.getKey()),
+					e -> stringToUUIDFunc.apply(e.getKey()),
 					e -> new ProfileContainer(
 						e.getValue().serializedGameProfile(),
 						Suppliers.memoize(() -> this.objectMapper.readValue(
@@ -205,7 +211,7 @@ public class GameProfileCacheManager
 			this.usernameUuids = Collections.synchronizedMap(persistentState.ensureUsernameUUIDs()
 				.entrySet()
 				.stream()
-				.map(e -> Map.entry(e.getKey(), UUID.fromString(e.getValue())))
+				.map(e -> Map.entry(e.getKey(), stringToUUIDFunc.apply(e.getValue())))
 				.filter(e -> this.uuidProfileContainers.containsKey(e.getValue()))
 				.collect(toLinkedHashMap(Map.Entry::getKey, Map.Entry::getValue)));
 			this.uuidUsernames = Collections.synchronizedMap(this.usernameUuids.entrySet()

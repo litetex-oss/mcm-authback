@@ -121,7 +121,7 @@ public abstract class YggdrasilMinecraftSessionServiceMixin
 		final Set<ProfileAction> response,
 		final CallbackInfoReturnable<Set<ProfileActionType>> cir)
 	{
-		if(AuthBackCommon.instance().isSkipExtractProfileActionTypes())
+		if(AuthBackCommon.instance().config().skipExtractProfileActionTypes().value())
 		{
 			LOG.debug("Skipping execution of extractProfileActionTypes");
 			cir.setReturnValue(Set.of());

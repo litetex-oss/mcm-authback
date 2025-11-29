@@ -28,7 +28,7 @@ public abstract class TitleScreenMixin
 	)
 	RealmsNotificationsScreen createRealmsNotificationScreen(final Operation<RealmsNotificationsScreen> original)
 	{
-		if(AuthBackClient.instance().isBlockRealmsFetching())
+		if(AuthBackClient.instance().config().blockRealmsFetching().value())
 		{
 			LOG.debug("Preventing realms notification screen from existing and fetching data");
 			return null;
