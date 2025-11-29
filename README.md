@@ -32,19 +32,21 @@ You can use the ``/authback`` command to e.g. manage your public keys or those o
 
 #### General
 
-The configuration is dynamically loaded from
-* Environment variables prefixed with ``AUTHBACK_<variant>`` 
-    * where ``variant`` is either ``SERVER`` OR ``CLIENT``
-* Environment variables prefixed with ``AUTHBACK_``
-* Environment variables prefixed with ``authback.<variant>`` 
-    * where ``variant`` is either ``server`` OR ``client``
-* System properties prefixed with ``authback.``
+The configuration is dynamically loaded from (sorted by highest priority)
+* Environment variables 
+    * prefixed with ``AUTHBACK_<variant>`` 
+        * where ``variant`` is either ``SERVER`` OR ``CLIENT``
+    * prefixed with ``AUTHBACK_``
+* System properties
+    * prefixed with ``authback.<variant>`` 
+        * where ``variant`` is either ``server`` OR ``client``
+    * prefixed with ``authback.``
 * A configuration file located in ``.config/authback-<variant>.json``
     * where ``variant`` is either ``server`` OR ``client``
 
 #### Client
 
-You can edit the most important configuration via the game options in the UI via
+You can edit the most important configuration in the game options UI via
 * ``Options > Online... > AuthBack...``
 * If ModMenu is installed: ``Mods > AuthBack > Click Icon/Settings``
 
@@ -55,12 +57,13 @@ You can edit the most important configuration via the game options in the UI via
 This is because they never joined with the mod before.
 You can fix this in the following way if you are an Admin:
 1. Tell your friend to launch the game with the mod
-2. Tell them to send their public key to you <!-- ! TODO (can be found in the UI under ...) -->
+2. and to send their public key to you
+    * The public key can be found/copied in the [client's mod options UI](#client) under `Key management`
 3. Associate the public key on the server with them by running `/authback public_key add name <yourFriendsPlayerName> <yourFriendsPublicKey>`
 
-### Where is the mod data stored?
+### Where does the mod store it's data?
 
-In the game directory (e.g. `%APDDATA%\.minecraft`) inside the ``.authback`` directory
+In the game directory (e.g. `%APDDATA%\.minecraft`) inside the ``.authback`` directory.
 
 <!-- modrinth_exclude.start -->
 
