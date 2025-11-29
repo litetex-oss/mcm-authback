@@ -2,13 +2,14 @@ package net.litetex.authback.client.init;
 
 import net.fabricmc.api.ClientModInitializer;
 import net.litetex.authback.client.AuthBackClient;
+import net.litetex.authback.shared.init.Initializer;
 
 
-public class AuthBackClientInitializer implements ClientModInitializer
+public class AuthBackClientInitializer extends Initializer implements ClientModInitializer
 {
 	@Override
 	public void onInitializeClient()
 	{
-		AuthBackClient.setInstance(new AuthBackClient());
+		this.doInit(() -> AuthBackClient.setInstance(new AuthBackClient()));
 	}
 }
