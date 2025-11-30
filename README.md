@@ -102,13 +102,6 @@ You can fix this in the following way if you are an Admin:
 
 In the game directory (e.g. `%APDDATA%\.minecraft`) inside the ``.authback`` directory.
 
-### Why does this mod exist?
-
-<!-- 
-https://www.reddit.com/r/Minecraft/comments/1oml1gu/report_system_exploit/
-https://www.reddit.com/r/Minecraft/comments/1on5rqk/the_largest_german_minecraft_project_w_over_300k/
--->
-
 <!-- modrinth_exclude.start -->
 
 ## Installation
