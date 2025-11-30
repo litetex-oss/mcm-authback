@@ -11,7 +11,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import org.apache.commons.codec.binary.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,6 +25,7 @@ import com.mojang.brigadier.suggestion.SuggestionProvider;
 import net.litetex.authback.common.gameprofile.GameProfileCacheManager;
 import net.litetex.authback.server.keys.ServerProfilePublicKeysManager;
 import net.litetex.authback.shared.crypto.Ed25519KeyDecoder;
+import net.litetex.authback.shared.external.org.apache.commons.codec.binary.Hex;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;

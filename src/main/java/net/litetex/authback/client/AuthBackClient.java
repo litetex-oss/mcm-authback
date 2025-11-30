@@ -1,6 +1,5 @@
 package net.litetex.authback.client;
 
-import org.apache.commons.codec.binary.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -8,6 +7,7 @@ import net.litetex.authback.client.config.AuthBackClientConfig;
 import net.litetex.authback.client.keys.ClientKeysManager;
 import net.litetex.authback.client.network.AuthBackClientNetworking;
 import net.litetex.authback.shared.AuthBack;
+import net.litetex.authback.shared.external.org.apache.commons.codec.binary.Hex;
 
 
 public class AuthBackClient extends AuthBack

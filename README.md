@@ -76,7 +76,7 @@ _You should know exactly what you're doing when doing modifications._
 | `keys.delete-after-unused-days` | `int` | `36` | If a user does not login with a public key for this amount of time the key will be deleted. 36 days was choosen as the default because when a player changes their username the name will be unavailable for 37 days |
 | `fallback-auth.allow-always` | `bool` | `true` | Always allows the use of fallback authentication. Set to `false` if you only want to allow fallback authentication when the server can't communicate with the central Mojang API during a player login |
 | `fallback-auth.rate-limit.requests-per-ip-per-minute` | `int` | `20` | The default allows for requests every 3s. If the value is set to 0 or less the rate limiter will be disabled |
-| `fallback-auth.rate-limit.bucket-size` | `int` | `1000` | Amounts of IPs to store (in memory) |
+| `fallback-auth.rate-limit.bucket-size` | `int` | `1000` | Amount of IP addresses to store (in memory) |
 | `fallback-auth.rate-limit.ignore-private-addresses` | `bool` | `true` | Should [private IP addresses](https://en.wikipedia.org/wiki/Private_network) be rate limited? |
 | `fallback-auth.rate-limit.ipv6-network-prefix-bytes` | `int` | `8` | Network prefix bytes (not bits!) for IPv6. The default `8` resolves to `/64`. |
 | `skip-old-user-conversion` | `bool` | `true` | Skips the migration of user files used by servers before `1.7.6` (released 2014-04). It's extremely unlikely that this is required by a server and requires contacting the central Mojang API therefore the migration is skipped by default |
