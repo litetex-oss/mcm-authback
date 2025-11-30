@@ -21,7 +21,6 @@ import net.litetex.authback.server.keys.ServerProfilePublicKeysManager;
 import net.litetex.authback.shared.crypto.Ed25519Signature;
 import net.litetex.authback.shared.crypto.SecureRandomByteArrayCreator;
 import net.litetex.authback.shared.network.ChannelNames;
-import net.litetex.authback.shared.network.login.LoginCompatibility;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.network.ServerLoginPacketListenerImpl;
 
@@ -103,7 +102,6 @@ public class FallbackUserAuthenticationAdapter
 		final byte[] challenge = SecureRandomByteArrayCreator.create(4);
 		
 		final FriendlyByteBuf requestBuf = new FriendlyByteBuf(Unpooled.buffer());
-		requestBuf.writeInt(LoginCompatibility.S2C);
 		requestBuf.writeByteArray(challenge);
 		
 		ServerLoginNetworking.registerReceiver(
@@ -167,14 +165,6 @@ public class FallbackUserAuthenticationAdapter
 		final GameProfile gameProfile,
 		final byte[] challenge)
 	{
-		final int clientVersion = buf.readInt();
-		if(clientVersion != LoginCompatibility.C2S)
-		{
-			customDisconnectAction.accept(
-				"Compatibility mismatch server=" + LoginCompatibility.C2S + ", client=" + clientVersion);
-			return;
-		}
-		
 		final byte[] signature = buf.readByteArray();
 		final byte[] publicKeyEncoded = buf.readByteArray();
 		

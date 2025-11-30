@@ -15,7 +15,6 @@ import net.litetex.authback.shared.network.ChannelNames;
 import net.litetex.authback.shared.network.configuration.ConfigurationRegistrySetup;
 import net.litetex.authback.shared.network.configuration.SyncPayloadC2S;
 import net.litetex.authback.shared.network.configuration.SyncPayloadS2C;
-import net.litetex.authback.shared.network.login.LoginCompatibility;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket;
 
@@ -41,22 +40,11 @@ public class AuthBackClientNetworking
 				
 				LOG.debug("Fallback auth request from server");
 				
-				final int serverCompatibilityVersion = buf.readInt();
-				if(serverCompatibilityVersion != LoginCompatibility.S2C)
-				{
-					LOG.warn(
-						"Fallback auth request from server failed - Compatibility mismatch[server={}, client={}]",
-						serverCompatibilityVersion,
-						LoginCompatibility.S2C);
-					return null;
-				}
-				
 				final byte[] challenge = buf.readByteArray();
 				
 				final KeyPair keyPair = this.clientKeysManager.currentKeyPair();
 				
 				final FriendlyByteBuf responseBuf = new FriendlyByteBuf(Unpooled.buffer());
-				responseBuf.writeInt(LoginCompatibility.C2S);
 				responseBuf.writeByteArray(Ed25519Signature.createSignature(
 					challenge,
 					keyPair.getPrivate()));
