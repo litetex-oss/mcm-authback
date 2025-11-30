@@ -38,7 +38,7 @@ public class AuthBackClientNetworking
 			ChannelNames.FALLBACK_AUTH,
 			(client, handler, buf, callbacksConsumer) -> {
 				
-				LOG.debug("Fallback auth request from server");
+				LOG.info("Fallback auth request from server");
 				
 				final byte[] challenge = buf.readByteArray();
 				
@@ -68,7 +68,7 @@ public class AuthBackClientNetworking
 					return;
 				}
 				
-				LOG.debug("Synchronizing with server");
+				LOG.info("Synchronizing with server");
 				final KeyPair keyPair = this.clientKeysManager.currentKeyPair();
 				context.networkHandler().send(new ServerboundCustomPayloadPacket(new SyncPayloadC2S(
 					Ed25519Signature.createSignature(

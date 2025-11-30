@@ -83,18 +83,18 @@ public class FallbackUserAuthenticationAdapter
 		}
 		
 		final String requestedUsername = loginPacketListener.requestedUsername;
-		LOG.debug("Trying fallback auth for username={}", requestedUsername);
+		LOG.info("Trying fallback auth for username={}", requestedUsername);
 		
 		final GameProfile gameProfile = this.gameProfileCacheManager().findByName(requestedUsername);
 		if(gameProfile == null)
 		{
-			LOG.debug("Unable to find matching profile");
+			LOG.info("Unable to find matching profile for username={}", requestedUsername);
 			defaultAction.run();
 			return;
 		}
 		if(!this.serverProfilePublicKeysManager().hasAnyKeyQuickCheck(gameProfile.id()))
 		{
-			LOG.debug("No public key");
+			LOG.info("No public key for {}", gameProfile.id());
 			defaultAction.run();
 			return;
 		}
@@ -110,7 +110,7 @@ public class FallbackUserAuthenticationAdapter
 			(server, handler, understood, buf, synchronizer, responseSender) -> {
 				if(!understood)
 				{
-					LOG.debug("Client did not understand fallback auth - disconnecting");
+					LOG.info("Client[id={}] did not understand fallback auth - disconnecting", gameProfile.id());
 					defaultAction.run();
 					return;
 				}
@@ -137,7 +137,7 @@ public class FallbackUserAuthenticationAdapter
 	{
 		if(this.rateLimiter == null)
 		{
-			// Ratelimiter is disabled
+			// Rate Limiter is disabled
 			return false;
 		}
 		
@@ -152,6 +152,7 @@ public class FallbackUserAuthenticationAdapter
 		final InetAddress address = inetSocketAddr.getAddress();
 		if(this.rateLimiter.isAddressRateLimited(address))
 		{
+			LOG.debug("Address exceeded rate limit: {}", address);
 			customDisconnectAction.accept("Too many requests");
 			return true;
 		}
