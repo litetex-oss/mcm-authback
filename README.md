@@ -7,7 +7,7 @@
 
 <!-- modrinth_exclude.end -->
 
-Allows you play as normal even when Mojang's authentication servers are down.
+Allows you to play as normal even when Mojang's authentication servers are down.
 
 #### How does it work?
 
@@ -20,7 +20,7 @@ Please note:
     * You must have already joined the server once (during the past 36 days)
 
 The mod is optional for the client and server.
-However if one side lacks the mod joining a server will be impossible when Mojang's authentication servers are down.
+However if one side lacks the mod joining a server will be impossible when Mojang's centralized authentication servers are down.
 
 ## Usage
 
