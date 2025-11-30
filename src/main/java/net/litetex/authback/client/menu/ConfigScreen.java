@@ -110,6 +110,8 @@ public class ConfigScreen extends OptionsSubScreen
 					"Suppress any joinServer error",
 					"""
 						Blocks all errors encountered when calling joinServer.
+						This can work-around problems when the API is misbehaving and returning incorrect responses.
+						
 						WARNING: Allows joining servers with possibly invalid session data"""
 				))
 			.map(BooleanConfigData::createButton)
