@@ -19,8 +19,8 @@ Please note:
     * The server also needs to have the mod installed
     * You must have already joined the server once (during the past 36 days)
 
-The mod is optional for the client and server.
-However if one side lacks the mod joining a server will be impossible when Mojang's centralized authentication servers are down.
+The mod is optional for the client and server.<br/>
+However if one side lacks the mod joining a server will be impossible when Mojang's centralized authentication servers/APIs are down.
 
 ## Usage
 
@@ -44,7 +44,7 @@ You can edit the most important configuration in the game options UI via
     * prefixed with ``AUTHBACK_<variant>`` 
         * where ``variant`` is either ``SERVER`` OR ``CLIENT``
     * prefixed with ``AUTHBACK_``
-    * all properties are in uppercase and use `_` as delimiter
+    * all properties are in UPPERCASE and use `_` (instead of `.`) as delimiter
 * System properties
     * prefixed with ``authback.<variant>`` 
         * where ``variant`` is either ``server`` OR ``client``
@@ -95,7 +95,7 @@ This is because they never joined with the mod before.
 You can fix this in the following way if you are an Admin:
 1. Tell your friend to launch the game with the mod
 2. and to send their public key to you
-    * The public key can be found/copied in the [client's mod options UI](#client) under `Key management`
+    * The public key can be found/copied in the client's mod options UI under `Key management`
 3. Associate the public key on the server with them by running `/authback public_key add name <yourFriendsPlayerName> <yourFriendsPublicKey>`
 
 ### Where does the mod store it's data?
