@@ -23,6 +23,7 @@ import net.litetex.authback.shared.crypto.SecureRandomByteArrayCreator;
 import net.litetex.authback.shared.network.ChannelNames;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.network.ServerLoginPacketListenerImpl;
+import net.minecraft.util.StringUtil;
 
 
 public class FallbackUserAuthenticationAdapter
@@ -84,8 +85,14 @@ public class FallbackUserAuthenticationAdapter
 		
 		final String requestedUsername = loginPacketListener.requestedUsername;
 		LOG.info("Trying fallback auth for username={}", requestedUsername);
+		if(requestedUsername == null || !StringUtil.isValidPlayerName(requestedUsername))
+		{
+			LOG.info("Aborting due to invalid username={}", requestedUsername);
+			defaultAction.run();
+			return;
+		}
 		
-		final GameProfile gameProfile = this.gameProfileCacheManager().findByName(requestedUsername);
+		final GameProfile gameProfile = this.getGameProfileFor(loginPacketListener, requestedUsername);
 		if(gameProfile == null)
 		{
 			LOG.info("Unable to find matching profile for username={}", requestedUsername);
@@ -128,6 +135,30 @@ public class FallbackUserAuthenticationAdapter
 		
 		ServerNetworkingImpl.getAddon(loginPacketListener)
 			.sendPacket(ChannelNames.FALLBACK_AUTH, requestBuf);
+	}
+	
+	private GameProfile getGameProfileFor(
+		final ServerLoginPacketListenerImpl loginPacketListener,
+		final String requestedUsername)
+	{
+		final GameProfile profile = this.gameProfileCacheManager().findByName(requestedUsername);
+		if(profile != null)
+		{
+			return profile;
+		}
+		
+		LOG.debug("Failed to find internally cached game profile[name={}], trying nameToIdCache", requestedUsername);
+		
+		return loginPacketListener.server.services().nameToIdCache().get(requestedUsername)
+			.map(nameAndId -> {
+				LOG.warn(
+					"Failed to find cached game profile[name={}], but was able to use nameToIdCache. "
+						+ "Creating temporary profile[uuid={}] without profile properties!",
+					requestedUsername,
+					nameAndId.id());
+				return new GameProfile(nameAndId.id(), nameAndId.name());
+			})
+			.orElse(null);
 	}
 	
 	private boolean rateLimitExceeded(

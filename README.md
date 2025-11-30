@@ -89,13 +89,40 @@ All client specific options can be changed / are described in the game options U
 
 ## FAQ
 
+### Where can I find my public key?
+
+The public key can be found/copied in the client's mod options UI under `Key management`
+
+The mod options can be found in
+* ``Options > Online... > AuthBack...``
+* or if ModMenu is installed: ``Mods > AuthBack > Click Icon/Settings``
+
+### The authentification servers are down, I installed the mod on my server but I can't join
+
+This is because the server doesn't know your public key.
+
+You can fix this in the following way:
+0. Make sure that you logged in less than a month ago 
+    * that is because the entries in `usercache.json` - which will be used in such a case - will expire after a month
+1. Make sure that you can run commands via the server console/RCON
+2. Add the mod to your local client/game and launch it
+3. Copy the public key (see above for details)
+4. Associate the public key with your account: 
+    * `/authback public_key add name <yourName> <yourPublicKey>`
+    * or `/authback public_key add id <yourUUID> <yourPublicKey>`
+
+You should now be able to log in as usual.<br/>
+Note however that profile related content like skins will not not be displayed.
+
+It's also recommended to restart the server once the outage is over to properly load existing profiles.
+
 ### The authentification servers are down, my friend got the mod but they can't join my server
 
 This is because they never joined with the mod before.
+
 You can fix this in the following way if you are an Admin:
 1. Tell your friend to launch the game with the mod
 2. and to send their public key to you
-    * The public key can be found/copied in the client's mod options UI under `Key management`
 3. Associate the public key on the server with them by running `/authback public_key add name <yourFriendsPlayerName> <yourFriendsPublicKey>`
 
 ### Where does the mod store it's data?
