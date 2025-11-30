@@ -58,6 +58,7 @@ public abstract class ServerLoginPacketListenerImplUserAuthenticatorMixin
 	{
 		if(!AuthBackServer.instance().isAlwaysAllowFallbackAuth())
 		{
+			LOG.debug("Always allow fallback auth is disabled");
 			return;
 		}
 		
