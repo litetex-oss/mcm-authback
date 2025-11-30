@@ -139,6 +139,8 @@ public class ServerProfilePublicKeysManager
 			return 0;
 		}
 		
+		this.saveAsync();
+		
 		return keyInfos.size();
 	}
 	
@@ -166,6 +168,9 @@ public class ServerProfilePublicKeysManager
 		{
 			this.profileUUIDKeys.remove(uuid);
 		}
+		
+		this.saveAsync();
+		
 		return true;
 	}
 	
