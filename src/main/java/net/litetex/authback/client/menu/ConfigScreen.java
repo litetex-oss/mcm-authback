@@ -5,8 +5,6 @@ import java.util.stream.Stream;
 
 import net.litetex.authback.client.AuthBackClient;
 import net.litetex.authback.client.config.AuthBackClientConfig;
-import net.litetex.authback.common.AuthBackCommon;
-import net.litetex.authback.common.config.AuthBackCommonConfig;
 import net.litetex.authback.shared.config.ConfigValueContainer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
@@ -87,7 +85,6 @@ public class ConfigScreen extends OptionsSubScreen
 	private void addAPIInteractionOptions()
 	{
 		final AuthBackClientConfig config = this.abClient.config();
-		final AuthBackCommonConfig commonConfig = AuthBackCommon.instance().config();
 		
 		this.addCategory(Component.literal("API Interaction"));
 		Stream.of(
@@ -114,11 +111,6 @@ public class ConfigScreen extends OptionsSubScreen
 					"""
 						Blocks all errors encountered when calling joinServer.
 						WARNING: Allows joining servers with possibly invalid session data"""
-				),
-				new BooleanConfigData(
-					commonConfig.skipExtractProfileActionTypes(),
-					"Skip extracting Profile Action Types",
-					"Skips the extraction of profile action types"
 				))
 			.map(BooleanConfigData::createButton)
 			.map(btn -> new BigEntry(this.list, btn))

@@ -34,7 +34,7 @@ public class GameProfileCacheManager
 	private static final Logger LOG = LoggerFactory.getLogger(GameProfileCacheManager.class);
 	
 	private static final Duration DELETE_AFTER_EXECUTION_INTERVAL = Duration.ofHours(12);
-	private static final float TARGET_PROFILE_COUNT_PERCENT = 0.8f;
+	private static final float TARGET_PROFILE_COUNT_PERCENT = 0.9f;
 	
 	private final ObjectMapper objectMapper = ObjectMapper.create();
 	

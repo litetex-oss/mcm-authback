@@ -69,7 +69,7 @@ public class AuthBackServer extends AuthBack
 		final CompletableFuture<ServerProfilePublicKeysManager> cfServerProfilePublicKeysManager =
 			CompletableFuture.supplyAsync(() -> new ServerProfilePublicKeysManager(
 				this.authbackDir.resolve("profiles-public-keys.json"),
-				this.lowLevelConfig.getInteger("keys.max-keys-per-user", 5),
+				this.lowLevelConfig.getInteger("keys.max-keys-per-player", 3),
 				// When a player changes their username the name will be unavailable for 37 days
 				Duration.ofDays(this.lowLevelConfig.getInteger("keys.delete-after-unused-days", 36))
 			));

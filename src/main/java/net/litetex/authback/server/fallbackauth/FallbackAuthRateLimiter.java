@@ -26,11 +26,13 @@ public class FallbackAuthRateLimiter
 	private final Supplier<RateLimiter> newRateLimiterSupplier;
 	
 	private final boolean ignoreLocalAddresses;
+	private final int ipv6NetworkPrefixBytes;
 	
 	FallbackAuthRateLimiter(
 		final int requestPerMinutePerIP,
 		final int bucketSize,
-		final boolean ignoreLocalAddresses)
+		final boolean ignoreLocalAddresses,
+		final int ipv6NetworkPrefixBytes)
 	{
 		this.rateLimiters = Collections.synchronizedMap(new MaxSizedHashMap<>(bucketSize));
 		this.newRateLimiterSupplier = () ->
@@ -38,6 +40,12 @@ public class FallbackAuthRateLimiter
 			RateLimiter.create(requestPerMinutePerIP / 60.0);
 		
 		this.ignoreLocalAddresses = ignoreLocalAddresses;
+		if(ipv6NetworkPrefixBytes < 0 || ipv6NetworkPrefixBytes > 16)
+		{
+			throw new IllegalArgumentException(
+				"ipv6NetworkPrefixBytes=" + ipv6NetworkPrefixBytes + " out of bound[min=0,max=16]");
+		}
+		this.ipv6NetworkPrefixBytes = ipv6NetworkPrefixBytes;
 	}
 	
 	@SuppressWarnings("checkstyle:MagicNumber")
@@ -56,7 +64,8 @@ public class FallbackAuthRateLimiter
 		return new FallbackAuthRateLimiter(
 			requestsPerMinutePerIP,
 			config.getInteger(prefix + "bucket-size", 1000),
-			config.getBoolean(prefix + "ignore-local-addresses", true));
+			config.getBoolean(prefix + "ignore-private-addresses", true),
+			config.getInteger(prefix + "ipv6-network-prefix-bytes", 8));
 	}
 	
 	public boolean isAddressRateLimited(final InetAddress address)
@@ -71,7 +80,7 @@ public class FallbackAuthRateLimiter
 		}
 		
 		return !this.rateLimiters.computeIfAbsent(
-				RateLimitKey.create(address),
+				RateLimitKey.create(address, this.ipv6NetworkPrefixBytes),
 				ignored -> this.newRateLimiterSupplier.get())
 			.tryAcquire();
 	}
@@ -82,14 +91,13 @@ public class FallbackAuthRateLimiter
 	)
 	{
 		@SuppressWarnings("checkstyle:MagicNumber")
-		public static RateLimitKey create(final InetAddress address)
+		public static RateLimitKey create(final InetAddress address, final int ipv6NetworkPrefixBytes)
 		{
 			if(address instanceof final Inet6Address inet6Address)
 			{
 				return new RateLimitKey(
 					IPVersion.V6,
-					// Only use the /64 subnet
-					Arrays.copyOfRange(inet6Address.getAddress(), 0, 8));
+					Arrays.copyOfRange(inet6Address.getAddress(), 0, ipv6NetworkPrefixBytes));
 			}
 			
 			return new RateLimitKey(
