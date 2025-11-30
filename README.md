@@ -91,11 +91,9 @@ All client specific options can be changed / are described in the game options U
 
 ### Where can I find my public key?
 
-The public key can be found/copied in the client's mod options UI under `Key management`
-
-The mod options can be found in
-* ``Options > Online... > AuthBack...``
-* or if ModMenu is installed: ``Mods > AuthBack > Click Icon/Settings``
+The public key can be found/copied under
+* ``Options > Online... > AuthBack... > Key management``
+* or if ModMenu is installed: ``Mods > AuthBack > Click Icon/Settings > Key management``
 
 ### The authentification servers are down, I installed the mod on my server but I can't join
 
