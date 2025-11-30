@@ -23,14 +23,13 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import org.apache.commons.codec.DecoderException;
-import org.apache.commons.codec.binary.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Suppliers;
-
 import net.litetex.authback.shared.crypto.Ed25519KeyDecoder;
+import net.litetex.authback.shared.external.com.google.common.base.Suppliers;
+import net.litetex.authback.shared.external.org.apache.commons.codec.DecoderException;
+import net.litetex.authback.shared.external.org.apache.commons.codec.binary.Hex;
 import net.litetex.authback.shared.json.JSONSerializer;
 
 

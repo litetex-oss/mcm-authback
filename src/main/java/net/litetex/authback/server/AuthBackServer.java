@@ -11,7 +11,6 @@ import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Suppliers;
 import com.mojang.authlib.GameProfile;
 
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
@@ -23,6 +22,7 @@ import net.litetex.authback.server.fallbackauth.FallbackUserAuthenticationAdapte
 import net.litetex.authback.server.keys.ServerProfilePublicKeysManager;
 import net.litetex.authback.server.network.AuthBackServerNetworking;
 import net.litetex.authback.shared.AuthBack;
+import net.litetex.authback.shared.external.com.google.common.base.Suppliers;
 import net.minecraft.network.Connection;
 import net.minecraft.server.network.ServerLoginPacketListenerImpl;
 

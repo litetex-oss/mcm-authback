@@ -12,9 +12,9 @@ import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Suppliers;
 import com.mojang.authlib.minecraft.client.ObjectMapper;
 
+import net.litetex.authback.shared.external.com.google.common.base.Suppliers;
 import net.litetex.authback.shared.json.JSONSerializer;
 
 

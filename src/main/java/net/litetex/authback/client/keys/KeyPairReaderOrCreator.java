@@ -6,13 +6,13 @@ import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.Map;
 
-import org.apache.commons.codec.binary.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.litetex.authback.shared.crypto.Ed25519KeyDecoder;
 import net.litetex.authback.shared.crypto.Ed25519Signature;
 import net.litetex.authback.shared.crypto.SecureRandomByteArrayCreator;
+import net.litetex.authback.shared.external.org.apache.commons.codec.binary.Hex;
 
 
 class KeyPairReaderOrCreator
