@@ -22,7 +22,7 @@ base {
 }
 
 loom {
-    accessWidenerPath = file("src/main/resources/template-placeholder.accesswidener")
+    accessWidenerPath = file("src/main/resources/authback.accesswidener")
     log4jConfigs.from(file("src/dev/log4j2.xml"))
 }
 
@@ -31,6 +31,45 @@ configurations.checkstyle {
     resolutionStrategy.capabilitiesResolution.withCapability("com.google.collections:google-collections") {
         select("com.google.guava:guava:0")
     }
+}
+
+repositories {
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = "Terraformers"
+                url = "https://maven.terraformersmc.com/"
+            }
+        }
+        filter {
+            includeGroup 'com.terraformersmc'
+        }
+    }
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = "DevAuth"
+                url = "https://pkgs.dev.azure.com/djtheredstoner/DevAuth/_packaging/public/maven/v1"
+            }
+        }
+        filter {
+            includeGroup 'me.djtheredstoner'
+        }
+    }
+    // https://support.modrinth.com/en/articles/8801191-modrinth-maven
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = "Modrinth"
+                url = "https://api.modrinth.com/maven"
+            }
+        }
+        filter {
+            includeGroup 'maven.modrinth'
+        }
+    }
+    // Fallback (fixes Renovate)
+    mavenCentral()
 }
 
 dependencies {
@@ -42,6 +81,17 @@ dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
     mappings loom.officialMojangMappings()
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+    modImplementation fabricApi.module("fabric-networking-api-v1", project.fabric_api_version)
+    modImplementation fabricApi.module("fabric-command-api-v2", project.fabric_api_version)
+
+    modCompileOnly "com.terraformersmc:modmenu:${project.modmenu_version}"
+
+    // Only needed during development
+    modLocalRuntime "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+    modLocalRuntime "com.terraformersmc:modmenu:${project.modmenu_version}"
+    modLocalRuntime "me.djtheredstoner:DevAuth-fabric:1.2.1"
+    modLocalRuntime "maven.modrinth:no-chat-reports:Fabric-1.21.10-v2.16.0"
 }
 
 processResources {
@@ -52,7 +102,9 @@ processResources {
                 "desc": project.mod_desc,
                 "license_spdx_id": project.mod_license_spdx_id,
                 "minecraft_version": project.minecraft_version,
-                "loader_version": project.loader_version
+                "loader_version": project.loader_version,
+                "fabric_api_version": project.fabric_api_version,
+                "modmenu_version": project.modmenu_version
     }
 }
 
