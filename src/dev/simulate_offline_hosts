@@ -1,0 +1,2 @@
+# Empty file to simulate that network connectivity went offline
+# Use -Djdk.net.hosts.file=./src/dev/simulate_offline_hosts
