@@ -125,7 +125,7 @@ You can fix this in the following way if you are an Admin:
 
 ### Where does the mod store it's data?
 
-In the game directory (e.g. `%APDDATA%\.minecraft`) inside the ``.authback`` directory.
+In the game directory (e.g. `%APPDATA%\.minecraft`) inside the ``.authback`` directory.
 
 <!-- modrinth_exclude.start -->
 
