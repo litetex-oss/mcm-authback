@@ -35,6 +35,7 @@ import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.server.permissions.PermissionProviderCheck;
 import net.minecraft.server.players.NameAndId;
 
 
@@ -44,8 +45,6 @@ public class FallbackCommand
 	
 	private static final DateTimeFormatter INSTANT_BASIC_DATE_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
 		.withZone(ZoneId.systemDefault());
-	
-	private static final int PERMISSION_ADMIN = 3;
 	
 	private final Supplier<ServerProfilePublicKeysManager> serverProfilePublicKeysManagerSupplier;
 	private final Supplier<GameProfileCacheManager> gameProfileCacheManagerSupplier;
@@ -83,7 +82,7 @@ public class FallbackCommand
 	{
 		return Commands.literal("add")
 			// Do not add "self" cmd here as it might lead to players accidentally back-dooring themselves
-			.requires(src -> src.hasPermission(PERMISSION_ADMIN))
+			.requires(permissionAdmin())
 			.then(cmdId()
 				.then(cmdArgId()
 					.suggests((ctx, builder) -> SharedSuggestionProvider.suggest(
@@ -154,7 +153,7 @@ public class FallbackCommand
 				.then(cmdArgPKH()
 					.executes(ctx -> this.execRemoveSelf(ctx, resolveArgPKH(ctx)))))
 			.then(cmdId()
-				.requires(src -> src.hasPermission(PERMISSION_ADMIN))
+				.requires(permissionAdmin())
 				.then(cmdArgId()
 					.suggests(this.suggestExistingPublicKeyUserUUIDs())
 					.then(cmdAll()
@@ -167,7 +166,7 @@ public class FallbackCommand
 							resolveArgId(ctx),
 							resolveArgPKH(ctx))))))
 			.then(cmdName()
-				.requires(src -> src.hasPermission(PERMISSION_ADMIN))
+				.requires(permissionAdmin())
 				.then(cmdArgName()
 					.suggests(this.suggestExistingPublicKeyUserNames())
 					.then(cmdAll()
@@ -249,17 +248,17 @@ public class FallbackCommand
 			.then(cmdSelf()
 				.executes(this::execListSelf))
 			.then(cmdAll()
-				.requires(src -> src.hasPermission(PERMISSION_ADMIN))
+				.requires(permissionAdmin())
 				.executes(this::execListAll))
 			.then(cmdId()
-				.requires(src -> src.hasPermission(PERMISSION_ADMIN))
+				.requires(permissionAdmin())
 				.then(cmdArgId()
 					.suggests(this.suggestExistingPublicKeyUserUUIDs())
 					.executes(ctx -> this.execList(
 						ctx,
 						resolveArgId(ctx)))))
 			.then(cmdName()
-				.requires(src -> src.hasPermission(PERMISSION_ADMIN))
+				.requires(permissionAdmin())
 				.then(cmdArgName()
 					.suggests(this.suggestExistingPublicKeyUserNames())
 					.executes(ctx -> this.execList(
@@ -455,6 +454,11 @@ public class FallbackCommand
 	private static RequiredArgumentBuilder<CommandSourceStack, String> cmdArgPKH()
 	{
 		return Commands.argument("publicKeyHex", StringArgumentType.word());
+	}
+	
+	private static PermissionProviderCheck<CommandSourceStack> permissionAdmin()
+	{
+		return Commands.hasPermission(Commands.LEVEL_ADMINS);
 	}
 	
 	// endregion
