@@ -34,7 +34,8 @@ public abstract class RuntimeConfiguration implements Configuration
 	@Override
 	public boolean getBoolean(final String path, final boolean def)
 	{
-		return Boolean.parseBoolean(this.getString(path, Boolean.toString(def)));
+		final String val = this.getString(path, Boolean.toString(def));
+		return "1".equals(val) || Boolean.parseBoolean(val);
 	}
 	
 	@Override
