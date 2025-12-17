@@ -16,8 +16,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.HttpAuthenticationService;
+import com.mojang.authlib.SignatureState;
 import com.mojang.authlib.exceptions.MinecraftClientException;
 import com.mojang.authlib.minecraft.client.MinecraftClient;
+import com.mojang.authlib.properties.Property;
 import com.mojang.authlib.yggdrasil.ProfileActionType;
 import com.mojang.authlib.yggdrasil.ProfileResult;
 import com.mojang.authlib.yggdrasil.YggdrasilMinecraftSessionService;
@@ -34,7 +36,7 @@ public abstract class YggdrasilMinecraftSessionServiceMixin
 {
 	@Unique
 	private static final Logger LOG =
-		LoggerFactory.getLogger("net.litetex.injected.YggdrasilMinecraftSessionService");
+		LoggerFactory.getLogger("net.litetex.injected.ABYggdrasilMinecraftSessionService");
 	
 	@Final
 	@Shadow
@@ -131,6 +133,27 @@ public abstract class YggdrasilMinecraftSessionServiceMixin
 		{
 			LOG.debug("Skipping execution of extractProfileActionTypes");
 			cir.setReturnValue(Set.of());
+		}
+	}
+	
+	// Workaround annoying log spam:
+	// Some servers send empty signatures, for example Hypixel during login
+	// This causes a subsequent signature validation crash:
+	// "Bad signature length: got 0 but was expecting 512"
+	// and subsequently
+	// "Failed to verify signature on property... <StackTrace>"
+	@Inject(
+		method = "getPropertySignatureState",
+		at = @At(value = "INVOKE", target = "Lcom/mojang/authlib/yggdrasil/ServicesKeySet;keys"
+			+ "(Lcom/mojang/authlib/yggdrasil/ServicesKeyType;)Ljava/util/Collection;"),
+		cancellable = true
+	)
+	void hasSignatureFixed(final Property property, final CallbackInfoReturnable<SignatureState> cir)
+	{
+		if(property.signature().isEmpty())
+		{
+			LOG.warn("Prevented signer crash due to empty signature (should be null) on property {}", property);
+			cir.setReturnValue(SignatureState.INVALID);
 		}
 	}
 }

@@ -1,3 +1,7 @@
+# 1.0.1
+* Prevent signature validation crash when servers send an empty signature
+    * The error itself is unrelated to the mod but it's frequently encountered when using it and spams the log
+
 # 1.0.0
 * Updated to 1.21.11
 
