@@ -1,4 +1,5 @@
-# 1.0.1
+# 1.1.0
+* Moved `.authback` directory to `.mods/authback` for a cleaner game directory
 * Prevent signature validation crash when servers send an empty signature
     * The error itself is unrelated to the mod but it's frequently encountered when using it and spams the log
 
