@@ -20,21 +20,21 @@ Please note:
     * You must have already joined the server once (during the past 36 days)
 
 The mod is optional for the client and server.<br/>
-However if one side lacks the mod joining a server will be impossible when Mojang's centralized authentication servers/APIs are down.
+However if one side lacks the mod joining a server will be impossible when Mojang's authentication servers/APIs are down.
 
 ## Usage
 
 ### Command
 
-You can use the ``/authback`` command to e.g. manage your public keys or those of other players if you are an admin.
+You can use the ``/authback`` command on servers with the mod to manage your public keys or those of other players if you are an admin.
 
 ### Configuration
 
 #### Client
 
-You can edit the most important configuration in the game options UI via
+You can configure the mod via
 * ``Options > Online... > AuthBack...``
-* If ModMenu is installed: ``Mods > AuthBack > Click Icon/Settings``
+* or if ModMenu is installed: ``Mods > AuthBack > Click Icon/Settings``
 
 #### General
 
@@ -63,7 +63,7 @@ _You should know exactly what you're doing when doing modifications._
 
 | Property | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `global-public-keys-cache.default-reuse-minutes` | `int` | `120` (2h) | The response for the global public keys of the central Mojang API barely ever changes. As of writing this documentation it has stayed the same the past 2+ years. This option instructs the mod to re-use the last saved response for the specified amount of minutes instead of contacting the API again. Using the cached response is a lot faster and saves network traffic during frequent game restarts. |
+| `global-public-keys-cache.default-reuse-minutes` | `int` | `120` (2h) | The response for the global public keys of the Mojang's API barely ever changes. As of writing this documentation it has stayed the same the past 2+ years. This option instructs the mod to re-use the last saved response for the specified amount of minutes instead of contacting the API again. Using the cached response is a lot faster and saves network traffic during frequent game restarts. |
 | `game-profiles.delete-after-days` | `int` | `36` | 36 days was choosen as the default because when a player changes their username the name will be unavailable for 37 days |
 | `game-profiles.max-cache-size` | `int` | `250` | Maximum amount of game profiles to keep in the cache. If the size exceeds the maximum the oldest entries will be removed until the list is at 90% of the configured maximum. |
 | `skip-extract-profile-action-types` | `bool` | `false` | Debug-Option |
@@ -74,12 +74,12 @@ _You should know exactly what you're doing when doing modifications._
 | --- | --- | --- | --- |
 | `keys.max-keys-per-player` | `int` | `3` | Maximum amount of public keys to store per player |
 | `keys.delete-after-unused-days` | `int` | `36` | If a user does not login with a public key for this amount of time the key will be deleted. 36 days was choosen as the default because when a player changes their username the name will be unavailable for 37 days |
-| `fallback-auth.allow-always` | `bool` | `true` | Always allows the use of fallback authentication. Set to `false` if you only want to allow fallback authentication when the server can't communicate with the central Mojang API during a player login |
+| `fallback-auth.allow-always` | `bool` | `true` | Always allows the use of fallback authentication. Set to `false` if you only want to allow fallback authentication when the server can't communicate with the Mojang's API during a player login |
 | `fallback-auth.rate-limit.requests-per-ip-per-minute` | `int` | `20` | The default allows for requests every 3s. If the value is set to 0 or less the rate limiter will be disabled |
 | `fallback-auth.rate-limit.bucket-size` | `int` | `1000` | Amount of IP addresses to store (in memory) |
-| `fallback-auth.rate-limit.ignore-private-addresses` | `bool` | `true` | Should [private IP addresses](https://en.wikipedia.org/wiki/Private_network) be rate limited? |
+| `fallback-auth.rate-limit.ignore-private-addresses` | `bool` | `true` | Should [private IP addresses](https://en.wikipedia.org/wiki/Private_network) NOT be rate limited? |
 | `fallback-auth.rate-limit.ipv6-network-prefix-bytes` | `int` | `8` | Network prefix bytes (not bits!) for IPv6. The default `8` resolves to `/64`. |
-| `skip-old-user-conversion` | `bool` | `true` | Skips the migration of user files used by servers before `1.7.6` (released 2014-04). It's extremely unlikely that this is required by a server and requires contacting the central Mojang API therefore the migration is skipped by default |
+| `skip-old-user-conversion` | `bool` | `true` | Skips the migration of user files used by servers before `1.7.6` (released 2014-04). It's extremely unlikely that this is needed by a server and requires contacting the Mojang's API. Therefore the migration is skipped by default |
 
 ##### Client
 
@@ -125,7 +125,7 @@ You can fix this in the following way if you are an Admin:
 
 ### Where does the mod store it's data?
 
-In the game directory (e.g. `%APDDATA%\.minecraft`) inside the ``.authback`` directory.
+In the game directory (e.g. `%APPDATA%\.minecraft`) inside the ``.mods\authback`` directory.
 
 <!-- modrinth_exclude.start -->
 

@@ -59,13 +59,16 @@ public class FileConfiguration implements Configuration
 	@Override
 	public void save()
 	{
-		try
+		if(!Files.exists(this.file.getParent()))
 		{
-			Files.createDirectories(this.file.getParent());
-		}
-		catch(final IOException ignored)
-		{
-			// ignore
+			try
+			{
+				Files.createDirectories(this.file.getParent());
+			}
+			catch(final IOException e)
+			{
+				LoggerFactory.getLogger(this.getClass()).warn("Failed to create parent directory", e);
+			}
 		}
 		
 		try(final BufferedWriter writer = Files.newBufferedWriter(this.file, StandardCharsets.UTF_8))
