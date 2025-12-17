@@ -120,7 +120,7 @@ This is because they never joined with the mod before.
 
 You can fix this in the following way if you are an Admin:
 1. Tell your friend to launch the game with the mod
-2. and to send their public key to you
+2. and to send their public key (see "Where can I find my public key?" above) to you
 3. Associate the public key on the server with them by running `/authback public_key add name <yourFriendsPlayerName> <yourFriendsPublicKey>`
 
 ### Where does the mod store it's data?
