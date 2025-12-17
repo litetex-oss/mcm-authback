@@ -1,3 +1,6 @@
+# 1.1.1
+* Fix crash when no mod state directory is present
+
 # 1.1.0
 * Moved `.authback` directory to `.mods/authback` for a cleaner game directory
 * Prevent signature validation crash when servers send an empty signature

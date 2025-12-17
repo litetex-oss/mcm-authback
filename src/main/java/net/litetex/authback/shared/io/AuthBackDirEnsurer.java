@@ -49,11 +49,12 @@ public final class AuthBackDirEnsurer
 					{
 						Files.move(legacyDir, dir, StandardCopyOption.REPLACE_EXISTING);
 						LOG.info("Migrated legacy directory: {} -> {}", legacyDir, dir);
-					}
-					if(isDirectoryEmpty(legacyRootDir))
-					{
-						Files.delete(legacyRootDir);
-						LOG.info("Deleted legacy root directory: {}", legacyRootDir);
+						
+						if(isDirectoryEmpty(legacyRootDir))
+						{
+							Files.delete(legacyRootDir);
+							LOG.info("Deleted legacy root directory: {}", legacyRootDir);
+						}
 					}
 				}
 			}
