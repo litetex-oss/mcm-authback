@@ -21,12 +21,9 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,6 +32,7 @@ import net.litetex.authback.shared.external.com.google.common.base.Suppliers;
 import net.litetex.authback.shared.external.org.apache.commons.codec.DecoderException;
 import net.litetex.authback.shared.external.org.apache.commons.codec.binary.Hex;
 import net.litetex.authback.shared.io.Persister;
+import net.litetex.authback.shared.sync.SynchronizedContainer;
 
 
 public class ServerProfilePublicKeysManager
@@ -52,9 +50,9 @@ public class ServerProfilePublicKeysManager
 	
 	// Using an ordered map here that always contains the latest value at the end
 	// This way cleanups can be A LOT (>20x) faster
-	private final SequencedMap<UUID, UUIDKeyInfos> profileUUIDKeys = new LinkedHashMap<>();
 	// For some reason there is no Collections.synchronizedSequenceMap, so this needs to be done manually
-	private final Object profileUUIDKeysLock = new Object();
+	private final SynchronizedContainer<SequencedMap<UUID, UUIDKeyInfos>> profileUUIDKeysSC =
+		new SynchronizedContainer<>(new LinkedHashMap<>());
 	
 	public ServerProfilePublicKeysManager(final Path file, final int maxKeysPerUser, final Duration deleteAfterUnused)
 	{
@@ -66,19 +64,19 @@ public class ServerProfilePublicKeysManager
 	
 	public void add(final UUID uuid, final byte[] encodedPublicKey, final PublicKey publicKey)
 	{
-		final UUIDKeyInfos uuidKeyInfos = this.profileUUIDKeysSupplyWithLock(profileUUIDKeys -> {
-			final UUIDKeyInfos existingUuidKeyInfos = profileUUIDKeys.get(uuid);
+		final var uuidKeyInfosSC = this.profileUUIDKeysSC.supplyWithLock(profileUUIDKeys -> {
+			final var existingUuidKeyInfosSC = profileUUIDKeys.get(uuid);
 			return profileUUIDKeys.putLast(
 				uuid,
-				existingUuidKeyInfos != null
-					? existingUuidKeyInfos
+				existingUuidKeyInfosSC != null
+					? existingUuidKeyInfosSC
 					: new UUIDKeyInfos());
 		});
 		
 		final int hash = Arrays.hashCode(encodedPublicKey);
 		final Instant now = Instant.now();
 		
-		uuidKeyInfos.execWithLock(hashKeyInfos -> {
+		uuidKeyInfosSC.execWithLock(hashKeyInfos -> {
 			final KeyInfo existingKeyInfo = hashKeyInfos.get(hash);
 			hashKeyInfos.putLast(
 				hash,
@@ -87,9 +85,9 @@ public class ServerProfilePublicKeysManager
 					: new KeyInfo(encodedPublicKey, () -> publicKey, now));
 		});
 		
-		if(uuidKeyInfos.hashKeyInfos().size() > this.maxKeysPerUser)
+		if(uuidKeyInfosSC.value().size() > this.maxKeysPerUser)
 		{
-			uuidKeyInfos.execWithLock(hashKeyInfos -> {
+			uuidKeyInfosSC.execWithLock(hashKeyInfos -> {
 				hashKeyInfos.entrySet()
 					.stream()
 					.limit(Math.max(hashKeyInfos.size() - this.maxKeysPerUser, 0))
@@ -105,18 +103,18 @@ public class ServerProfilePublicKeysManager
 	// Quick check if there are any keys without validating if a key is valid
 	public boolean hasAnyKeyQuickCheck(final UUID profileUUID)
 	{
-		return this.getUUIDKeyInfos(profileUUID) != null;
+		return this.getUUIDKeyInfosSC(profileUUID) != null;
 	}
 	
-	private UUIDKeyInfos getUUIDKeyInfos(final UUID profileUUID)
+	private SynchronizedContainer<LinkedHashMap<Integer, KeyInfo>> getUUIDKeyInfosSC(final UUID profileUUID)
 	{
-		return this.profileUUIDKeysSupplyWithLock(profileUUIDKeys -> profileUUIDKeys.get(profileUUID));
+		return this.profileUUIDKeysSC.supplyWithLock(profileUUIDKeys -> profileUUIDKeys.get(profileUUID));
 	}
 	
 	public PublicKey find(final UUID profileUUID, final byte[] encodedPublicKey)
 	{
-		final UUIDKeyInfos uuidKeyInfos = this.getUUIDKeyInfos(profileUUID);
-		if(uuidKeyInfos == null)
+		final var uuidKeyInfosSC = this.getUUIDKeyInfosSC(profileUUID);
+		if(uuidKeyInfosSC == null)
 		{
 			return null;
 		}
@@ -124,7 +122,7 @@ public class ServerProfilePublicKeysManager
 		this.cleanUpIfRequired();
 		
 		final int hashedPublicKey = Arrays.hashCode(encodedPublicKey);
-		final KeyInfo keyInfo = uuidKeyInfos.supplyWithLock(
+		final KeyInfo keyInfo = uuidKeyInfosSC.supplyWithLock(
 			hashKeyInfos -> hashKeyInfos.get(hashedPublicKey));
 		if(keyInfo == null)
 		{
@@ -138,7 +136,7 @@ public class ServerProfilePublicKeysManager
 		catch(final Exception ex)
 		{
 			LOG.warn("Failed to deserialize public key", ex);
-			if(uuidKeyInfos.supplyWithLock(hashKeyInfos -> {
+			if(uuidKeyInfosSC.supplyWithLock(hashKeyInfos -> {
 				hashKeyInfos.remove(hashedPublicKey);
 				return hashKeyInfos.isEmpty();
 			}))
@@ -152,21 +150,21 @@ public class ServerProfilePublicKeysManager
 	
 	public int removeAll(final UUID uuid)
 	{
-		final UUIDKeyInfos uuidKeyInfos = this.removeProfileUUIDKeyWithLock(uuid);
-		if(uuidKeyInfos == null)
+		final var uuidKeyInfosSC = this.removeProfileUUIDKeyWithLock(uuid);
+		if(uuidKeyInfosSC == null)
 		{
 			return 0;
 		}
 		
 		this.saveAsync();
 		
-		return uuidKeyInfos.supplyWithLock(HashMap::size);
+		return uuidKeyInfosSC.supplyWithLock(HashMap::size);
 	}
 	
 	public boolean remove(final UUID uuid, final String publicKeyEncoded)
 	{
-		final UUIDKeyInfos uuidKeyInfos = this.getUUIDKeyInfos(uuid);
-		if(uuidKeyInfos == null)
+		final var uuidKeyInfosSC = this.getUUIDKeyInfosSC(uuid);
+		if(uuidKeyInfosSC == null)
 		{
 			return false;
 		}
@@ -174,7 +172,7 @@ public class ServerProfilePublicKeysManager
 		try
 		{
 			final int hash = Arrays.hashCode(Hex.decodeHex(publicKeyEncoded));
-			if(uuidKeyInfos.supplyWithLock(hashKeyInfos -> hashKeyInfos.remove(hash)) == null)
+			if(uuidKeyInfosSC.supplyWithLock(hashKeyInfos -> hashKeyInfos.remove(hash)) == null)
 			{
 				return false;
 			}
@@ -184,7 +182,7 @@ public class ServerProfilePublicKeysManager
 			return false;
 		}
 		
-		if(uuidKeyInfos.supplyWithLock(HashMap::isEmpty))
+		if(uuidKeyInfosSC.supplyWithLock(HashMap::isEmpty))
 		{
 			this.removeProfileUUIDKeyWithLock(uuid);
 		}
@@ -194,20 +192,20 @@ public class ServerProfilePublicKeysManager
 		return true;
 	}
 	
-	private UUIDKeyInfos removeProfileUUIDKeyWithLock(final UUID uuid)
+	private SynchronizedContainer<LinkedHashMap<Integer, KeyInfo>> removeProfileUUIDKeyWithLock(final UUID uuid)
 	{
-		return this.profileUUIDKeysSupplyWithLock(profileUUIDKeys -> profileUUIDKeys.remove(uuid));
+		return this.profileUUIDKeysSC.supplyWithLock(profileUUIDKeys -> profileUUIDKeys.remove(uuid));
 	}
 	
 	public Set<UUID> profileUUIDs()
 	{
-		return this.profileUUIDKeysSupplyWithLock(profileUUIDKeys -> new HashSet<>(profileUUIDKeys.keySet()));
+		return this.profileUUIDKeysSC.supplyWithLock(profileUUIDKeys -> new HashSet<>(profileUUIDKeys.keySet()));
 	}
 	
 	public Map<UUID, List<PublicKeyInfo>> uuidPublicKeyHex()
 	{
-		final SequencedMap<UUID, UUIDKeyInfos> profileUUIDKeysCopy =
-			this.profileUUIDKeysSupplyWithLock(LinkedHashMap::new);
+		final SequencedMap<UUID, SynchronizedContainer<LinkedHashMap<Integer, KeyInfo>>> profileUUIDKeysCopy =
+			this.profileUUIDKeysSC.supplyWithLock(LinkedHashMap::new);
 		return profileUUIDKeysCopy.entrySet()
 			.stream()
 			.collect(Collectors.toMap(
@@ -247,7 +245,7 @@ public class ServerProfilePublicKeysManager
 		// | -2 2000-02-02
 		// C--1 2000-02-03
 		final LinkedHashMap<UUID, UUIDKeyInfos> profileUUIDKeysCopy =
-			this.profileUUIDKeysSupplyWithLock(LinkedHashMap::new);
+			this.profileUUIDKeysSC.supplyWithLock(LinkedHashMap::new);
 		
 		final List<UUID> entriesToDelete = new ArrayList<>();
 		final AtomicInteger deletedKeysCounter = new AtomicInteger(0);
@@ -304,7 +302,7 @@ public class ServerProfilePublicKeysManager
 		
 		if(!entriesToDelete.isEmpty())
 		{
-			this.profileUUIDKeysExecWithLock(profileUUIDKeys ->
+			this.profileUUIDKeysSC.execWithLock(profileUUIDKeys ->
 				entriesToDelete.forEach(profileUUIDKeys::remove));
 		}
 		
@@ -354,7 +352,7 @@ public class ServerProfilePublicKeysManager
 								)))))
 					);
 			
-			this.profileUUIDKeysExecWithLock(profileUUIDKeys -> {
+			this.profileUUIDKeysSC.execWithLock(profileUUIDKeys -> {
 				profileUUIDKeys.clear();
 				profileUUIDKeys.putAll(readProfileUUIDKeys);
 			});
@@ -362,7 +360,7 @@ public class ServerProfilePublicKeysManager
 			LOG.debug(
 				"Took {}ms to read keys for {}x profiles",
 				System.currentTimeMillis() - startMs,
-				this.profileUUIDKeys.size());
+				this.profileUUIDKeysSC.value().size());
 		}
 		catch(final Exception ex)
 		{
@@ -380,7 +378,7 @@ public class ServerProfilePublicKeysManager
 		this.cleanUpIfRequired();
 		
 		final LinkedHashMap<String, Set<PersistentState.PersistentKeyInfo>> mapToSave =
-			this.profileUUIDKeysSupplyWithLock(profileUUIDKeys ->
+			this.profileUUIDKeysSC.supplyWithLock(profileUUIDKeys ->
 				profileUUIDKeys.entrySet()
 					.stream()
 					.collect(toLinkedHashMap(
@@ -399,52 +397,16 @@ public class ServerProfilePublicKeysManager
 			() -> new PersistentState(mapToSave));
 	}
 	
-	private void profileUUIDKeysExecWithLock(final Consumer<SequencedMap<UUID, UUIDKeyInfos>> consumer)
-	{
-		synchronized(this.profileUUIDKeysLock)
-		{
-			consumer.accept(this.profileUUIDKeys);
-		}
-	}
-	
-	private <T> T profileUUIDKeysSupplyWithLock(final Function<SequencedMap<UUID, UUIDKeyInfos>, T> func)
-	{
-		synchronized(this.profileUUIDKeysLock)
-		{
-			return func.apply(this.profileUUIDKeys);
-		}
-	}
-	
-	record UUIDKeyInfos(
-		Object keyInfosLock,
-		@NotNull
-		LinkedHashMap<Integer, KeyInfo> hashKeyInfos
-	)
+	static class UUIDKeyInfos extends SynchronizedContainer<LinkedHashMap<Integer, KeyInfo>>
 	{
 		public UUIDKeyInfos()
 		{
 			this(new LinkedHashMap<>());
 		}
 		
-		public UUIDKeyInfos(final LinkedHashMap<Integer, KeyInfo> hashKeyInfos)
+		public UUIDKeyInfos(final LinkedHashMap<Integer, KeyInfo> value)
 		{
-			this(new Object(), hashKeyInfos);
-		}
-		
-		public void execWithLock(final Consumer<LinkedHashMap<Integer, KeyInfo>> consumer)
-		{
-			synchronized(this.keyInfosLock())
-			{
-				consumer.accept(this.hashKeyInfos());
-			}
-		}
-		
-		public <T> T supplyWithLock(final Function<LinkedHashMap<Integer, KeyInfo>, T> func)
-		{
-			synchronized(this.keyInfosLock())
-			{
-				return func.apply(this.hashKeyInfos());
-			}
+			super(value);
 		}
 	}
 	
