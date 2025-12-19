@@ -16,6 +16,7 @@ import java.util.SequencedMap;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -75,15 +76,11 @@ public class GameProfileCacheManager
 	public void add(final GameProfile profile)
 	{
 		LOG.debug("Add {}", profile.id());
-		synchronized(this.uuidProfileContainersLock)
-		{
-			this.uuidProfileContainers.putLast(
-				profile.id(),
-				new ProfileContainer(
-					this.objectMapper.writeValueAsString(profile),
-					() -> profile,
-					Instant.now()));
-		}
+		final ProfileContainer profileContainer = new ProfileContainer(
+			this.objectMapper.writeValueAsString(profile),
+			() -> profile,
+			Instant.now());
+		this.uuidProfileContainersExecWithLock(map -> map.putLast(profile.id(), profileContainer));
 		this.usernameUuids.put(profile.name(), profile.id());
 		this.uuidUsernames.put(profile.id(), profile.name());
 		
@@ -107,11 +104,7 @@ public class GameProfileCacheManager
 	{
 		LOG.debug("FindByUUID {}", id);
 		final long startMs = System.currentTimeMillis();
-		final ProfileContainer container;
-		synchronized(this.uuidProfileContainersLock)
-		{
-			container = this.uuidProfileContainers.get(id);
-		}
+		final ProfileContainer container = this.uuidProfileContainersSupplyWithLock(map -> map.get(id));
 		if(container == null)
 		{
 			return null;
@@ -128,7 +121,8 @@ public class GameProfileCacheManager
 		catch(final Exception ex)
 		{
 			LOG.warn("Failed to deserialize game profile", ex);
-			this.removeWithoutLock(id); // Remove corrupted container
+			// Remove corrupted container
+			this.uuidProfileContainersExecWithLock(ignored -> this.removeWithoutLock(id));
 			return null;
 		}
 	}
@@ -155,38 +149,35 @@ public class GameProfileCacheManager
 		LOG.debug("Executing cleanup");
 		this.nextDeletedAfterExecuteTime = now.plus(DELETE_AFTER_EXECUTION_INTERVAL);
 		
-		boolean requiresSaving;
 		final Instant deleteBefore = now.minus(this.deleteAfter);
 		
 		final long startMs = System.currentTimeMillis();
-		synchronized(this.uuidProfileContainersLock)
-		{
-			final List<Map.Entry<UUID, ProfileContainer>> entriesToDelete = new ArrayList<>();
-			for(final Map.Entry<UUID, ProfileContainer> entry : this.uuidProfileContainers.entrySet())
-			{
-				// As the map is ordered: Abort everything else after the first entry that is valid
-				if(!entry.getValue().createdAt().isBefore(deleteBefore))
+		boolean requiresSaving = this.uuidProfileContainersSupplyWithLock(
+			uuidProfileContainers -> {
+				final List<Map.Entry<UUID, ProfileContainer>> entriesToDelete = new ArrayList<>();
+				for(final Map.Entry<UUID, ProfileContainer> entry : uuidProfileContainers.entrySet())
 				{
-					break;
+					// As the map is ordered: Abort everything else after the first entry that is valid
+					if(!entry.getValue().createdAt().isBefore(deleteBefore))
+					{
+						break;
+					}
+					entriesToDelete.add(entry);
 				}
-				entriesToDelete.add(entry);
-			}
-			
-			this.removeAllWithoutLock(entriesToDelete.stream());
-			requiresSaving = !entriesToDelete.isEmpty();
-		}
+				
+				this.removeAllWithoutLock(entriesToDelete.stream());
+				return !entriesToDelete.isEmpty();
+			});
 		
 		final long start2Ms = System.currentTimeMillis();
 		LOG.debug("Cleanup with isBefore took {}ms", start2Ms - startMs);
 		
 		if(this.uuidProfileContainers.size() > this.targetedProfileCount)
 		{
-			synchronized(this.uuidProfileContainersLock)
-			{
-				this.removeAllWithoutLock(this.uuidProfileContainers.entrySet()
+			this.uuidProfileContainersExecWithLock(uuidProfileContainers ->
+				this.removeAllWithoutLock(uuidProfileContainers.entrySet()
 					.stream()
-					.limit(Math.max(this.uuidProfileContainers.size() - this.targetedProfileCount, 0)));
-			}
+					.limit(Math.max(uuidProfileContainers.size() - this.targetedProfileCount, 0))));
 			
 			requiresSaving = true;
 			LOG.debug("Cleanup trim to targetedCacheSize took {}ms", System.currentTimeMillis() - start2Ms);
@@ -226,10 +217,8 @@ public class GameProfileCacheManager
 			final Function<String, UUID> stringToUUIDFunc =
 				s -> stringToUUIDCache.computeIfAbsent(s, UUID::fromString);
 			
-			synchronized(this.uuidProfileContainersLock)
-			{
-				this.uuidProfileContainers.clear();
-				this.uuidProfileContainers.putAll(persistentState.ensureIdProfiles()
+			final LinkedHashMap<UUID, ProfileContainer> deserializedUuidProfileContainers =
+				persistentState.ensureIdProfiles()
 					.entrySet()
 					.stream()
 					.filter(e -> e.getValue().createdAt().isAfter(deleteBefore))
@@ -241,19 +230,18 @@ public class GameProfileCacheManager
 								e.getValue().serializedGameProfile(),
 								GameProfile.class)),
 							e.getValue().createdAt()
-						))));
-			}
+						)));
+			this.uuidProfileContainersExecWithLock(map -> {
+				map.clear();
+				map.putAll(deserializedUuidProfileContainers);
+			});
 			
 			this.usernameUuids = Collections.synchronizedMap(persistentState.ensureUsernameUUIDs()
 				.entrySet()
 				.stream()
 				.map(e -> Map.entry(e.getKey(), stringToUUIDFunc.apply(e.getValue())))
-				.filter(e -> {
-					synchronized(this.uuidProfileContainersLock)
-					{
-						return this.uuidProfileContainers.containsKey(e.getValue());
-					}
-				})
+				.filter(e -> this.uuidProfileContainersSupplyWithLock(
+					map -> map.containsKey(e.getValue())))
 				.collect(toLinkedHashMap(Map.Entry::getKey, Map.Entry::getValue)));
 			this.uuidUsernames = Collections.synchronizedMap(this.usernameUuids.entrySet()
 				.stream()
@@ -279,11 +267,8 @@ public class GameProfileCacheManager
 	{
 		this.cleanUpIfRequired();
 		
-		final LinkedHashMap<UUID, ProfileContainer> uuidProfileContainerSaveMap;
-		synchronized(this.uuidProfileContainersLock)
-		{
-			uuidProfileContainerSaveMap = new LinkedHashMap<>(this.uuidProfileContainers);
-		}
+		final LinkedHashMap<UUID, ProfileContainer> uuidProfileContainerSaveMap =
+			this.uuidProfileContainersSupplyWithLock(LinkedHashMap::new);
 		
 		LOG.debug("Saving {}x profiles", uuidProfileContainerSaveMap.size());
 		Persister.trySave(
@@ -302,6 +287,22 @@ public class GameProfileCacheManager
 						e -> e.getKey().toString(),
 						e -> e.getValue().persist()
 					))));
+	}
+	
+	private void uuidProfileContainersExecWithLock(final Consumer<SequencedMap<UUID, ProfileContainer>> consumer)
+	{
+		synchronized(this.uuidProfileContainersLock)
+		{
+			consumer.accept(this.uuidProfileContainers);
+		}
+	}
+	
+	private <T> T uuidProfileContainersSupplyWithLock(final Function<SequencedMap<UUID, ProfileContainer>, T> func)
+	{
+		synchronized(this.uuidProfileContainersLock)
+		{
+			return func.apply(this.uuidProfileContainers);
+		}
 	}
 	
 	record ProfileContainer(

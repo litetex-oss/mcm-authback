@@ -66,16 +66,14 @@ public class ServerProfilePublicKeysManager
 	
 	public void add(final UUID uuid, final byte[] encodedPublicKey, final PublicKey publicKey)
 	{
-		final UUIDKeyInfos uuidKeyInfos;
-		synchronized(this.profileUUIDKeysLock)
-		{
-			final UUIDKeyInfos existingUuidKeyInfos = this.profileUUIDKeys.get(uuid);
-			uuidKeyInfos = this.profileUUIDKeys.putLast(
+		final UUIDKeyInfos uuidKeyInfos = this.profileUUIDKeysSupplyWithLock(profileUUIDKeys -> {
+			final UUIDKeyInfos existingUuidKeyInfos = profileUUIDKeys.get(uuid);
+			return profileUUIDKeys.putLast(
 				uuid,
 				existingUuidKeyInfos != null
 					? existingUuidKeyInfos
 					: new UUIDKeyInfos());
-		}
+		});
 		
 		final int hash = Arrays.hashCode(encodedPublicKey);
 		final Instant now = Instant.now();
@@ -112,10 +110,7 @@ public class ServerProfilePublicKeysManager
 	
 	private UUIDKeyInfos getUUIDKeyInfos(final UUID profileUUID)
 	{
-		synchronized(this.profileUUIDKeysLock)
-		{
-			return this.profileUUIDKeys.get(profileUUID);
-		}
+		return this.profileUUIDKeysSupplyWithLock(profileUUIDKeys -> profileUUIDKeys.get(profileUUID));
 	}
 	
 	public PublicKey find(final UUID profileUUID, final byte[] encodedPublicKey)
@@ -148,10 +143,7 @@ public class ServerProfilePublicKeysManager
 				return hashKeyInfos.isEmpty();
 			}))
 			{
-				synchronized(this.profileUUIDKeysLock)
-				{
-					this.profileUUIDKeys.remove(profileUUID);
-				}
+				this.removeProfileUUIDKeyWithLock(profileUUID);
 			}
 			
 			return null;
@@ -160,12 +152,7 @@ public class ServerProfilePublicKeysManager
 	
 	public int removeAll(final UUID uuid)
 	{
-		final UUIDKeyInfos uuidKeyInfos;
-		synchronized(this.profileUUIDKeysLock)
-		{
-			uuidKeyInfos = this.profileUUIDKeys.remove(uuid);
-		}
-		
+		final UUIDKeyInfos uuidKeyInfos = this.removeProfileUUIDKeyWithLock(uuid);
 		if(uuidKeyInfos == null)
 		{
 			return 0;
@@ -199,10 +186,7 @@ public class ServerProfilePublicKeysManager
 		
 		if(uuidKeyInfos.supplyWithLock(HashMap::isEmpty))
 		{
-			synchronized(this.profileUUIDKeysLock)
-			{
-				this.profileUUIDKeys.remove(uuid);
-			}
+			this.removeProfileUUIDKeyWithLock(uuid);
 		}
 		
 		this.saveAsync();
@@ -210,21 +194,20 @@ public class ServerProfilePublicKeysManager
 		return true;
 	}
 	
+	private UUIDKeyInfos removeProfileUUIDKeyWithLock(final UUID uuid)
+	{
+		return this.profileUUIDKeysSupplyWithLock(profileUUIDKeys -> profileUUIDKeys.remove(uuid));
+	}
+	
 	public Set<UUID> profileUUIDs()
 	{
-		synchronized(this.profileUUIDKeysLock)
-		{
-			return new HashSet<>(this.profileUUIDKeys.keySet());
-		}
+		return this.profileUUIDKeysSupplyWithLock(profileUUIDKeys -> new HashSet<>(profileUUIDKeys.keySet()));
 	}
 	
 	public Map<UUID, List<PublicKeyInfo>> uuidPublicKeyHex()
 	{
-		final SequencedMap<UUID, UUIDKeyInfos> profileUUIDKeysCopy;
-		synchronized(this.profileUUIDKeysLock)
-		{
-			profileUUIDKeysCopy = new LinkedHashMap<>(this.profileUUIDKeys);
-		}
+		final SequencedMap<UUID, UUIDKeyInfos> profileUUIDKeysCopy =
+			this.profileUUIDKeysSupplyWithLock(LinkedHashMap::new);
 		return profileUUIDKeysCopy.entrySet()
 			.stream()
 			.collect(Collectors.toMap(
@@ -263,11 +246,8 @@ public class ServerProfilePublicKeysManager
 		// B-+1 2000-01-01
 		// | -2 2000-02-02
 		// C--1 2000-02-03
-		final LinkedHashMap<UUID, UUIDKeyInfos> profileUUIDKeysCopy;
-		synchronized(this.profileUUIDKeysLock)
-		{
-			profileUUIDKeysCopy = new LinkedHashMap<>(this.profileUUIDKeys);
-		}
+		final LinkedHashMap<UUID, UUIDKeyInfos> profileUUIDKeysCopy =
+			this.profileUUIDKeysSupplyWithLock(LinkedHashMap::new);
 		
 		final List<UUID> entriesToDelete = new ArrayList<>();
 		final AtomicInteger deletedKeysCounter = new AtomicInteger(0);
@@ -324,11 +304,10 @@ public class ServerProfilePublicKeysManager
 		
 		if(!entriesToDelete.isEmpty())
 		{
-			synchronized(this.profileUUIDKeysLock)
-			{
-				entriesToDelete.forEach(this.profileUUIDKeys::remove);
-			}
+			this.profileUUIDKeysExecWithLock(profileUUIDKeys ->
+				entriesToDelete.forEach(profileUUIDKeys::remove));
 		}
+		
 		LOG.debug(
 			"Executed cleanUp, deleted {}x UUIDs and {}x keys in {}ms",
 			entriesToDelete.size(),
@@ -375,11 +354,10 @@ public class ServerProfilePublicKeysManager
 								)))))
 					);
 			
-			synchronized(this.profileUUIDKeysLock)
-			{
-				this.profileUUIDKeys.clear();
-				this.profileUUIDKeys.putAll(readProfileUUIDKeys);
-			}
+			this.profileUUIDKeysExecWithLock(profileUUIDKeys -> {
+				profileUUIDKeys.clear();
+				profileUUIDKeys.putAll(readProfileUUIDKeys);
+			});
 			
 			LOG.debug(
 				"Took {}ms to read keys for {}x profiles",
@@ -401,30 +379,40 @@ public class ServerProfilePublicKeysManager
 	{
 		this.cleanUpIfRequired();
 		
-		final LinkedHashMap<String, Set<PersistentState.PersistentKeyInfo>> mapToSave;
-		synchronized(this.profileUUIDKeysLock)
-		{
-			mapToSave = new LinkedHashMap<>(this.profileUUIDKeys.size());
-			for(final Map.Entry<UUID, UUIDKeyInfos> entry : this.profileUUIDKeys.entrySet())
-			{
-				final List<KeyInfo> keyInfos;
-				synchronized(entry.getValue().keyInfosLock())
-				{
-					keyInfos = new ArrayList<>(entry.getValue().hashKeyInfos().values());
-				}
-				mapToSave.putLast(
-					entry.getKey().toString(),
-					keyInfos.stream()
-						.map(KeyInfo::persist)
-						.collect(Collectors.toCollection(LinkedHashSet::new)));
-			}
-		}
+		final LinkedHashMap<String, Set<PersistentState.PersistentKeyInfo>> mapToSave =
+			this.profileUUIDKeysSupplyWithLock(profileUUIDKeys ->
+				profileUUIDKeys.entrySet()
+					.stream()
+					.collect(toLinkedHashMap(
+						e -> e.getKey().toString(),
+						e -> e.getValue().supplyWithLock(map -> new ArrayList<>(map.values()))
+							.stream()
+							.map(KeyInfo::persist)
+							.collect(Collectors.toCollection(LinkedHashSet::new))
+					))
+			);
 		
 		LOG.debug("Saving {}x profiles", mapToSave.size());
 		Persister.trySave(
 			LOG,
 			this.file,
 			() -> new PersistentState(mapToSave));
+	}
+	
+	private void profileUUIDKeysExecWithLock(final Consumer<SequencedMap<UUID, UUIDKeyInfos>> consumer)
+	{
+		synchronized(this.profileUUIDKeysLock)
+		{
+			consumer.accept(this.profileUUIDKeys);
+		}
+	}
+	
+	private <T> T profileUUIDKeysSupplyWithLock(final Function<SequencedMap<UUID, UUIDKeyInfos>, T> func)
+	{
+		synchronized(this.profileUUIDKeysLock)
+		{
+			return func.apply(this.profileUUIDKeys);
+		}
 	}
 	
 	record UUIDKeyInfos(
