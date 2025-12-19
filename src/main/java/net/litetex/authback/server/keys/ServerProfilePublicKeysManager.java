@@ -224,6 +224,7 @@ public class ServerProfilePublicKeysManager
 	{
 	}
 	
+	@SuppressWarnings("PMD.CognitiveComplexity") // Well documented
 	private synchronized void cleanUpIfRequired()
 	{
 		final Instant now = Instant.now();
