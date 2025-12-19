@@ -1,6 +1,5 @@
 package net.litetex.authback.client.keys;
 
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.KeyPair;
 import java.util.HashMap;
@@ -11,7 +10,7 @@ import java.util.concurrent.CompletableFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.litetex.authback.shared.json.JSONSerializer;
+import net.litetex.authback.shared.io.Persister;
 import net.minecraft.client.Minecraft;
 
 
@@ -73,21 +72,8 @@ public class ClientKeysManager
 	
 	private void readKeyStatesFromFile()
 	{
-		if(!Files.exists(this.keyStatesFile))
-		{
-			this.keyStates = new KeyStates();
-			return;
-		}
-		
-		try
-		{
-			this.keyStates = JSONSerializer.GSON.fromJson(Files.readString(this.keyStatesFile), KeyStates.class);
-		}
-		catch(final Exception ex)
-		{
-			LOG.warn("Failed to read keyStatesFile['{}']", this.keyStatesFile, ex);
-			this.keyStates = new KeyStates();
-		}
+		this.keyStates = Persister.tryRead(LOG, this.keyStatesFile, KeyStates.class)
+			.orElseGet(KeyStates::new);
 	}
 	
 	private void saveKeyStatesFileAsync()
@@ -97,14 +83,7 @@ public class ClientKeysManager
 	
 	private void saveKeyStatesFile()
 	{
-		try
-		{
-			Files.writeString(this.keyStatesFile, JSONSerializer.GSON.toJson(this.keyStates));
-		}
-		catch(final Exception ex)
-		{
-			LOG.warn("Failed to write keyStatesFile['{}']", this.keyStatesFile, ex);
-		}
+		Persister.trySave(LOG, this.keyStatesFile, () -> this.keyStates);
 	}
 	
 	static class KeyStates

@@ -1,3 +1,11 @@
+# 1.2.0
+* Rework cleanup behavior of expiring cached values
+    * now executed initially
+    * now alwawys persisted in the correct order (newest = at the end)
+    * should be much faster
+    * _NOTE:<br/>This MIGHT remove some cached values from previous versions. The cache will automatically be rebuilt over time._
+* Further code cleanup
+
 # 1.1.1
 * Fix crash when no mod state directory is present
 
