@@ -43,19 +43,7 @@ public final class AuthBackDirEnsurer
 				
 				if(usedDefault.get())
 				{
-					final Path legacyRootDir = FabricLoader.getInstance().getGameDir().resolve(".authback");
-					final Path legacyDir = legacyRootDir.resolve(variant);
-					if(Files.exists(legacyDir))
-					{
-						Files.move(legacyDir, dir, StandardCopyOption.REPLACE_EXISTING);
-						LOG.info("Migrated legacy directory: {} -> {}", legacyDir, dir);
-						
-						if(isDirectoryEmpty(legacyRootDir))
-						{
-							Files.delete(legacyRootDir);
-							LOG.info("Deleted legacy root directory: {}", legacyRootDir);
-						}
-					}
+					migrateLegacyDir(variant, dir);
 				}
 			}
 			catch(final IOException e)
@@ -64,6 +52,23 @@ public final class AuthBackDirEnsurer
 			}
 		}
 		return dir;
+	}
+	
+	private static void migrateLegacyDir(final String variant, final Path dir) throws IOException
+	{
+		final Path legacyRootDir = FabricLoader.getInstance().getGameDir().resolve(".authback");
+		final Path legacyDir = legacyRootDir.resolve(variant);
+		if(Files.exists(legacyDir))
+		{
+			Files.move(legacyDir, dir, StandardCopyOption.REPLACE_EXISTING);
+			LOG.info("Migrated legacy directory: {} -> {}", legacyDir, dir);
+			
+			if(isDirectoryEmpty(legacyRootDir))
+			{
+				Files.delete(legacyRootDir);
+				LOG.info("Deleted legacy root directory: {}", legacyRootDir);
+			}
+		}
 	}
 	
 	private static boolean isDirectoryEmpty(final Path dirPath) throws IOException

@@ -14,6 +14,7 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.mojang.authlib.GameProfile;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
@@ -35,8 +36,10 @@ import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.contents.objects.PlayerSprite;
 import net.minecraft.server.permissions.PermissionProviderCheck;
 import net.minecraft.server.players.NameAndId;
+import net.minecraft.world.item.component.ResolvableProfile;
 
 
 public class FallbackCommand
@@ -131,14 +134,18 @@ public class FallbackCommand
 		}
 		catch(final Exception ex)
 		{
-			ctx.getSource().sendFailure(Component.literal("Failed to decode public key: " + ex.getMessage()));
+			ctx.getSource().sendFailure(Component.literal("Failed to decode public key ")
+				.append(this.renderPublicKeyHex(publicKeyHex))
+				.append(": " + ex.getMessage()));
 			LOG.debug("Failed to decode public key", ex);
 			return 0;
 		}
 		
 		this.serverProfilePublicKeysManager().add(uuid, encodedKeyData, publicKey);
 		final MutableComponent root = Component.empty()
-			.append("Add public key for ")
+			.append("Added public key ")
+			.append(this.renderPublicKeyHex(publicKeyHex))
+			.append(" for ")
 			.append(this.renderPlayer(ctx, uuid));
 		ctx.getSource().sendSuccess(() -> root, false);
 		return 1;
@@ -204,14 +211,18 @@ public class FallbackCommand
 		if(this.serverProfilePublicKeysManager().remove(uuid, publicKeyHex))
 		{
 			final MutableComponent root = Component.empty()
-				.append("Removed public key from ")
+				.append("Removed public key ")
+				.append(this.renderPublicKeyHex(publicKeyHex))
+				.append(" from ")
 				.append(this.renderPlayer(ctx, uuid));
 			ctx.getSource().sendSuccess(() -> root, false);
 			return 1;
 		}
 		
 		ctx.getSource().sendFailure(Component.empty()
-			.append("Failed to find public key for ")
+			.append("Failed to find public key ")
+			.append(this.renderPublicKeyHex(publicKeyHex))
+			.append(" for ")
 			.append(this.renderPlayer(ctx, uuid)));
 		return 0;
 	}
@@ -311,11 +322,7 @@ public class FallbackCommand
 				e.getValue().stream()
 					.map(pki -> Stream.of(
 							Component.literal("- "),
-							Component.literal(pki.hex().substring(0, 16) + "...")
-								.withStyle(style -> style.withItalic(true)
-									.withClickEvent(new ClickEvent.CopyToClipboard(pki.hex()))
-									.withHoverEvent(new HoverEvent.ShowText(Component.literal(pki.hex())))
-								),
+							this.renderPublicKeyHex(pki.hex()),
 							Component.literal(" "),
 							Component.literal(INSTANT_BASIC_DATE_TIME.format(pki.lastUse()))
 								.withStyle(style -> style
@@ -336,16 +343,35 @@ public class FallbackCommand
 	
 	private Component renderPlayer(final CommandContext<CommandSourceStack> ctx, final UUID uuid)
 	{
-		return Component.literal(this.associatedNameOrUUID(ctx, uuid))
+		final MutableComponent root = Component.empty()
 			.withStyle(style -> style
 				.withClickEvent(new ClickEvent.CopyToClipboard(uuid.toString()))
 				.withHoverEvent(new HoverEvent.ShowText(Component.literal(uuid.toString()))));
+		
+		final GameProfile cachedProfile = this.gameProfileCacheManager().findByUUID(uuid);
+		if(cachedProfile != null)
+		{
+			root.append(Component.object(new PlayerSprite(ResolvableProfile.createResolved(cachedProfile), true)));
+			root.append(Component.literal(" "));
+		}
+		return root.append(Component.literal(this.associatedNameOrUUID(ctx, uuid)));
 	}
 	
 	private String associatedNameOrUUID(final CommandContext<CommandSourceStack> ctx, final UUID uuid)
 	{
 		return this.findNameForUUID(ctx, uuid)
 			.orElseGet(uuid::toString);
+	}
+	
+	private MutableComponent renderPublicKeyHex(final String publicKeyHex)
+	{
+		return Component.literal(publicKeyHex.length() <= 16
+				? publicKeyHex
+				: ("..." + publicKeyHex.substring(publicKeyHex.length() - 16)))
+			.withStyle(style -> style.withItalic(true)
+				.withClickEvent(new ClickEvent.CopyToClipboard(publicKeyHex))
+				.withHoverEvent(new HoverEvent.ShowText(Component.literal(publicKeyHex)))
+			);
 	}
 	
 	private int execForName(

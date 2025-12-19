@@ -1,7 +1,6 @@
 package net.litetex.authback.common;
 
 import java.net.URL;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
@@ -15,7 +14,7 @@ import org.slf4j.LoggerFactory;
 import com.mojang.authlib.minecraft.client.ObjectMapper;
 
 import net.litetex.authback.shared.external.com.google.common.base.Suppliers;
-import net.litetex.authback.shared.json.JSONSerializer;
+import net.litetex.authback.shared.io.Persister;
 
 
 public class GlobalPublicKeysCache
@@ -47,74 +46,43 @@ public class GlobalPublicKeysCache
 	
 	private synchronized void save(final URL url, final Object response)
 	{
-		try
-		{
-			Files.writeString(
-				this.cacheFile,
-				JSONSerializer.GSON.toJson(new PersistentContainer(
-					url.toString(),
-					Instant.now(),
-					this.objectMapper.writeValueAsString(response))));
-		}
-		catch(final Exception e)
-		{
-			LOG.warn("Failed to save {}", this.cacheFile, e);
-		}
+		Persister.trySave(
+			LOG,
+			this.cacheFile,
+			() -> new PersistentContainer(
+				url.toString(),
+				Instant.now(),
+				this.objectMapper.writeValueAsString(response)));
 	}
 	
 	public <T> Optional<CachedResponse<T>> read(final URL url, final Class<T> responseClass)
 	{
-		if(!Files.exists(this.cacheFile))
-		{
-			return Optional.empty();
-		}
-		
-		final long startMs = System.currentTimeMillis();
-		try
-		{
-			
-			final PersistentContainer persistentContainer = JSONSerializer.GSON.fromJson(
-				Files.readString(this.cacheFile),
-				PersistentContainer.class);
-			if(!url.toString().equals(persistentContainer.url())
-				|| persistentContainer.createdAt() == null
-				|| persistentContainer.createdAt().isAfter(Instant.now())
-				|| persistentContainer.response() == null)
-			{
-				return Optional.empty();
-			}
-			
-			return Optional.of(
-				new CachedResponse<>(
-					persistentContainer.createdAt(),
-					Suppliers.memoize(() ->
+		return Persister.tryRead(LOG, this.cacheFile, PersistentContainer.class)
+			// Validate
+			.filter(persistentContainer -> url.toString().equals(persistentContainer.url())
+				&& persistentContainer.createdAt() != null
+				&& persistentContainer.createdAt().isBefore(Instant.now())
+				&& persistentContainer.response() != null)
+			.map(persistentContainer -> new CachedResponse<>(
+				persistentContainer.createdAt(),
+				Suppliers.memoize(() ->
+				{
+					final long startMs2 = System.currentTimeMillis();
+					try
 					{
-						final long startMs2 = System.currentTimeMillis();
-						try
-						{
-							return this.objectMapper.readValue(persistentContainer.response(), responseClass);
-						}
-						catch(final Exception e2)
-						{
-							LOG.warn("Failed to cached response", e2);
-							return null;
-						}
-						finally
-						{
-							LOG.debug("Took {}ms to deserialize response", System.currentTimeMillis() - startMs2);
-						}
-					})
-				));
-		}
-		catch(final Exception e)
-		{
-			LOG.warn("Failed to read {}", this.cacheFile, e);
-			return Optional.empty();
-		}
-		finally
-		{
-			LOG.debug("Took {}ms to read and deserialize container", System.currentTimeMillis() - startMs);
-		}
+						return this.objectMapper.readValue(persistentContainer.response(), responseClass);
+					}
+					catch(final Exception e2)
+					{
+						LOG.warn("Failed to cached response", e2);
+						return null;
+					}
+					finally
+					{
+						LOG.debug("Took {}ms to deserialize response", System.currentTimeMillis() - startMs2);
+					}
+				})
+			));
 	}
 	
 	public record CachedResponse<T>(
