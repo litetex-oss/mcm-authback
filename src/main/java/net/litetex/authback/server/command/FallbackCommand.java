@@ -14,6 +14,7 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.mojang.authlib.GameProfile;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
@@ -35,8 +36,10 @@ import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.contents.objects.PlayerSprite;
 import net.minecraft.server.permissions.PermissionProviderCheck;
 import net.minecraft.server.players.NameAndId;
+import net.minecraft.world.item.component.ResolvableProfile;
 
 
 public class FallbackCommand
@@ -311,7 +314,7 @@ public class FallbackCommand
 				e.getValue().stream()
 					.map(pki -> Stream.of(
 							Component.literal("- "),
-							Component.literal(pki.hex().substring(0, 16) + "...")
+							Component.literal("..." + pki.hex().substring(pki.hex().length() - 16))
 								.withStyle(style -> style.withItalic(true)
 									.withClickEvent(new ClickEvent.CopyToClipboard(pki.hex()))
 									.withHoverEvent(new HoverEvent.ShowText(Component.literal(pki.hex())))
@@ -336,10 +339,18 @@ public class FallbackCommand
 	
 	private Component renderPlayer(final CommandContext<CommandSourceStack> ctx, final UUID uuid)
 	{
-		return Component.literal(this.associatedNameOrUUID(ctx, uuid))
+		final MutableComponent root = Component.empty()
 			.withStyle(style -> style
 				.withClickEvent(new ClickEvent.CopyToClipboard(uuid.toString()))
 				.withHoverEvent(new HoverEvent.ShowText(Component.literal(uuid.toString()))));
+		
+		final GameProfile cachedProfile = this.gameProfileCacheManager().findByUUID(uuid);
+		if(cachedProfile != null)
+		{
+			root.append(Component.object(new PlayerSprite(ResolvableProfile.createResolved(cachedProfile), true)));
+			root.append(Component.literal(" "));
+		}
+		return root.append(Component.literal(this.associatedNameOrUUID(ctx, uuid)));
 	}
 	
 	private String associatedNameOrUUID(final CommandContext<CommandSourceStack> ctx, final UUID uuid)

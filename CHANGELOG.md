@@ -4,7 +4,11 @@
     * now alwawys persisted in the correct order (newest = at the end)
     * should be much faster
     * _NOTE:<br/>This MIGHT remove some cached values from previous versions. The cache will automatically be rebuilt over time._
-* Further code cleanup
+* Improved command
+    * Keys are now truncated at the start (e.g. `...f55112bb38e1d9d0`)
+        * Previously they were truncated at the end - which always showed the same `302a300506032b65...`
+    * Highlight player names with head sprites when possible
+* Various cleanups and optimizations
 
 # 1.1.1
 * Fix crash when no mod state directory is present
