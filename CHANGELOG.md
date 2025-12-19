@@ -1,13 +1,13 @@
 # 1.2.0
-* Rework cleanup behavior of expiring cached values
-    * now executed initially
-    * now alwawys persisted in the correct order (newest = at the end)
+* Rework cleanup behavior of expiring cached values (e.g. game profile information)
+    * now always executed when first accessed
+    * now persisted in the correct order (newest = at the end)
     * should be much faster
     * _NOTE:<br/>This MIGHT remove some cached values from previous versions. The cache will automatically be rebuilt over time._
 * Improved command
     * Keys are now truncated at the start (e.g. `...f55112bb38e1d9d0`)
         * Previously they were truncated at the end - which always showed the same `302a300506032b65...`
-    * Highlight player names with head sprites when possible
+    * Highlight player names in the chat with heads when possible
 * Various cleanups and optimizations
 
 # 1.1.1
