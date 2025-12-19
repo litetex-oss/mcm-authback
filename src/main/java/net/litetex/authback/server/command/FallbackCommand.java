@@ -134,14 +134,18 @@ public class FallbackCommand
 		}
 		catch(final Exception ex)
 		{
-			ctx.getSource().sendFailure(Component.literal("Failed to decode public key: " + ex.getMessage()));
+			ctx.getSource().sendFailure(Component.literal("Failed to decode public key ")
+				.append(this.renderPublicKeyHex(publicKeyHex))
+				.append(": " + ex.getMessage()));
 			LOG.debug("Failed to decode public key", ex);
 			return 0;
 		}
 		
 		this.serverProfilePublicKeysManager().add(uuid, encodedKeyData, publicKey);
 		final MutableComponent root = Component.empty()
-			.append("Add public key for ")
+			.append("Added public key ")
+			.append(this.renderPublicKeyHex(publicKeyHex))
+			.append(" for ")
 			.append(this.renderPlayer(ctx, uuid));
 		ctx.getSource().sendSuccess(() -> root, false);
 		return 1;
@@ -207,14 +211,18 @@ public class FallbackCommand
 		if(this.serverProfilePublicKeysManager().remove(uuid, publicKeyHex))
 		{
 			final MutableComponent root = Component.empty()
-				.append("Removed public key from ")
+				.append("Removed public key ")
+				.append(this.renderPublicKeyHex(publicKeyHex))
+				.append(" from ")
 				.append(this.renderPlayer(ctx, uuid));
 			ctx.getSource().sendSuccess(() -> root, false);
 			return 1;
 		}
 		
 		ctx.getSource().sendFailure(Component.empty()
-			.append("Failed to find public key for ")
+			.append("Failed to find public key ")
+			.append(this.renderPublicKeyHex(publicKeyHex))
+			.append(" for ")
 			.append(this.renderPlayer(ctx, uuid)));
 		return 0;
 	}
@@ -314,11 +322,7 @@ public class FallbackCommand
 				e.getValue().stream()
 					.map(pki -> Stream.of(
 							Component.literal("- "),
-							Component.literal("..." + pki.hex().substring(pki.hex().length() - 16))
-								.withStyle(style -> style.withItalic(true)
-									.withClickEvent(new ClickEvent.CopyToClipboard(pki.hex()))
-									.withHoverEvent(new HoverEvent.ShowText(Component.literal(pki.hex())))
-								),
+							this.renderPublicKeyHex(pki.hex()),
 							Component.literal(" "),
 							Component.literal(INSTANT_BASIC_DATE_TIME.format(pki.lastUse()))
 								.withStyle(style -> style
@@ -357,6 +361,17 @@ public class FallbackCommand
 	{
 		return this.findNameForUUID(ctx, uuid)
 			.orElseGet(uuid::toString);
+	}
+	
+	private MutableComponent renderPublicKeyHex(final String publicKeyHex)
+	{
+		return Component.literal(publicKeyHex.length() <= 16
+				? publicKeyHex
+				: ("..." + publicKeyHex.substring(publicKeyHex.length() - 16)))
+			.withStyle(style -> style.withItalic(true)
+				.withClickEvent(new ClickEvent.CopyToClipboard(publicKeyHex))
+				.withHoverEvent(new HoverEvent.ShowText(Component.literal(publicKeyHex)))
+			);
 	}
 	
 	private int execForName(
