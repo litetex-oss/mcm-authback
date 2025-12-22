@@ -14,16 +14,20 @@ public record AuthBackClientConfig(
 	ConfigValueContainer<Boolean> blockRealmsFetching,
 	// Suppresses all joinServer errors
 	// WARNING: Allows to join servers with possibly invalid session data
-	ConfigValueContainer<Boolean> suppressAllServerJoinErrors
+	ConfigValueContainer<Boolean> suppressAllServerJoinErrors,
+	// Disables sending a legacy ping (for servers running 1.6.4 or lower) in the server list
+	// when the normal ping fails or times out
+	boolean preventLegacyServerPing
 )
 {
 	public AuthBackClientConfig(final Configuration config)
 	{
 		this(
-			ConfigValueContainer.bool(config, "block-address-check", false),
+			ConfigValueContainer.bool(config, "block-address-check", true),
 			ConfigValueContainer.bool(config, "block-profile-keys-fetching", false),
 			ConfigValueContainer.bool(config, "block-realms-fetching", false),
-			ConfigValueContainer.bool(config, "suppress-all-server-join-errors", false)
+			ConfigValueContainer.bool(config, "suppress-all-server-join-errors", false),
+			config.getBoolean("prevent-legacy-server-ping", true)
 		);
 	}
 }

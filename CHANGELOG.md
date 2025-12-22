@@ -1,3 +1,8 @@
+# 1.2.1
+* Disabled useless server related network traffic
+    * Enabled `block-address-check` by default as this causes laggy reverse DNS lookups when using literal IPs
+    * Prevent legacy server status ping for servers running 1.6.4 or lower
+
 # 1.2.0
 * Rework cleanup behavior of expiring cached values (e.g. game profile information)
     * now always executed when first accessed

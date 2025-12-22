@@ -11,8 +11,10 @@
     "client.AccountProfileKeyPairManagerMixin",
     "client.AddressCheckMixin",
     "client.ClientHandshakePacketListenerImplMixin",
+    "client.ConnectScreenMixin",
     "client.OnlineOptionsScreenMixin",
     "client.RealmsClientMixin",
+    "client.ServerStatusPingerMixin",
     "client.TitleScreenMixin"
   ],
   "server": [
