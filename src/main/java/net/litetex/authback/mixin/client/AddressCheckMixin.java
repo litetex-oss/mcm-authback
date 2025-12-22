@@ -16,12 +16,16 @@ import net.minecraft.client.multiplayer.resolver.ServerAddress;
 public interface AddressCheckMixin
 {
 	// There are major problems with the address check - Why is this even in use?
-	// Why? Because 99% of the entries are either
+	// What problems?
+	// 1. 99% of the entries are either
 	// a) not been in use for a decade
 	// (e.g. dc2c735b3e6aba51ece294d7de21b947379aac4d - is present since 2016!)
 	// b) DynDNS entries where someone keeps increasing the number
-	//
 	// See also https://raw.githubusercontent.com/sudofox/mojang-blocklist/refs/heads/master/data/merged.txt
+	//
+	// 2. The same trash code is also responsible for lagging out resolution of literal IP based servers!
+	// It calls InetAddress#getHostName which ALWAYS causes a reverse DNS lookup (PTR) when a literal IP is used
+	// Mods like "Fast IP Ping" work around this problem by correctly creating InetAddress
 	
 	@Inject(
 		method = "createFromService",

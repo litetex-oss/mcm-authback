@@ -96,14 +96,17 @@ public class ConfigScreen extends OptionsSubScreen
 				new BooleanConfigData(
 					config.blockFetchingProfileKeys(),
 					"Block fetching profile/chat-signing keys",
-					"NOTE: You will NOT be able to join servers that have set enforce-secure-profile to true when this"
-						+ " is "
-						+ "enabled"
+					"NOTE: You will NOT be able to join servers that have "
+						+ "enforce-secure-profile set to true when this is enabled"
 				),
 				new BooleanConfigData(
 					config.blockAddressCheck(),
 					"Disable server address check",
-					"Disables the central server blocklist lookup"
+					"""
+						Disables the central server blocklist lookup.
+						Massively improves the performance when looking up literal IPs \
+						as the required Reverse DNS lookup will no longer be executed.
+						"""
 				),
 				new BooleanConfigData(
 					config.suppressAllServerJoinErrors(),
