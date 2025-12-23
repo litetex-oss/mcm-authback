@@ -105,8 +105,7 @@ public class ConfigScreen extends OptionsSubScreen
 					"""
 						Disables the central server blocklist lookup.
 						Massively improves the performance when looking up literal IPs \
-						as the required Reverse DNS lookup will no longer be executed.
-						"""
+						as the required Reverse DNS lookup will no longer be executed."""
 				),
 				new BooleanConfigData(
 					config.suppressAllServerJoinErrors(),
