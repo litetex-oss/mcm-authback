@@ -2,6 +2,7 @@
 * [Client] Added more configuration options for UserAPI
     * Can now be completely replaced by a dummy
 * [Server] Added `force-disable-enforce-secure-profile`
+* Correctly handle account name changes
 * Improved logging
 
 # 1.2.1

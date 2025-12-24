@@ -12,6 +12,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.SequencedMap;
 import java.util.Set;
 import java.util.UUID;
@@ -49,8 +50,8 @@ public class GameProfileCacheManager
 	private final int maxTargetedProfileCount;
 	private final int targetedProfileCount;
 	
-	private Map<String, UUID> usernameUuids = new HashMap<>();
 	private Map<UUID, String> uuidUsernames = new HashMap<>(); // Reverse map for tracking when deleting
+	private Map<String, UUID> usernameUuids = new HashMap<>();
 	// Using an ordered map here that always contains the latest value at the end
 	// This way cleanups can be A LOT (>20x) faster
 	// For some reason there is no Collections.synchronizedSequenceMap, so this needs to be done manually
@@ -83,8 +84,13 @@ public class GameProfileCacheManager
 			Instant.now());
 		
 		this.uuidProfileContainersSC.execWithLock(m -> m.putLast(profile.id(), profileContainer));
+		final String previousName = this.uuidUsernames.put(profile.id(), profile.name());
+		// Handle account name change
+		if(previousName != null && !profile.name().equals(previousName))
+		{
+			this.usernameUuids.remove(previousName);
+		}
 		this.usernameUuids.put(profile.name(), profile.id());
-		this.uuidUsernames.put(profile.id(), profile.name());
 		
 		this.saveAsync();
 	}
@@ -234,14 +240,35 @@ public class GameProfileCacheManager
 				map.putAll(deserializedUuidProfileContainers);
 			});
 			
-			this.usernameUuids = Collections.synchronizedMap(persistentState.ensureUsernameUUIDs()
+			this.uuidUsernames = Collections.synchronizedMap(persistentState.ensureUUIDUsernames()
 				.entrySet()
 				.stream()
-				.map(e -> Map.entry(e.getKey(), stringToUUIDFunc.apply(e.getValue())))
+				.map(e -> {
+					try
+					{
+						return Map.entry(stringToUUIDFunc.apply(e.getKey()), e.getValue());
+					}
+					catch(final Exception ex)
+					{
+						LOG.warn("Failed to parse", ex);
+						return null;
+					}
+				})
+				.filter(Objects::nonNull)
 				.filter(e -> this.uuidProfileContainersSC.supplyWithLock(
-					map -> map.containsKey(e.getValue())))
+					map -> map.containsKey(e.getKey())))
 				.collect(toLinkedHashMap(Map.Entry::getKey, Map.Entry::getValue)));
-			this.uuidUsernames = Collections.synchronizedMap(this.usernameUuids.entrySet()
+			if(persistentState.usernameUUIDs != null) // Migrate legacy
+			{
+				persistentState.usernameUUIDs
+					.entrySet()
+					.stream()
+					.map(e -> Map.entry(e.getKey(), stringToUUIDFunc.apply(e.getValue())))
+					.filter(e -> this.uuidProfileContainersSC.supplyWithLock(
+						map -> map.containsKey(e.getValue())))
+					.forEach(e -> this.uuidUsernames.put(e.getValue(), e.getKey()));
+			}
+			this.usernameUuids = Collections.synchronizedMap(this.uuidUsernames.entrySet()
 				.stream()
 				.collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey)));
 			
@@ -273,11 +300,12 @@ public class GameProfileCacheManager
 			LOG,
 			this.file,
 			() -> new PersistentState(
-				this.usernameUuids.entrySet()
+				null,
+				this.uuidUsernames.entrySet()
 					.stream()
 					.collect(toLinkedHashMap(
-						Map.Entry::getKey,
-						e -> e.getValue().toString()
+						e -> e.getKey().toString(),
+						Map.Entry::getValue
 					)),
 				uuidProfileContainerSaveMap.entrySet()
 					.stream()
@@ -304,18 +332,28 @@ public class GameProfileCacheManager
 	
 	
 	record PersistentState(
+		// Legacy: Can be removed after 2026-01
+		@Deprecated
 		Map<String, String> usernameUUIDs,
+		Map<String, String> uuidUsernames,
 		Map<String, PersistentProfileContainer> idProfiles
 	)
 	{
+		public PersistentState(
+			final Map<String, String> uuidUsernames,
+			final Map<String, PersistentProfileContainer> idProfiles)
+		{
+			this(null, uuidUsernames, idProfiles);
+		}
+		
 		public PersistentState()
 		{
 			this(new LinkedHashMap<>(), new LinkedHashMap<>());
 		}
 		
-		Map<String, String> ensureUsernameUUIDs()
+		Map<String, String> ensureUUIDUsernames()
 		{
-			return this.usernameUUIDs != null ? this.usernameUUIDs : Map.of();
+			return this.uuidUsernames != null ? this.uuidUsernames : Map.of();
 		}
 		
 		Map<String, PersistentProfileContainer> ensureIdProfiles()
