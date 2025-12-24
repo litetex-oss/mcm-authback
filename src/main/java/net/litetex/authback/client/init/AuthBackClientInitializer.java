@@ -10,6 +10,6 @@ public class AuthBackClientInitializer extends Initializer implements ClientModI
 	@Override
 	public void onInitializeClient()
 	{
-		this.doInit(() -> AuthBackClient.setInstance(new AuthBackClient()));
+		this.doInit(() -> AuthBackClient.ensureInstance().initialize());
 	}
 }

@@ -21,21 +21,30 @@ public class AuthBackClient extends AuthBack
 		return instance;
 	}
 	
-	public static void setInstance(final AuthBackClient instance)
+	public static AuthBackClient ensureInstance()
 	{
-		AuthBackClient.instance = instance;
+		if(AuthBackClient.instance == null)
+		{
+			AuthBackClient.instance = new AuthBackClient();
+		}
+		return AuthBackClient.instance;
 	}
 	
 	private final ClientKeysManager clientKeysManager;
 	private final AuthBackClientConfig config;
 	
-	public AuthBackClient()
+	protected AuthBackClient()
 	{
 		super("client");
 		this.clientKeysManager = new ClientKeysManager(this.authbackDir);
 		
 		this.config = new AuthBackClientConfig(this.lowLevelConfig);
 		
+		LOG.debug("Created");
+	}
+	
+	public void initialize()
+	{
 		// Create and setup
 		new AuthBackClientNetworking(this.clientKeysManager);
 		

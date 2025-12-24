@@ -15,6 +15,7 @@ public record AuthBackClientConfig(
 	// Suppresses all joinServer errors
 	// WARNING: Allows to join servers with possibly invalid session data
 	ConfigValueContainer<Boolean> suppressAllServerJoinErrors,
+	UserAPIConfig userAPIConfig,
 	// Disables sending a legacy ping (for servers running 1.6.4 or lower) in the server list
 	// when the normal ping fails or times out
 	boolean preventLegacyServerPing
@@ -27,7 +28,35 @@ public record AuthBackClientConfig(
 			ConfigValueContainer.bool(config, "block-profile-keys-fetching", false),
 			ConfigValueContainer.bool(config, "block-realms-fetching", false),
 			ConfigValueContainer.bool(config, "suppress-all-server-join-errors", false),
+			new UserAPIConfig(config),
 			config.getBoolean("prevent-legacy-server-ping", true)
 		);
+	}
+	
+	public record UserAPIConfig(
+		// Simulates that the user API is in offline/dummy mode. This means that
+		// * No user properties (like SERVERS_ALLOWED, CHAT_ALLOWED, TELEMETRY_ENABLED) will be fetched.
+		// Instead the defaults will be used.
+		// * The player blocklist will not work
+		// * No telemetry will be available
+		// * No keypair will be available (see blockFetchingProfileKeys)
+		// * Abuse reporting will not be available
+		ConfigValueContainer<Boolean> dummyMode,
+		ConfigValueContainer<Boolean> blockFetchProperties,
+		ConfigValueContainer<Boolean> blockFetchBlocklist,
+		ConfigValueContainer<Boolean> blockTelemetry,
+		ConfigValueContainer<Boolean> blockReportAbuse
+	)
+	{
+		public UserAPIConfig(final Configuration config)
+		{
+			this(
+				ConfigValueContainer.bool(config, "userapi-dummy-mode", false),
+				ConfigValueContainer.bool(config, "userapi-block-fetch-properties", false),
+				ConfigValueContainer.bool(config, "userapi-block-fetch-blocklist", false),
+				ConfigValueContainer.bool(config, "userapi-block-telemetry", false),
+				ConfigValueContainer.bool(config, "userapi-block-report-abuse", false)
+			);
+		}
 	}
 }

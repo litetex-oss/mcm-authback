@@ -54,6 +54,9 @@ public class AuthBackServer extends AuthBack
 	// Also allow fallback auth when authServers are available for the server
 	private final boolean alwaysAllowFallbackAuth;
 	
+	// Force disable enforce-secure-profile
+	private final boolean forceDisableEnforceSecureProfile;
+	
 	// Requires calling the API
 	// Only needed when updating extremely ancient server versions (before 1.7.6 - 2014-04)
 	private final boolean skipOldUserConversion;
@@ -82,6 +85,8 @@ public class AuthBackServer extends AuthBack
 		);
 		this.alwaysAllowFallbackAuth = this.lowLevelConfig.getBoolean("fallback-auth.allow-always", true);
 		
+		this.forceDisableEnforceSecureProfile =
+			this.lowLevelConfig.getBoolean("force-disable-enforce-secure-profile", true);
 		this.skipOldUserConversion = this.lowLevelConfig.getBoolean("skip-old-user-conversion", true);
 		
 		new AuthBackServerNetworking(
@@ -121,6 +126,11 @@ public class AuthBackServer extends AuthBack
 	public boolean isAlwaysAllowFallbackAuth()
 	{
 		return this.alwaysAllowFallbackAuth;
+	}
+	
+	public boolean isForceDisableEnforceSecureProfile()
+	{
+		return this.forceDisableEnforceSecureProfile;
 	}
 	
 	public boolean isSkipOldUserConversion()

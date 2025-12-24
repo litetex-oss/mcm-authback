@@ -3,7 +3,6 @@ package net.litetex.authback.mixin.client;
 import java.util.UUID;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -18,6 +17,7 @@ import com.mojang.authlib.exceptions.UserBannedException;
 import com.mojang.authlib.minecraft.MinecraftSessionService;
 
 import net.litetex.authback.client.AuthBackClient;
+import net.litetex.authback.shared.mixin.log.MixinLogger;
 import net.minecraft.client.multiplayer.ClientHandshakePacketListenerImpl;
 
 
@@ -25,7 +25,7 @@ import net.minecraft.client.multiplayer.ClientHandshakePacketListenerImpl;
 public abstract class ClientHandshakePacketListenerImplMixin
 {
 	@Unique
-	private static final Logger LOG = LoggerFactory.getLogger(ClientHandshakePacketListenerImplMixin.class);
+	private static final Logger LOG = MixinLogger.client("ClientHandshakePacketListenerImplMixin");
 	
 	@Redirect(
 		method = "authenticateServer",

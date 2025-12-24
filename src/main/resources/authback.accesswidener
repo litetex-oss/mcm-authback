@@ -8,3 +8,4 @@ accessible method net/minecraft/client/gui/components/AbstractSelectionList addE
 accessible class net/minecraft/client/gui/components/OptionsList$Entry
 accessible method net/minecraft/client/gui/components/OptionsList$Entry <init> (Ljava/util/List;Lnet/minecraft/client/gui/screens/Screen;)V
 accessible field net/minecraft/client/gui/components/OptionsList screen Lnet/minecraft/client/gui/screens/options/OptionsSubScreen;
+accessible method net/minecraft/server/dedicated/Settings get (Ljava/lang/String;Z)Z

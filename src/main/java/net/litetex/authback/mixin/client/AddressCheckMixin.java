@@ -1,12 +1,12 @@
 package net.litetex.authback.mixin.client;
 
-import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import net.litetex.authback.client.AuthBackClient;
+import net.litetex.authback.shared.mixin.log.MixinLogger;
 import net.minecraft.client.multiplayer.resolver.AddressCheck;
 import net.minecraft.client.multiplayer.resolver.ResolvedServerAddress;
 import net.minecraft.client.multiplayer.resolver.ServerAddress;
@@ -35,7 +35,7 @@ public interface AddressCheckMixin
 	{
 		if(AuthBackClient.instance().config().blockAddressCheck().value())
 		{
-			LoggerFactory.getLogger(AddressCheckMixin.class).debug("Blocking address check");
+			MixinLogger.client("AddressCheckMixin").debug("Blocking address check");
 			cir.setReturnValue(new AddressCheck()
 			{
 				@Override
