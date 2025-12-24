@@ -12,13 +12,16 @@
     "client.AddressCheckMixin",
     "client.ClientHandshakePacketListenerImplMixin",
     "client.ConnectScreenMixin",
+    "client.MinecraftMixin",
     "client.OnlineOptionsScreenMixin",
     "client.RealmsClientMixin",
     "client.ServerStatusPingerMixin",
-    "client.TitleScreenMixin"
+    "client.TitleScreenMixin",
+    "client.YggdrasilUserApiServiceMixin"
   ],
   "server": [
     "server.DedicatedServerMixin",
+    "server.DedicatedServerPropertiesMixin",
     "server.OldUsersConverterMixin",
     "server.ServerLoginPacketListenerImplUserAuthenticatorMixin"
   ],

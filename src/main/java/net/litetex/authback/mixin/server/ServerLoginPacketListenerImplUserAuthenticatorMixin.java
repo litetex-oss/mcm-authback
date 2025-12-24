@@ -3,7 +3,6 @@ package net.litetex.authback.mixin.server;
 import java.util.function.Consumer;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.gen.Accessor;
@@ -15,6 +14,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import com.mojang.authlib.GameProfile;
 
 import net.litetex.authback.server.AuthBackServer;
+import net.litetex.authback.shared.mixin.log.MixinLogger;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.network.ServerLoginPacketListenerImpl;
 
@@ -23,8 +23,7 @@ import net.minecraft.server.network.ServerLoginPacketListenerImpl;
 public abstract class ServerLoginPacketListenerImplUserAuthenticatorMixin
 {
 	@Unique
-	private static final Logger LOG =
-		LoggerFactory.getLogger(ServerLoginPacketListenerImplUserAuthenticatorMixin.class);
+	private static final Logger LOG = MixinLogger.server("ServerLoginPacketListenerImplUserAuthenticatorMixin");
 	
 	@Accessor("field_14176")
 	abstract ServerLoginPacketListenerImpl serverLoginPacketListener();

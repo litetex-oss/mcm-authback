@@ -1,7 +1,6 @@
 package net.litetex.authback.mixin.client;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -11,6 +10,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.realmsclient.gui.screens.RealmsNotificationsScreen;
 
 import net.litetex.authback.client.AuthBackClient;
+import net.litetex.authback.shared.mixin.log.MixinLogger;
 import net.minecraft.client.gui.screens.TitleScreen;
 
 
@@ -18,7 +18,7 @@ import net.minecraft.client.gui.screens.TitleScreen;
 public abstract class TitleScreenMixin
 {
 	@Unique
-	private static final Logger LOG = LoggerFactory.getLogger(TitleScreenMixin.class);
+	private static final Logger LOG = MixinLogger.client("TitleScreenMixin");
 	
 	@WrapOperation(
 		method = "init",

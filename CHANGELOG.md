@@ -1,3 +1,9 @@
+# 1.3.0
+* [Client] Added more configuration options for UserAPI
+    * Can now be completely replaced by a dummy
+* [Server] Added `force-disable-enforce-secure-profile`
+* Improved logging
+
 # 1.2.1
 * Disabled useless server related network traffic
     * Enabled `block-address-check` by default as this causes laggy reverse DNS lookups when using literal IPs

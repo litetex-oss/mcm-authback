@@ -1,6 +1,7 @@
 package net.litetex.authback.client.menu;
 
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import net.litetex.authback.client.AuthBackClient;
@@ -41,6 +42,7 @@ public class ConfigScreen extends OptionsSubScreen
 	{
 		this.addKeyManagementOptions();
 		this.addAPIInteractionOptions();
+		this.addUserAPIInteractionOptions();
 	}
 	
 	private void addKeyManagementOptions()
@@ -112,11 +114,60 @@ public class ConfigScreen extends OptionsSubScreen
 					"Suppress any joinServer error",
 					"""
 						Blocks all errors encountered when calling joinServer.
-						This can work-around problems when the API is misbehaving and returning incorrect responses.
+						This can workaround problems when the API is misbehaving and returning incorrect responses.
 						
 						WARNING: Allows joining servers with possibly invalid session data"""
 				))
 			.map(BooleanConfigData::createButton)
+			.map(btn -> new BigEntry(this.list, btn))
+			.forEach(this.list::addEntry);
+	}
+	
+	private void addUserAPIInteractionOptions()
+	{
+		final AuthBackClientConfig.UserAPIConfig config = this.abClient.config().userAPIConfig();
+		
+		this.addCategory(Component.literal("UserAPI"));
+		
+		final List<CycleButton<Boolean>> detailBtns = Stream.of(
+				new BooleanConfigData(
+					config.blockFetchProperties(),
+					"Prevent fetching player properties",
+					"""
+						No user properties will be fetched and the defaults will be used.
+						
+						NOTE: Even when this is enabled the game works like normal \
+						and you can still play on servers"""
+				),
+				new BooleanConfigData(
+					config.blockFetchBlocklist(),
+					"Prevent fetching blocked players",
+					"Prevents fetching the list of players that have been blocked by you"
+				),
+				new BooleanConfigData(
+					config.blockTelemetry(),
+					"Prevent sending telemetry"
+				),
+				new BooleanConfigData(
+					config.blockReportAbuse(),
+					"Disable abuse reporting"
+				))
+			.map(BooleanConfigData::createButton)
+			.toList();
+		
+		final CycleButton<Boolean> dummyModeBtn = new BooleanConfigData(
+			config.dummyMode(),
+			"Dummy/offline mode",
+			"""
+				Replaces the default implementation with the one used for offline mode:
+				* User properties won't be fetched / defaults will be used
+				* Player blocklist will not work
+				* No telemetry will be available
+				* Profile/Chat-signing keys will not be fetched
+				* Abuse reporting is unavailable""")
+			.createButton(dummyMode -> detailBtns.forEach(btn -> btn.visible = !dummyMode));
+		
+		Stream.concat(Stream.of(dummyModeBtn), detailBtns.stream())
 			.map(btn -> new BigEntry(this.list, btn))
 			.forEach(this.list::addEntry);
 	}
@@ -208,15 +259,39 @@ public class ConfigScreen extends OptionsSubScreen
 		String name,
 		String tooltip)
 	{
+		public BooleanConfigData(final ConfigValueContainer<Boolean> container, final String name)
+		{
+			this(container, name, null);
+		}
+		
 		CycleButton<Boolean> createButton()
 		{
-			return CycleButton.onOffBuilder(this.container.value())
-				.withTooltip(ignored -> Tooltip.create(Component.literal(this.tooltip)))
-				.create(
+			return this.createButton(null);
+		}
+		
+		CycleButton<Boolean> createButton(final Consumer<Boolean> onChanged)
+		{
+			final Boolean val = this.container.value();
+			if(onChanged != null)
+			{
+				onChanged.accept(val);
+			}
+			
+			final CycleButton.Builder<Boolean> builder = CycleButton.onOffBuilder(val);
+			if(this.tooltip != null)
+			{
+				builder.withTooltip(ignored -> Tooltip.create(Component.literal(this.tooltip)));
+			}
+			return builder.create(
 					Component.literal(this.name),
 					(btn, value) ->
-						this.container.set(value)
-				);
+					{
+						this.container.set(value);
+						if(onChanged != null)
+						{
+							onChanged.accept(value);
+						}
+					});
 		}
 	}
 }
