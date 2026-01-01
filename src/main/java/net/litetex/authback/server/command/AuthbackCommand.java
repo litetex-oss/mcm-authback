@@ -42,9 +42,9 @@ import net.minecraft.server.players.NameAndId;
 import net.minecraft.world.item.component.ResolvableProfile;
 
 
-public class FallbackCommand
+public class AuthbackCommand
 {
-	private static final Logger LOG = LoggerFactory.getLogger(FallbackCommand.class);
+	private static final Logger LOG = LoggerFactory.getLogger(AuthbackCommand.class);
 	
 	private static final DateTimeFormatter INSTANT_BASIC_DATE_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")
 		.withZone(ZoneId.systemDefault());
@@ -52,7 +52,7 @@ public class FallbackCommand
 	private final Supplier<ServerProfilePublicKeysManager> serverProfilePublicKeysManagerSupplier;
 	private final Supplier<GameProfileCacheManager> gameProfileCacheManagerSupplier;
 	
-	public FallbackCommand(
+	public AuthbackCommand(
 		final Supplier<ServerProfilePublicKeysManager> serverProfilePublicKeysManagerSupplier,
 		final Supplier<GameProfileCacheManager> gameProfileCacheManagerSupplier)
 	{
