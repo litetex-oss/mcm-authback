@@ -85,7 +85,7 @@ public class FallbackUserAuthenticationAdapter
 		
 		final String requestedUsername = loginPacketListener.requestedUsername;
 		LOG.info("Trying fallback auth for username={}", requestedUsername);
-		if(requestedUsername == null || !StringUtil.isValidPlayerName(requestedUsername))
+		if(requestedUsername == null || requestedUsername.isEmpty() || !StringUtil.isValidPlayerName(requestedUsername))
 		{
 			LOG.info("Aborting due to invalid username={}", requestedUsername);
 			defaultAction.run();
