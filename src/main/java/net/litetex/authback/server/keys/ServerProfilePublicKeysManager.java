@@ -64,13 +64,11 @@ public class ServerProfilePublicKeysManager
 	
 	public void add(final UUID uuid, final byte[] encodedPublicKey, final PublicKey publicKey)
 	{
-		final var uuidKeyInfosSC = this.profileUUIDKeysSC.supplyWithLock(profileUUIDKeys -> {
-			final var existingUuidKeyInfosSC = profileUUIDKeys.get(uuid);
-			return profileUUIDKeys.putLast(
-				uuid,
-				existingUuidKeyInfosSC != null
-					? existingUuidKeyInfosSC
-					: new UUIDKeyInfos());
+		final UUIDKeyInfos uuidKeyInfosSC = this.profileUUIDKeysSC.supplyWithLock(profileUUIDKeys -> {
+			final UUIDKeyInfos uuidKeyInfos =
+				Objects.requireNonNullElseGet(profileUUIDKeys.get(uuid), UUIDKeyInfos::new);
+			profileUUIDKeys.putLast(uuid, uuidKeyInfos);
+			return uuidKeyInfos;
 		});
 		
 		final int hash = Arrays.hashCode(encodedPublicKey);
