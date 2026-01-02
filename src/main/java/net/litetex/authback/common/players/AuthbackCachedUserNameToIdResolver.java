@@ -101,6 +101,7 @@ public class AuthbackCachedUserNameToIdResolver implements UserNameToIdResolver
 	
 	private Optional<OfflineProfiles> optOfflineProfiles = Optional.empty();
 	
+	@SuppressWarnings("PMD.ExcessiveParameterList")
 	public AuthbackCachedUserNameToIdResolver(
 		final GameProfileRepository gameProfileRepository,
 		final Path file,
@@ -293,7 +294,13 @@ public class AuthbackCachedUserNameToIdResolver implements UserNameToIdResolver
 		final BiFunction<GameProfileCacheManager, K, GameProfile> secondaryCacheAccessor,
 		final K key)
 	{
-		return this.getFromCache(onlineSC, GameProfileInfo::toNameAndId, optOfflineSC, secondaryCacheAccessor, key, key);
+		return this.getFromCache(
+			onlineSC,
+			GameProfileInfo::toNameAndId,
+			optOfflineSC,
+			secondaryCacheAccessor,
+			key,
+			key);
 	}
 	
 	private <K> Optional<NameAndId> getFromCache(

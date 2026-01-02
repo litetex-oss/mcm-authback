@@ -11,8 +11,6 @@ import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.mojang.authlib.minecraft.client.ObjectMapper;
-
 import net.litetex.authback.shared.external.com.google.common.base.Suppliers;
 import net.litetex.authback.shared.io.Persister;
 import net.litetex.authback.shared.json.JSONSerializer;
@@ -22,7 +20,6 @@ public class GlobalPublicKeysCache
 {
 	private static final Logger LOG = LoggerFactory.getLogger(GlobalPublicKeysCache.class);
 	
-	private final ObjectMapper objectMapper = JSONSerializer.FAST_OBJECT_MAPPER;
 	private final Path cacheFile;
 	
 	private final Optional<Duration> optDefaultReuseDuration;
@@ -53,7 +50,7 @@ public class GlobalPublicKeysCache
 			() -> new PersistentContainer(
 				url.toString(),
 				Instant.now(),
-				this.objectMapper.writeValueAsString(response)));
+				JSONSerializer.FAST_OBJECT_MAPPER.writeValueAsString(response)));
 	}
 	
 	public <T> Optional<CachedResponse<T>> read(final URL url, final Class<T> responseClass)
@@ -71,7 +68,9 @@ public class GlobalPublicKeysCache
 					final long startMs2 = System.currentTimeMillis();
 					try
 					{
-						return this.objectMapper.readValue(persistentContainer.response(), responseClass);
+						return JSONSerializer.FAST_OBJECT_MAPPER.readValue(
+							persistentContainer.response(),
+							responseClass);
 					}
 					catch(final Exception e2)
 					{

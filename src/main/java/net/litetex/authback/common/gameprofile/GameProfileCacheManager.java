@@ -28,7 +28,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.mojang.authlib.GameProfile;
-import com.mojang.authlib.minecraft.client.ObjectMapper;
 
 import net.litetex.authback.shared.external.com.google.common.base.Suppliers;
 import net.litetex.authback.shared.io.Persister;
@@ -42,8 +41,6 @@ public class GameProfileCacheManager
 	
 	private static final Duration DELETE_AFTER_EXECUTION_INTERVAL = Duration.ofHours(12);
 	private static final float TARGET_PROFILE_COUNT_PERCENT = 0.9f;
-	
-	private final ObjectMapper objectMapper = JSONSerializer.FAST_OBJECT_MAPPER;
 	
 	private final Path file;
 	
@@ -86,7 +83,7 @@ public class GameProfileCacheManager
 		LOG.debug("Add {}/{}", profile.name(), profile.id());
 		
 		final ProfileContainer profileContainer = new ProfileContainer(
-			this.objectMapper.writeValueAsString(profile),
+			JSONSerializer.FAST_OBJECT_MAPPER.writeValueAsString(profile),
 			() -> profile,
 			Instant.now());
 		
@@ -256,7 +253,7 @@ public class GameProfileCacheManager
 						e -> stringToUUIDFunc.apply(e.getKey()),
 						e -> new ProfileContainer(
 							e.getValue().serializedGameProfile(),
-							Suppliers.memoize(() -> this.objectMapper.readValue(
+							Suppliers.memoize(() -> JSONSerializer.FAST_OBJECT_MAPPER.readValue(
 								e.getValue().serializedGameProfile(),
 								GameProfile.class)),
 							e.getValue().createdAt()
