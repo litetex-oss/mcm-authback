@@ -4,11 +4,11 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 
-public class MaxSizedHashMap<K, V> extends LinkedHashMap<K, V>
+public class MaxSizedLinkedHashMap<K, V> extends LinkedHashMap<K, V>
 {
 	private final int maxSize;
 	
-	public MaxSizedHashMap(final int maxSize)
+	public MaxSizedLinkedHashMap(final int maxSize)
 	{
 		this.maxSize = maxSize;
 	}

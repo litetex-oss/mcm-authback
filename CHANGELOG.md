@@ -1,3 +1,8 @@
+# 1.4.0
+* Replaced default implementation of `UserNameToIdResolver` (`usercache.json`) with a better alternative that is more efficient and prevents cache corruption
+* Fix NPE when a new user intially joins a server
+* Added safety check for player name validation
+
 # 1.3.0
 * [Client] Added more configuration options for UserAPI
     * Can now be completely replaced by a dummy

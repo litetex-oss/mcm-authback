@@ -15,13 +15,14 @@ import com.mojang.authlib.minecraft.client.ObjectMapper;
 
 import net.litetex.authback.shared.external.com.google.common.base.Suppliers;
 import net.litetex.authback.shared.io.Persister;
+import net.litetex.authback.shared.json.JSONSerializer;
 
 
 public class GlobalPublicKeysCache
 {
 	private static final Logger LOG = LoggerFactory.getLogger(GlobalPublicKeysCache.class);
 	
-	private final ObjectMapper objectMapper = ObjectMapper.create();
+	private final ObjectMapper objectMapper = JSONSerializer.FAST_OBJECT_MAPPER;
 	private final Path cacheFile;
 	
 	private final Optional<Duration> optDefaultReuseDuration;

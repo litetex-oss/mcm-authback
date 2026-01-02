@@ -16,7 +16,9 @@ import java.util.Objects;
 import java.util.SequencedMap;
 import java.util.Set;
 import java.util.UUID;
+import java.util.WeakHashMap;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -30,6 +32,7 @@ import com.mojang.authlib.minecraft.client.ObjectMapper;
 
 import net.litetex.authback.shared.external.com.google.common.base.Suppliers;
 import net.litetex.authback.shared.io.Persister;
+import net.litetex.authback.shared.json.JSONSerializer;
 import net.litetex.authback.shared.sync.SynchronizedContainer;
 
 
@@ -40,7 +43,7 @@ public class GameProfileCacheManager
 	private static final Duration DELETE_AFTER_EXECUTION_INTERVAL = Duration.ofHours(12);
 	private static final float TARGET_PROFILE_COUNT_PERCENT = 0.9f;
 	
-	private final ObjectMapper objectMapper = ObjectMapper.create();
+	private final ObjectMapper objectMapper = JSONSerializer.FAST_OBJECT_MAPPER;
 	
 	private final Path file;
 	
@@ -49,6 +52,10 @@ public class GameProfileCacheManager
 	
 	private final int maxTargetedProfileCount;
 	private final int targetedProfileCount;
+	
+	// Key = Owner
+	private final Map<Object, Consumer<GameProfile>> onAddedProfileAsyncHandlers =
+		Collections.synchronizedMap(new WeakHashMap<>());
 	
 	private Map<UUID, String> uuidUsernames = new HashMap<>(); // Reverse map for tracking when deleting
 	private Map<String, UUID> usernameUuids = new HashMap<>();
@@ -76,7 +83,7 @@ public class GameProfileCacheManager
 	
 	public void add(final GameProfile profile)
 	{
-		LOG.debug("Add {}", profile.id());
+		LOG.debug("Add {}/{}", profile.name(), profile.id());
 		
 		final ProfileContainer profileContainer = new ProfileContainer(
 			this.objectMapper.writeValueAsString(profile),
@@ -93,6 +100,25 @@ public class GameProfileCacheManager
 		this.usernameUuids.put(profile.name(), profile.id());
 		
 		this.saveAsync();
+		
+		if(!this.onAddedProfileAsyncHandlers.isEmpty())
+		{
+			CompletableFuture.runAsync(() -> this.onAddedProfileAsyncHandlers.forEach((owner, c) -> {
+				final long startMs = System.currentTimeMillis();
+				try
+				{
+					c.accept(profile);
+					LOG.debug(
+						"Called onAddedProfileAsyncHandler for {} took {}ms",
+						owner,
+						System.currentTimeMillis() - startMs);
+				}
+				catch(final Exception ex)
+				{
+					LOG.warn("Failed to execute onAddedProfileAsyncHandler for {}", owner, ex);
+				}
+			}));
+		}
 	}
 	
 	public GameProfile findByName(final String username)
@@ -313,6 +339,11 @@ public class GameProfileCacheManager
 						e -> e.getKey().toString(),
 						e -> e.getValue().persist()
 					))));
+	}
+	
+	public void registerOnAddedProfileAsyncHandlers(final Object owner, final Consumer<GameProfile> consumer)
+	{
+		this.onAddedProfileAsyncHandlers.put(owner, consumer);
 	}
 	
 	record ProfileContainer(

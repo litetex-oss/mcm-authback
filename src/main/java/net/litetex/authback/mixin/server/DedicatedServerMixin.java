@@ -28,7 +28,7 @@ public abstract class DedicatedServerMixin
 		if(AuthBackServer.instance().isSkipOldUserConversion())
 		{
 			LOG.debug("Skipping old user conversion");
-			cir.setReturnValue(true);
+			cir.setReturnValue(false);
 		}
 	}
 }
