@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.util.concurrent.RateLimiter;
 
-import net.litetex.authback.shared.collections.MaxSizedHashMap;
+import net.litetex.authback.shared.collections.MaxSizedLinkedHashMap;
 import net.litetex.authback.shared.config.Configuration;
 
 
@@ -34,7 +34,7 @@ public class FallbackAuthRateLimiter
 		final boolean ignoreLocalAddresses,
 		final int ipv6NetworkPrefixBytes)
 	{
-		this.rateLimiters = Collections.synchronizedMap(new MaxSizedHashMap<>(bucketSize));
+		this.rateLimiters = Collections.synchronizedMap(new MaxSizedLinkedHashMap<>(bucketSize));
 		this.newRateLimiterSupplier = () ->
 			// Note that the rate limiter is constant
 			RateLimiter.create(requestPerMinutePerIP / 60.0);

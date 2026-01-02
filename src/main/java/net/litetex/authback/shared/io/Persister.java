@@ -8,6 +8,8 @@ import java.util.function.Supplier;
 
 import org.slf4j.Logger;
 
+import com.google.gson.Gson;
+
 import net.litetex.authback.shared.json.JSONSerializer;
 
 
@@ -15,12 +17,16 @@ public final class Persister
 {
 	public static <T> Optional<T> tryRead(final Logger logger, final Path path, final Class<T> clazz)
 	{
+		return tryRead(logger, path, JSONSerializer.GSON, clazz);
+	}
+	
+	public static <T> Optional<T> tryRead(final Logger logger, final Path path, final Gson gson, final Class<T> clazz)
+	{
 		try
 		{
 			final long startMs = System.currentTimeMillis();
 			
-			final Optional<T> optContent =
-				Optional.ofNullable(JSONSerializer.GSON.fromJson(Files.readString(path), clazz));
+			final Optional<T> optContent = Optional.ofNullable(gson.fromJson(Files.readString(path), clazz));
 			
 			logger.debug("Reading {} took {}ms", path, System.currentTimeMillis() - startMs);
 			return optContent;
@@ -38,12 +44,17 @@ public final class Persister
 	
 	public static <T> boolean trySave(final Logger logger, final Path path, final Supplier<T> value)
 	{
+		return trySave(logger, path, JSONSerializer.GSON, value);
+	}
+	
+	public static <T> boolean trySave(final Logger logger, final Path path, final Gson gson, final Supplier<T> value)
+	{
 		try
 		{
 			final long startMs = System.currentTimeMillis();
 			
 			Files.createDirectories(path.getParent());
-			Files.writeString(path, JSONSerializer.GSON.toJson(value.get()));
+			Files.writeString(path, gson.toJson(value.get()));
 			
 			logger.debug("Saving {} took {}ms", path, System.currentTimeMillis() - startMs);
 			return true;

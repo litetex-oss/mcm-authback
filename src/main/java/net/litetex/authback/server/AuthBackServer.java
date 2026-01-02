@@ -16,7 +16,7 @@ import com.mojang.authlib.GameProfile;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.litetex.authback.common.AuthBackCommon;
 import net.litetex.authback.common.gameprofile.GameProfileCacheManager;
-import net.litetex.authback.server.command.FallbackCommand;
+import net.litetex.authback.server.command.AuthbackCommand;
 import net.litetex.authback.server.fallbackauth.FallbackAuthRateLimiter;
 import net.litetex.authback.server.fallbackauth.FallbackUserAuthenticationAdapter;
 import net.litetex.authback.server.keys.ServerProfilePublicKeysManager;
@@ -94,7 +94,7 @@ public class AuthBackServer extends AuthBack
 			this.serverProfilePublicKeysManagerSupplier);
 		
 		CommandRegistrationCallback.EVENT.register((dispatcher, buildContext, selection) ->
-			new FallbackCommand(
+			new AuthbackCommand(
 				this.serverProfilePublicKeysManagerSupplier,
 				this.gameProfileCacheManagerSupplier)
 				.register(dispatcher));

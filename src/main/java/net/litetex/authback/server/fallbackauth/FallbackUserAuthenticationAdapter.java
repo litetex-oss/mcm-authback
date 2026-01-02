@@ -85,7 +85,7 @@ public class FallbackUserAuthenticationAdapter
 		
 		final String requestedUsername = loginPacketListener.requestedUsername;
 		LOG.info("Trying fallback auth for username={}", requestedUsername);
-		if(requestedUsername == null || !StringUtil.isValidPlayerName(requestedUsername))
+		if(requestedUsername == null || requestedUsername.isEmpty() || !StringUtil.isValidPlayerName(requestedUsername))
 		{
 			LOG.info("Aborting due to invalid username={}", requestedUsername);
 			defaultAction.run();
@@ -150,6 +150,9 @@ public class FallbackUserAuthenticationAdapter
 		LOG.debug("Failed to find internally cached game profile[name={}], trying nameToIdCache", requestedUsername);
 		
 		return loginPacketListener.server.services().nameToIdCache().get(requestedUsername)
+			// nameToIdCache Lookup is case-insensitive
+			// -> Ensure that the requestUsername EXACTLY matches to prevent conflicts
+			.filter(nameAndId -> nameAndId.name().equals(requestedUsername))
 			.map(nameAndId -> {
 				LOG.warn(
 					"Failed to find cached game profile[name={}], but was able to use nameToIdCache. "
