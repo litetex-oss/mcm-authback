@@ -131,6 +131,14 @@ You can fix this in the following way if you are an Admin:
 2. and to send their public key (see "Where can I find my public key?" above) to you
 3. Associate the public key on the server with them by running `/authback public_key add name <yourFriendsPlayerName> <yourFriendsPublicKey>`
 
+### How can I test fallback authentication?
+
+1. Ensure that the server knows your public key (you can check that on the server using `/authback public_key list`)
+2. Ensure that `fallback-auth.allow-always` is enabled on the server (it should be enabled by default)
+3. Start the client in offline mode
+4. Enable `Suppress any joinServer error` in the client options
+5. You should now be able to join the server using fallback authentication. Check the log for details.
+
 ### Where does the mod store it's data?
 
 In the game directory (e.g. `%APPDATA%\.minecraft`) inside the ``.mods\authback`` directory.
