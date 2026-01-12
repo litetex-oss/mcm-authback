@@ -44,7 +44,7 @@ You can configure the mod via
     * prefixed with ``AUTHBACK_<variant>`` 
         * where ``variant`` is either ``SERVER`` OR ``CLIENT``
     * prefixed with ``AUTHBACK_``
-    * all properties are in UPPERCASE and use `_` (instead of `.`) as delimiter
+    * all properties are in UPPERCASE and use `_` instead of `.` or `-`
 * System properties
     * prefixed with ``authback.<variant>`` 
         * where ``variant`` is either ``server`` OR ``client``
