@@ -25,6 +25,7 @@
     "server.DedicatedServerMixin",
     "server.DedicatedServerPropertiesMixin",
     "server.OldUsersConverterMixin",
+    "server.ServerConnectionListenerMixin",
     "server.ServerLoginPacketListenerImplUserAuthenticatorMixin"
   ],
   "injectors": {

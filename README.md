@@ -88,6 +88,7 @@ _You should know exactly what you're doing when doing modifications._
 | `fallback-auth.rate-limit.ipv6-network-prefix-bytes` | `int` | `8` | Network prefix bytes (not bits!) for IPv6. The default `8` resolves to `/64`. |
 | `force-disable-enforce-secure-profile` | `bool` | `true` | Forces `enforce-secure-profile` to be disabled |
 | `skip-old-user-conversion` | `bool` | `true` | Skips the migration of user files used by servers before `1.7.6` (released 2014-04). It's extremely unlikely that this is needed by a server and requires contacting the Mojang's API. Therefore the migration is skipped by default |
+| `disable-legacy-query-handler` | `bool` | `true` | Disables the legacy (pre 1.7) query/ping handler |
 
 ##### Client
 

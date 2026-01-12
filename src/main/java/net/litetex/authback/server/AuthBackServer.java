@@ -61,6 +61,9 @@ public class AuthBackServer extends AuthBack
 	// Only needed when updating extremely ancient server versions (before 1.7.6 - 2014-04)
 	private final boolean skipOldUserConversion;
 	
+	// Disables the legacy (pre 1.7) query/ping handler
+	private final boolean disableLegacyQueryHandler;
+	
 	@SuppressWarnings("checkstyle:MagicNumber")
 	public AuthBackServer()
 	{
@@ -88,6 +91,7 @@ public class AuthBackServer extends AuthBack
 		this.forceDisableEnforceSecureProfile =
 			this.lowLevelConfig.getBoolean("force-disable-enforce-secure-profile", true);
 		this.skipOldUserConversion = this.lowLevelConfig.getBoolean("skip-old-user-conversion", true);
+		this.disableLegacyQueryHandler = this.lowLevelConfig.getBoolean("disable-legacy-query-handler", true);
 		
 		new AuthBackServerNetworking(
 			this.connectionsToSkipUpToDateCheck,
@@ -136,5 +140,10 @@ public class AuthBackServer extends AuthBack
 	public boolean isSkipOldUserConversion()
 	{
 		return this.skipOldUserConversion;
+	}
+	
+	public boolean isDisableLegacyQueryHandler()
+	{
+		return this.disableLegacyQueryHandler;
 	}
 }
