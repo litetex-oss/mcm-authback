@@ -55,7 +55,7 @@ public abstract class ServerLoginPacketListenerImplUserAuthenticatorMixin
 	)
 	void handleNotJoined(final CallbackInfo ci)
 	{
-		if(!AuthBackServer.instance().isAlwaysAllowFallbackAuth())
+		if(!AuthBackServer.instance().config().alwaysAllowFallbackAuth())
 		{
 			LOG.debug("Always allow fallback auth is disabled");
 			return;

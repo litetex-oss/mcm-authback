@@ -25,9 +25,9 @@ public abstract class OldUsersConverterMixin
 	)
 	private static void skipServerReadyAfterUserconversion(final CallbackInfoReturnable<Boolean> cir)
 	{
-		if(AuthBackServer.instance().isSkipOldUserConversion())
+		if(AuthBackServer.instance().config().skipOldUserConversion())
 		{
-			LOG.debug("Skipping server ready after userconversion");
+			LOG.debug("Skipping server ready after user-conversion");
 			cir.setReturnValue(true);
 		}
 	}

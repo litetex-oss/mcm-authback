@@ -28,7 +28,7 @@ public abstract class DedicatedServerPropertiesMixin
 		final boolean resolvedValue = instance.get(key, defaultValue);
 		if("enforce-secure-profile".equals(key)
 			&& resolvedValue
-			&& AuthBackServer.instance().isForceDisableEnforceSecureProfile())
+			&& AuthBackServer.instance().config().forceDisableEnforceSecureProfile())
 		{
 			LOG.info("enforce-secure-profile was enabled - force disabling it. "
 				+ "You should disable it in the server.properties!");

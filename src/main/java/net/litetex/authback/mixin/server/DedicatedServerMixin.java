@@ -25,9 +25,9 @@ public abstract class DedicatedServerMixin
 	)
 	void skipConvertOldUsers(final CallbackInfoReturnable<Boolean> cir)
 	{
-		if(AuthBackServer.instance().isSkipOldUserConversion())
+		if(AuthBackServer.instance().config().skipOldUserConversion())
 		{
-			LOG.debug("Skipping old user conversion");
+			LOG.debug("Skipping old user-conversion");
 			cir.setReturnValue(false);
 		}
 	}

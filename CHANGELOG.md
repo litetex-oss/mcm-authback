@@ -1,5 +1,7 @@
 # 1.5.0
-* [Server] Added `disable-legacy-query-handler`
+* [Server] Added 
+    * `disable-legacy-query-handler`
+    * `log-connection-init-ips`
 * [Client] Reconfigure some initial option values to be less annoying
 
 # 1.4.0

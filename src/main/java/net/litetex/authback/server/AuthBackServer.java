@@ -17,6 +17,7 @@ import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.litetex.authback.common.AuthBackCommon;
 import net.litetex.authback.common.gameprofile.GameProfileCacheManager;
 import net.litetex.authback.server.command.AuthbackCommand;
+import net.litetex.authback.server.config.AuthBackServerConfig;
 import net.litetex.authback.server.fallbackauth.FallbackAuthRateLimiter;
 import net.litetex.authback.server.fallbackauth.FallbackUserAuthenticationAdapter;
 import net.litetex.authback.server.keys.ServerProfilePublicKeysManager;
@@ -51,18 +52,7 @@ public class AuthBackServer extends AuthBack
 	// This is the case when a connection did log in using fallback auth
 	private final Set<Connection> connectionsToSkipUpToDateCheck;
 	
-	// Also allow fallback auth when authServers are available for the server
-	private final boolean alwaysAllowFallbackAuth;
-	
-	// Force disable enforce-secure-profile
-	private final boolean forceDisableEnforceSecureProfile;
-	
-	// Requires calling the API
-	// Only needed when updating extremely ancient server versions (before 1.7.6 - 2014-04)
-	private final boolean skipOldUserConversion;
-	
-	// Disables the legacy (pre 1.7) query/ping handler
-	private final boolean disableLegacyQueryHandler;
+	private final AuthBackServerConfig config;
 	
 	@SuppressWarnings("checkstyle:MagicNumber")
 	public AuthBackServer()
@@ -86,12 +76,8 @@ public class AuthBackServer extends AuthBack
 			this.gameProfileCacheManagerSupplier,
 			FallbackAuthRateLimiter.create(this.lowLevelConfig)
 		);
-		this.alwaysAllowFallbackAuth = this.lowLevelConfig.getBoolean("fallback-auth.allow-always", true);
 		
-		this.forceDisableEnforceSecureProfile =
-			this.lowLevelConfig.getBoolean("force-disable-enforce-secure-profile", true);
-		this.skipOldUserConversion = this.lowLevelConfig.getBoolean("skip-old-user-conversion", true);
-		this.disableLegacyQueryHandler = this.lowLevelConfig.getBoolean("disable-legacy-query-handler", true);
+		this.config = new AuthBackServerConfig(this.lowLevelConfig);
 		
 		new AuthBackServerNetworking(
 			this.connectionsToSkipUpToDateCheck,
@@ -127,23 +113,8 @@ public class AuthBackServer extends AuthBack
 			});
 	}
 	
-	public boolean isAlwaysAllowFallbackAuth()
+	public AuthBackServerConfig config()
 	{
-		return this.alwaysAllowFallbackAuth;
-	}
-	
-	public boolean isForceDisableEnforceSecureProfile()
-	{
-		return this.forceDisableEnforceSecureProfile;
-	}
-	
-	public boolean isSkipOldUserConversion()
-	{
-		return this.skipOldUserConversion;
-	}
-	
-	public boolean isDisableLegacyQueryHandler()
-	{
-		return this.disableLegacyQueryHandler;
+		return this.config;
 	}
 }
