@@ -15,6 +15,7 @@
     "client.ConnectScreenMixin",
     "client.MinecraftMixin",
     "client.OnlineOptionsScreenMixin",
+    "client.OptionsMixin",
     "client.RealmsClientMixin",
     "client.ServerStatusPingerMixin",
     "client.TitleScreenMixin",
@@ -24,6 +25,7 @@
     "server.DedicatedServerMixin",
     "server.DedicatedServerPropertiesMixin",
     "server.OldUsersConverterMixin",
+    "server.ServerConnectionListenerMixin",
     "server.ServerLoginPacketListenerImplUserAuthenticatorMixin"
   ],
   "injectors": {

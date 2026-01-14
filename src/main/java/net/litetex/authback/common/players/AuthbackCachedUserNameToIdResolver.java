@@ -174,7 +174,7 @@ public class AuthbackCachedUserNameToIdResolver implements UserNameToIdResolver
 		}
 		finally
 		{
-			LOG.debug("Add {} took {}", nameAndId, System.currentTimeMillis() - startMs);
+			LOG.debug("Add {} took {}ms", nameAndId, System.currentTimeMillis() - startMs);
 		}
 	}
 	

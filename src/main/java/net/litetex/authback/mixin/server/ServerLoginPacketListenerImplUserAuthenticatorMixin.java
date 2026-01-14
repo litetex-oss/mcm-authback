@@ -8,9 +8,10 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.authlib.GameProfile;
 
 import net.litetex.authback.server.AuthBackServer;
@@ -28,7 +29,7 @@ public abstract class ServerLoginPacketListenerImplUserAuthenticatorMixin
 	@Accessor("field_14176")
 	abstract ServerLoginPacketListenerImpl serverLoginPacketListener();
 	
-	@Redirect(
+	@WrapOperation(
 		method = "run",
 		at = @At(
 			value = "INVOKE",
@@ -37,9 +38,12 @@ public abstract class ServerLoginPacketListenerImplUserAuthenticatorMixin
 			ordinal = 0
 		)
 	)
-	void handleHasJoinedSuccess(final ServerLoginPacketListenerImpl instance, final GameProfile gameProfile)
+	void handleHasJoinedSuccess(
+		final ServerLoginPacketListenerImpl instance,
+		final GameProfile gameProfile,
+		final Operation<Void> original)
 	{
-		instance.startClientVerification(gameProfile);
+		original.call(instance, gameProfile);
 		
 		AuthBackServer.instance().handleJoinSuccess(gameProfile);
 	}
@@ -55,7 +59,7 @@ public abstract class ServerLoginPacketListenerImplUserAuthenticatorMixin
 	)
 	void handleNotJoined(final CallbackInfo ci)
 	{
-		if(!AuthBackServer.instance().isAlwaysAllowFallbackAuth())
+		if(!AuthBackServer.instance().config().alwaysAllowFallbackAuth())
 		{
 			LOG.debug("Always allow fallback auth is disabled");
 			return;
@@ -65,7 +69,7 @@ public abstract class ServerLoginPacketListenerImplUserAuthenticatorMixin
 			"UnverifiedClient",
 			loginPacketListener -> {
 				loginPacketListener.disconnect(Component.translatable("multiplayer.disconnect.unverified_username"));
-				LOG.error("Couldn't verify username");
+				LOG.warn("Couldn't verify username '{}'", loginPacketListener.getUserName());
 			});
 		
 		ci.cancel();
@@ -86,7 +90,9 @@ public abstract class ServerLoginPacketListenerImplUserAuthenticatorMixin
 			"AuthServersDown",
 			loginPacketListener -> {
 				loginPacketListener.disconnect(Component.translatable("multiplayer.disconnect.authservers_down"));
-				LOG.error("Couldn't verify username because auth servers are unavailable");
+				LOG.warn(
+					"Couldn't verify username '{}' because auth servers are unavailable",
+					loginPacketListener.getUserName());
 			});
 		
 		ci.cancel();

@@ -1,3 +1,10 @@
+# 1.5.0
+* [Server] Added 
+    * `disable-legacy-query-handler`
+    * `log-connection-init-ips`
+* [Client] Reconfigure some initial option values to be less annoying
+* Improve compatibility with other mods
+
 # 1.4.0
 * Replaced default implementation of `UserNameToIdResolver` (`usercache.json`) with a better alternative that is more efficient and prevents cache corruption
 * Fix NPE when a new user intially joins a server
