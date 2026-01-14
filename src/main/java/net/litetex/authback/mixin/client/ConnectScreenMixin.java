@@ -5,7 +5,9 @@ import java.net.InetSocketAddress;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Redirect;
+
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 
 import net.litetex.authback.client.AuthBackClient;
 
@@ -23,13 +25,13 @@ public abstract class ConnectScreenMixin
 		this.enabled = AuthBackClient.instance().config().blockAddressCheck().value();
 	}
 	
-	@Redirect(
+	@WrapOperation(
 		method = "run",
 		at = @At(value = "INVOKE", target = "Ljava/net/InetSocketAddress;getHostName()Ljava/lang/String;"))
-	String getHostName(final InetSocketAddress instance)
+	String getHostName(final InetSocketAddress instance, final Operation<String> original)
 	{
 		return this.enabled
 			? instance.getHostString() // Same as getHostName but does not execute reverse DNS lookup (on literal IPs)
-			: instance.getHostName();
+			: original.call(instance);
 	}
 }

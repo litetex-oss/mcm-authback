@@ -8,9 +8,10 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.authlib.GameProfile;
 
 import net.litetex.authback.server.AuthBackServer;
@@ -28,7 +29,7 @@ public abstract class ServerLoginPacketListenerImplUserAuthenticatorMixin
 	@Accessor("field_14176")
 	abstract ServerLoginPacketListenerImpl serverLoginPacketListener();
 	
-	@Redirect(
+	@WrapOperation(
 		method = "run",
 		at = @At(
 			value = "INVOKE",
@@ -37,9 +38,12 @@ public abstract class ServerLoginPacketListenerImplUserAuthenticatorMixin
 			ordinal = 0
 		)
 	)
-	void handleHasJoinedSuccess(final ServerLoginPacketListenerImpl instance, final GameProfile gameProfile)
+	void handleHasJoinedSuccess(
+		final ServerLoginPacketListenerImpl instance,
+		final GameProfile gameProfile,
+		final Operation<Void> original)
 	{
-		instance.startClientVerification(gameProfile);
+		original.call(instance, gameProfile);
 		
 		AuthBackServer.instance().handleJoinSuccess(gameProfile);
 	}
