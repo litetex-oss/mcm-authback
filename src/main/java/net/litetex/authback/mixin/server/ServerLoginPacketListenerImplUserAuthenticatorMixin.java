@@ -69,7 +69,7 @@ public abstract class ServerLoginPacketListenerImplUserAuthenticatorMixin
 			"UnverifiedClient",
 			loginPacketListener -> {
 				loginPacketListener.disconnect(Component.translatable("multiplayer.disconnect.unverified_username"));
-				LOG.error("Couldn't verify username");
+				LOG.warn("Couldn't verify username '{}'", loginPacketListener.getUserName());
 			});
 		
 		ci.cancel();
@@ -90,7 +90,9 @@ public abstract class ServerLoginPacketListenerImplUserAuthenticatorMixin
 			"AuthServersDown",
 			loginPacketListener -> {
 				loginPacketListener.disconnect(Component.translatable("multiplayer.disconnect.authservers_down"));
-				LOG.error("Couldn't verify username because auth servers are unavailable");
+				LOG.warn(
+					"Couldn't verify username '{}' because auth servers are unavailable",
+					loginPacketListener.getUserName());
 			});
 		
 		ci.cancel();
