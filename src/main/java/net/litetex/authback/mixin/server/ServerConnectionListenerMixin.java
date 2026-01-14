@@ -17,6 +17,7 @@ import net.litetex.authback.shared.mixin.log.MixinLogger;
 import net.minecraft.server.MinecraftServer;
 
 
+@SuppressWarnings("PMD.MoreThanOneLogger") // Expected
 @Mixin(targets = "net.minecraft.server.network.ServerConnectionListener$1")
 public abstract class ServerConnectionListenerMixin
 {
