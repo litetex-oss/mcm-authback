@@ -8,6 +8,7 @@
 <!-- modrinth_exclude.end -->
 
 Allows you to play as normal even when Mojang's authentication servers are down.
+Additionally also improves the networking behavior.
 
 #### How does it work?
 
