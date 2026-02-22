@@ -354,7 +354,7 @@ public class GameProfileCacheManager
 		Map<String, PersistentProfileContainer> idProfiles
 	)
 	{
-		public PersistentState()
+		PersistentState()
 		{
 			this(new LinkedHashMap<>(), new LinkedHashMap<>());
 		}
