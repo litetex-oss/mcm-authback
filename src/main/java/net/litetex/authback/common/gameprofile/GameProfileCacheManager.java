@@ -339,7 +339,7 @@ public class GameProfileCacheManager
 		Instant createdAt
 	)
 	{
-		public PersistentState.PersistentProfileContainer persist()
+		PersistentState.PersistentProfileContainer persist()
 		{
 			return new PersistentState.PersistentProfileContainer(
 				this.serializedGameProfile(),

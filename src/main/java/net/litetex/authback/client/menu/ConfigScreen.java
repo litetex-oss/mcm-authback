@@ -191,7 +191,7 @@ public class ConfigScreen extends OptionsSubScreen
 		protected final OptionsList list;
 		protected final AbstractWidget widget;
 		
-		public BigEntry(
+		BigEntry(
 			final OptionsList list,
 			final AbstractWidget widget)
 		{
@@ -233,7 +233,7 @@ public class ConfigScreen extends OptionsSubScreen
 	// See also KeyBindsList#CategoryEntry
 	static class CategoryEntry extends BigEntry
 	{
-		public CategoryEntry(final OptionsList list, final Component category)
+		CategoryEntry(final OptionsList list, final Component category)
 		{
 			super(list, new StringWidget(category, Minecraft.getInstance().font));
 		}
@@ -259,7 +259,7 @@ public class ConfigScreen extends OptionsSubScreen
 		String name,
 		String tooltip)
 	{
-		public BooleanConfigData(final ConfigValueContainer<Boolean> container, final String name)
+		BooleanConfigData(final ConfigValueContainer<Boolean> container, final String name)
 		{
 			this(container, name, null);
 		}

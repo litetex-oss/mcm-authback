@@ -90,12 +90,12 @@ public class ClientKeysManager
 	{
 		private Map<String, KeyState> v1 = new HashMap<>();
 		
-		public Map<String, KeyState> getV1()
+		Map<String, KeyState> getV1()
 		{
 			return this.v1;
 		}
 		
-		public void setV1(final Map<String, KeyState> v1)
+		void setV1(final Map<String, KeyState> v1)
 		{
 			this.v1 = v1;
 		}

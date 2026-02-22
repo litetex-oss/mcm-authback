@@ -30,7 +30,7 @@ class KeyPairReaderOrCreator
 		this.uuid = uuid;
 	}
 	
-	public KeyPair getOrCreateKeyPair()
+	KeyPair getOrCreateKeyPair()
 	{
 		final KeyState keyState = this.keyStates.get(this.uuid);
 		if(keyState == null)

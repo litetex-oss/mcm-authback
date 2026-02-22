@@ -10,7 +10,7 @@ record KeyState(
 	Instant lastAccessedAt
 )
 {
-	public KeyState lastUsedNow()
+	KeyState lastUsedNow()
 	{
 		return new KeyState(
 			this.privateKey(),

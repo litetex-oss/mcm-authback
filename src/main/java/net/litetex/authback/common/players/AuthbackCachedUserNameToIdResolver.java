@@ -347,7 +347,7 @@ public class AuthbackCachedUserNameToIdResolver implements UserNameToIdResolver
 		SynchronizedContainer<LinkedHashMap<String, NameAndId>> nameProfilesSC
 	)
 	{
-		public OfflineProfiles(final int maxTargetedProfileCount)
+		OfflineProfiles(final int maxTargetedProfileCount)
 		{
 			this(createContainer(maxTargetedProfileCount), createContainer(maxTargetedProfileCount));
 		}
