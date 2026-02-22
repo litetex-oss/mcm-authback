@@ -281,16 +281,7 @@ public class GameProfileCacheManager
 				.filter(e -> this.uuidProfileContainersSC.supplyWithLock(
 					map -> map.containsKey(e.getKey())))
 				.collect(toLinkedHashMap(Map.Entry::getKey, Map.Entry::getValue)));
-			if(persistentState.usernameUUIDs != null) // Migrate legacy
-			{
-				persistentState.usernameUUIDs
-					.entrySet()
-					.stream()
-					.map(e -> Map.entry(e.getKey(), stringToUUIDFunc.apply(e.getValue())))
-					.filter(e -> this.uuidProfileContainersSC.supplyWithLock(
-						map -> map.containsKey(e.getValue())))
-					.forEach(e -> this.uuidUsernames.put(e.getValue(), e.getKey()));
-			}
+
 			this.usernameUuids = Collections.synchronizedMap(this.uuidUsernames.entrySet()
 				.stream()
 				.collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey)));
@@ -323,7 +314,6 @@ public class GameProfileCacheManager
 			LOG,
 			this.file,
 			() -> new PersistentState(
-				null,
 				this.uuidUsernames.entrySet()
 					.stream()
 					.collect(toLinkedHashMap(
@@ -360,20 +350,10 @@ public class GameProfileCacheManager
 	
 	
 	record PersistentState(
-		// Legacy: Can be removed after 2026-01
-		@Deprecated
-		Map<String, String> usernameUUIDs,
 		Map<String, String> uuidUsernames,
 		Map<String, PersistentProfileContainer> idProfiles
 	)
 	{
-		public PersistentState(
-			final Map<String, String> uuidUsernames,
-			final Map<String, PersistentProfileContainer> idProfiles)
-		{
-			this(null, uuidUsernames, idProfiles);
-		}
-		
 		public PersistentState()
 		{
 			this(new LinkedHashMap<>(), new LinkedHashMap<>());
