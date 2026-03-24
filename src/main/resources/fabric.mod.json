@@ -32,7 +32,7 @@
   "mixins": [
     "authback.mixins.json"
   ],
-  "accessWidener": "authback.accesswidener",
+  "accessWidener": "authback.classtweaker",
   "requires": {
     "fabric-api": "*"
   },

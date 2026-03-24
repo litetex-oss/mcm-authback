@@ -156,7 +156,7 @@ In the game directory (e.g. `%APPDATA%\.minecraft`) inside the ``.mods\authback`
 Add the following to ``build.gradle``:
 ```groovy
 dependencies {
-    modImplementation 'net.litetex.mcm:authback:<version>'
+    implementation 'net.litetex.mcm:authback:<version>'
     // Further documentation: https://wiki.fabricmc.net/documentation:fabric_loom
 }
 ```
