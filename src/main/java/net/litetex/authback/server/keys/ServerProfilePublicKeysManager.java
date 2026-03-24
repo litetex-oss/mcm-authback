@@ -398,12 +398,12 @@ public class ServerProfilePublicKeysManager
 	
 	static class UUIDKeyInfos extends SynchronizedContainer<LinkedHashMap<Integer, KeyInfo>>
 	{
-		public UUIDKeyInfos()
+		UUIDKeyInfos()
 		{
 			this(new LinkedHashMap<>());
 		}
 		
-		public UUIDKeyInfos(final LinkedHashMap<Integer, KeyInfo> value)
+		UUIDKeyInfos(final LinkedHashMap<Integer, KeyInfo> value)
 		{
 			super(value);
 		}
@@ -415,12 +415,12 @@ public class ServerProfilePublicKeysManager
 		Instant lastUsedAt
 	)
 	{
-		public KeyInfo updateLastUsedAt(final Instant now)
+		KeyInfo updateLastUsedAt(final Instant now)
 		{
 			return new KeyInfo(this.publicKeyEncoded(), this.publicKeySupplier(), now);
 		}
 		
-		public PersistentState.PersistentKeyInfo persist()
+		PersistentState.PersistentKeyInfo persist()
 		{
 			return new PersistentState.PersistentKeyInfo(
 				Hex.encodeHexString(this.publicKeyEncoded()),
@@ -434,7 +434,7 @@ public class ServerProfilePublicKeysManager
 		Map<String, Set<PersistentKeyInfo>> profileUUIDKeys
 	)
 	{
-		public PersistentState()
+		PersistentState()
 		{
 			this(new LinkedHashMap<>());
 		}

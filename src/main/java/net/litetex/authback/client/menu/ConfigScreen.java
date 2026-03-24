@@ -9,7 +9,7 @@ import net.litetex.authback.client.config.AuthBackClientConfig;
 import net.litetex.authback.shared.config.ConfigValueContainer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;
@@ -191,7 +191,7 @@ public class ConfigScreen extends OptionsSubScreen
 		protected final OptionsList list;
 		protected final AbstractWidget widget;
 		
-		public BigEntry(
+		BigEntry(
 			final OptionsList list,
 			final AbstractWidget widget)
 		{
@@ -202,18 +202,18 @@ public class ConfigScreen extends OptionsSubScreen
 		
 		@SuppressWarnings("checkstyle:MagicNumber")
 		@Override
-		public void renderContent(
-			final GuiGraphics guiGraphics,
-			final int i,
-			final int j,
-			final boolean bl,
-			final float f)
+		public void extractContent(
+			final GuiGraphicsExtractor graphics,
+			final int mouseX,
+			final int mouseY,
+			final boolean hovered,
+			final float a)
 		{
 			this.widget.setWidth(this.list.getRowWidth());
 			this.widget.setPosition(
 				this.list.screen.width / 2 - 155,
 				this.getContentY());
-			this.widget.render(guiGraphics, i, j, f);
+			this.widget.extractRenderState(graphics, mouseX, mouseY, a);
 		}
 		
 		@Override
@@ -233,23 +233,24 @@ public class ConfigScreen extends OptionsSubScreen
 	// See also KeyBindsList#CategoryEntry
 	static class CategoryEntry extends BigEntry
 	{
-		public CategoryEntry(final OptionsList list, final Component category)
+		CategoryEntry(final OptionsList list, final Component category)
 		{
 			super(list, new StringWidget(category, Minecraft.getInstance().font));
 		}
 		
 		@Override
-		public void renderContent(
-			final GuiGraphics guiGraphics,
-			final int i,
-			final int j,
-			final boolean bl,
-			final float f)
+		public void extractContent(
+			final GuiGraphicsExtractor graphics,
+			final int mouseX,
+			final int mouseY,
+			final boolean hovered,
+			final float a)
 		{
+			super.extractContent(graphics, mouseX, mouseY, hovered, a);
 			this.widget.setPosition(
 				this.list.getWidth() / 2 - this.widget.getWidth() / 2,
 				this.getContentBottom() - 12);
-			this.widget.render(guiGraphics, i, j, f);
+			this.widget.extractRenderState(graphics, mouseX, mouseY, a);
 		}
 	}
 	
@@ -259,7 +260,7 @@ public class ConfigScreen extends OptionsSubScreen
 		String name,
 		String tooltip)
 	{
-		public BooleanConfigData(final ConfigValueContainer<Boolean> container, final String name)
+		BooleanConfigData(final ConfigValueContainer<Boolean> container, final String name)
 		{
 			this(container, name, null);
 		}

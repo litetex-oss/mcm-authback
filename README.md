@@ -8,6 +8,7 @@
 <!-- modrinth_exclude.end -->
 
 Allows you to play as normal even when Mojang's authentication servers are down.
+Additionally also improves the networking behavior.
 
 #### How does it work?
 
@@ -155,7 +156,7 @@ In the game directory (e.g. `%APPDATA%\.minecraft`) inside the ``.mods\authback`
 Add the following to ``build.gradle``:
 ```groovy
 dependencies {
-    modImplementation 'net.litetex.mcm:authback:<version>'
+    implementation 'net.litetex.mcm:authback:<version>'
     // Further documentation: https://wiki.fabricmc.net/documentation:fabric_loom
 }
 ```

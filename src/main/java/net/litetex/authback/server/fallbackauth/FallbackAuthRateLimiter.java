@@ -18,6 +18,7 @@ import net.litetex.authback.shared.collections.MaxSizedLinkedHashMap;
 import net.litetex.authback.shared.config.Configuration;
 
 
+@SuppressWarnings("UnstableApiUsage")
 public class FallbackAuthRateLimiter
 {
 	private static final Logger LOG = LoggerFactory.getLogger(FallbackAuthRateLimiter.class);
@@ -91,7 +92,7 @@ public class FallbackAuthRateLimiter
 	)
 	{
 		@SuppressWarnings("checkstyle:MagicNumber")
-		public static RateLimitKey create(final InetAddress address, final int ipv6NetworkPrefixBytes)
+		static RateLimitKey create(final InetAddress address, final int ipv6NetworkPrefixBytes)
 		{
 			if(address instanceof final Inet6Address inet6Address)
 			{
