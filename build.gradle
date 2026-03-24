@@ -74,6 +74,8 @@ dependencies {
     implementation fabricApi.module("fabric-command-api-v2", project.fabric_api_version)
 
     compileOnly "com.terraformersmc:modmenu:${project.modmenu_version}"
+    // Temporary added to fix compilation because modmenu ships an outdated version that fails compilation
+    compileOnly fabricApi.module("fabric-resource-loader-v1", project.fabric_api_version)
 
     // Only needed during development
     localRuntime "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
