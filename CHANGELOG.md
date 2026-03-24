@@ -1,9 +1,6 @@
 # 1.6.0
 * Updated to 26.1
 
-# 1.5.1
-_Faulty release_
-
 # 1.5.0
 * [Server] Added 
     * `disable-legacy-query-handler`
