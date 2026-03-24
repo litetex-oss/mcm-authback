@@ -544,7 +544,7 @@ public class AuthbackCachedUserNameToIdResolver implements UserNameToIdResolver
 		static final DateTimeFormatter FORMATTER =
 			DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss Z", Locale.ROOT);
 		
-		private final Map<OffsetDateTime, String> formatCache = new WeakHashMap<>();
+		private final Map<OffsetDateTime, String> formatCache = Collections.synchronizedMap(new WeakHashMap<>());
 		
 		@Override
 		public JsonElement serialize(
