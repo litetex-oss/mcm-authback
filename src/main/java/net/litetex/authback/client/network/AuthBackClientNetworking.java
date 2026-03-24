@@ -70,7 +70,7 @@ public class AuthBackClientNetworking
 				
 				LOG.info("Synchronizing with server");
 				final KeyPair keyPair = this.clientKeysManager.currentKeyPair();
-				context.networkHandler().send(new ServerboundCustomPayloadPacket(new SyncPayloadC2S(
+				context.packetListener().send(new ServerboundCustomPayloadPacket(new SyncPayloadC2S(
 					Ed25519Signature.createSignature(
 						payload.challenge(),
 						keyPair.getPrivate()),

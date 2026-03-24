@@ -9,7 +9,7 @@ import net.litetex.authback.client.config.AuthBackClientConfig;
 import net.litetex.authback.shared.config.ConfigValueContainer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;
@@ -202,18 +202,18 @@ public class ConfigScreen extends OptionsSubScreen
 		
 		@SuppressWarnings("checkstyle:MagicNumber")
 		@Override
-		public void renderContent(
-			final GuiGraphics guiGraphics,
-			final int i,
-			final int j,
-			final boolean bl,
-			final float f)
+		public void extractContent(
+			final GuiGraphicsExtractor graphics,
+			final int mouseX,
+			final int mouseY,
+			final boolean hovered,
+			final float a)
 		{
 			this.widget.setWidth(this.list.getRowWidth());
 			this.widget.setPosition(
 				this.list.screen.width / 2 - 155,
 				this.getContentY());
-			this.widget.render(guiGraphics, i, j, f);
+			this.widget.extractRenderState(graphics, mouseX, mouseY, a);
 		}
 		
 		@Override
@@ -239,17 +239,18 @@ public class ConfigScreen extends OptionsSubScreen
 		}
 		
 		@Override
-		public void renderContent(
-			final GuiGraphics guiGraphics,
-			final int i,
-			final int j,
-			final boolean bl,
-			final float f)
+		public void extractContent(
+			final GuiGraphicsExtractor graphics,
+			final int mouseX,
+			final int mouseY,
+			final boolean hovered,
+			final float a)
 		{
+			super.extractContent(graphics, mouseX, mouseY, hovered, a);
 			this.widget.setPosition(
 				this.list.getWidth() / 2 - this.widget.getWidth() / 2,
 				this.getContentBottom() - 12);
-			this.widget.render(guiGraphics, i, j, f);
+			this.widget.extractRenderState(graphics, mouseX, mouseY, a);
 		}
 	}
 	
