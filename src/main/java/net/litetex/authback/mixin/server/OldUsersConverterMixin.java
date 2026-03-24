@@ -19,11 +19,11 @@ public abstract class OldUsersConverterMixin
 	private static final Logger LOG = MixinLogger.server("OldUsersConverterMixin");
 	
 	@Inject(
-		method = "serverReadyAfterUserconversion",
+		method = "areOldUserlistsRemoved",
 		at = @At("HEAD"),
 		cancellable = true
 	)
-	private static void skipServerReadyAfterUserconversion(final CallbackInfoReturnable<Boolean> cir)
+	private static void skipAreOldUserlistsRemovedUserConversion(final CallbackInfoReturnable<Boolean> cir)
 	{
 		if(AuthBackServer.instance().config().skipOldUserConversion())
 		{

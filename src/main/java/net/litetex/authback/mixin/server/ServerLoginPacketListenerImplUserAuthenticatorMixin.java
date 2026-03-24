@@ -26,7 +26,7 @@ public abstract class ServerLoginPacketListenerImplUserAuthenticatorMixin
 	@Unique
 	private static final Logger LOG = MixinLogger.server("ServerLoginPacketListenerImplUserAuthenticatorMixin");
 	
-	@Accessor("field_14176")
+	@Accessor("this$0")
 	abstract ServerLoginPacketListenerImpl serverLoginPacketListener();
 	
 	@WrapOperation(
