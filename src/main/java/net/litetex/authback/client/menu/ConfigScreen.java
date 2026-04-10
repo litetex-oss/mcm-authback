@@ -246,7 +246,6 @@ public class ConfigScreen extends OptionsSubScreen
 			final boolean hovered,
 			final float a)
 		{
-			super.extractContent(graphics, mouseX, mouseY, hovered, a);
 			this.widget.setPosition(
 				this.list.getWidth() / 2 - this.widget.getWidth() / 2,
 				this.getContentBottom() - 12);
