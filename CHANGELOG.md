@@ -1,3 +1,6 @@
+# 1.6.1
+* Fixed header rendering of configuration screen
+
 # 1.6.0
 * Updated to 26.1
 
