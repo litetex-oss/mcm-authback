@@ -15,6 +15,8 @@ public record AuthBackClientConfig(
 	// Suppresses all joinServer errors
 	// WARNING: Allows to join servers with possibly invalid session data
 	ConfigValueContainer<Boolean> suppressAllServerJoinErrors,
+	// Forces the skin to be downloaded using a secure (https) connection
+	ConfigValueContainer<Boolean> forceSecureSkinDownload,
 	UserAPIConfig userAPIConfig,
 	// Disables sending a legacy ping (for servers running 1.6.4 or lower) in the server list
 	// when the normal ping fails or times out
@@ -28,6 +30,7 @@ public record AuthBackClientConfig(
 			ConfigValueContainer.bool(config, "block-profile-keys-fetching", false),
 			ConfigValueContainer.bool(config, "block-realms-fetching", false),
 			ConfigValueContainer.bool(config, "suppress-all-server-join-errors", false),
+			ConfigValueContainer.bool(config, "force-secure-skin-download", false),
 			new UserAPIConfig(config),
 			config.getBoolean("prevent-legacy-server-ping", true)
 		);
