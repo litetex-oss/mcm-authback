@@ -18,6 +18,7 @@
     "client.OptionsMixin",
     "client.RealmsClientMixin",
     "client.ServerStatusPingerMixin",
+    "client.SkinTextureDownloaderMixin",
     "client.TitleScreenMixin",
     "client.YggdrasilUserApiServiceMixin"
   ],

@@ -117,6 +117,11 @@ public class ConfigScreen extends OptionsSubScreen
 						This can workaround problems when the API is misbehaving and returning incorrect responses.
 						
 						WARNING: Allows joining servers with possibly invalid session data"""
+				),
+				new BooleanConfigData(
+					config.forceSecureSkinDownload(),
+					"Force secure skin download",
+					"Forces player skins to be download via secure HTTPS instead of HTTP"
 				))
 			.map(BooleanConfigData::createButton)
 			.map(btn -> new BigEntry(this.list, btn))

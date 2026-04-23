@@ -1,3 +1,7 @@
+# 1.7.0
+* [Client] Added
+    * `force-secure-skin-download`: Forces the skin to be downloaded using a secure (https) connection
+
 # 1.6.1
 * Fixed header rendering of configuration screen
 
