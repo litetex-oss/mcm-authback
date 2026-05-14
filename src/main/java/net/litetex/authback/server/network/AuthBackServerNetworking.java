@@ -49,7 +49,7 @@ public class AuthBackServerNetworking
 	{
 		ConfigurationRegistrySetup.setup();
 		
-		ServerConfigurationConnectionEvents.CONFIGURE.register((handler, server) -> {
+		ServerConfigurationConnectionEvents.CONFIGURE.register((handler, _) -> {
 			final GameProfile profile = handler.getOwner();
 			
 			if(this.connectionsToSkipUpToDateCheck.remove(handler.connection))
@@ -80,7 +80,7 @@ public class AuthBackServerNetworking
 		ServerConfigurationNetworking.registerReceiver(
 			originalHandler,
 			SyncPayloadC2S.ID,
-			(payload, context) -> {
+			(payload, _) -> {
 				final PublicKey publicKey = new Ed25519KeyDecoder().decodePublic(payload.publicKey());
 				
 				if(!Ed25519Signature.isValidSignature(challenge, payload.signature(), publicKey))
