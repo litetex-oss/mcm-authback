@@ -1,3 +1,7 @@
+# 1.8.0
+* Updated to 26.2
+* Fix realms not being displayed as expected
+
 # 1.7.1
 * [Client]
     * Fix realms not being displayed as expected
