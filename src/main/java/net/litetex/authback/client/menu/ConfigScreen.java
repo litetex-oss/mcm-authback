@@ -185,6 +185,14 @@ public class ConfigScreen extends OptionsSubScreen
 		this.addCategory(Component.literal("Other"));
 		Stream.of(
 				new BooleanConfigData(
+					config.preventLegacyServerPing(),
+					"Prevent legacy server ping",
+					"""
+						Disables sending a legacy ping (for servers running 1.6.4 or lower) in the server list \
+						if the normal ping fails or times out
+						"""
+				),
+				new BooleanConfigData(
 					config.compactTitleScreen(),
 					"Compact title screen",
 					"Repositions or hides redundant elements like friends-list, language or narrator"
