@@ -36,7 +36,7 @@ public abstract class OnlineOptionsScreenMixin extends OptionsSubScreen
 		this.list.addSmall(List.of(
 			Button.builder(
 					Component.literal("AuthBack..."),
-					ignored -> this.minecraft.setScreen(
+					ignored -> this.minecraft.setScreenAndShow(
 						new ConfigScreen(
 							this,
 							this.options
