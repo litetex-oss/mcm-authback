@@ -34,6 +34,9 @@ public abstract class OptionsMixin
 		// Welcome to the internet
 		this.skipMultiplayerWarning = true;
 		
+		// If friendlist is off it stays off. No need to promote it every time the user launches a new instance.
+		this.skipFriendsListPromo = true;
+		
 		// The first thing you see when joining a server is,
 		// how you can block or report other players/your friends.
 		// Isn't that nice?
@@ -46,6 +49,9 @@ public abstract class OptionsMixin
 	
 	@Shadow
 	public boolean skipMultiplayerWarning;
+	
+	@Shadow
+	public boolean skipFriendsListPromo;
 	
 	@Shadow
 	public boolean joinedFirstServer;
