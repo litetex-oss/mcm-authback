@@ -40,7 +40,6 @@ public abstract class OnlineOptionsScreenMixin extends OptionsSubScreen
 	{
 		final LinearLayout footerLayout = this.layout.addToFooter(LinearLayout.horizontal().spacing(8));
 		
-		// To individual volume options screen
 		addLayoutButton(
 			footerLayout,
 			Component.literal("AuthBack..."),
