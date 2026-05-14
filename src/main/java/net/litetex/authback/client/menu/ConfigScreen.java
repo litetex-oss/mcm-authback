@@ -43,6 +43,7 @@ public class ConfigScreen extends OptionsSubScreen
 		this.addKeyManagementOptions();
 		this.addAPIInteractionOptions();
 		this.addUserAPIInteractionOptions();
+		this.addOtherOptions();
 	}
 	
 	private void addKeyManagementOptions()
@@ -173,6 +174,23 @@ public class ConfigScreen extends OptionsSubScreen
 			.createButton(dummyMode -> detailBtns.forEach(btn -> btn.active = !dummyMode));
 		
 		Stream.concat(Stream.of(dummyModeBtn), detailBtns.stream())
+			.map(btn -> new BigEntry(this.list, btn))
+			.forEach(this.list::addEntry);
+	}
+	
+	private void addOtherOptions()
+	{
+		final AuthBackClientConfig config = this.abClient.config();
+		
+		this.addCategory(Component.literal("Other"));
+		Stream.of(
+				new BooleanConfigData(
+					config.compactTitleScreen(),
+					"Compact title screen",
+					"Repositions or hides redundant elements like friends-list, language or narrator"
+				)
+			)
+			.map(BooleanConfigData::createButton)
 			.map(btn -> new BigEntry(this.list, btn))
 			.forEach(this.list::addEntry);
 	}
