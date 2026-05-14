@@ -17,7 +17,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.WeakHashMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
@@ -41,6 +40,7 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.GameProfileRepository;
 
 import net.litetex.authback.common.gameprofile.GameProfileCacheManager;
+import net.litetex.authback.shared.collections.ConcurrentReferenceHashMap;
 import net.litetex.authback.shared.collections.MaxSizedLinkedHashMap;
 import net.litetex.authback.shared.io.Persister;
 import net.litetex.authback.shared.sync.SynchronizedContainer;
@@ -544,7 +544,8 @@ public class AuthbackCachedUserNameToIdResolver implements UserNameToIdResolver
 		static final DateTimeFormatter FORMATTER =
 			DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss Z", Locale.ROOT);
 		
-		private final Map<OffsetDateTime, String> formatCache = Collections.synchronizedMap(new WeakHashMap<>());
+		private final Map<OffsetDateTime, String> formatCache = new ConcurrentReferenceHashMap<>(
+			ConcurrentReferenceHashMap.ReferenceType.WEAK);
 		
 		@Override
 		public JsonElement serialize(

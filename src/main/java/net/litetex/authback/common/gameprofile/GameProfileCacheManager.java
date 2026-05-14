@@ -16,7 +16,6 @@ import java.util.Objects;
 import java.util.SequencedMap;
 import java.util.Set;
 import java.util.UUID;
-import java.util.WeakHashMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -29,6 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import com.mojang.authlib.GameProfile;
 
+import net.litetex.authback.shared.collections.ConcurrentReferenceHashMap;
 import net.litetex.authback.shared.external.com.google.common.base.Suppliers;
 import net.litetex.authback.shared.io.Persister;
 import net.litetex.authback.shared.json.JSONSerializer;
@@ -52,7 +52,7 @@ public class GameProfileCacheManager
 	
 	// Key = Owner
 	private final Map<Object, Consumer<GameProfile>> onAddedProfileAsyncHandlers =
-		Collections.synchronizedMap(new WeakHashMap<>());
+		new ConcurrentReferenceHashMap<>(ConcurrentReferenceHashMap.ReferenceType.WEAK);
 	
 	private Map<UUID, String> uuidUsernames = new HashMap<>(); // Reverse map for tracking when deleting
 	private Map<String, UUID> usernameUuids = new HashMap<>();
