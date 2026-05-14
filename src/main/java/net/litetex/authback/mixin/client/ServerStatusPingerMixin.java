@@ -3,7 +3,6 @@ package net.litetex.authback.mixin.client;
 import java.net.InetSocketAddress;
 
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -18,14 +17,6 @@ import net.minecraft.server.network.EventLoopGroupHolder;
 @Mixin(ServerStatusPinger.class)
 public abstract class ServerStatusPingerMixin
 {
-	@Unique
-	private final boolean preventLegacyServerPing;
-	
-	public ServerStatusPingerMixin()
-	{
-		this.preventLegacyServerPing = AuthBackClient.instance().config().preventLegacyServerPing();
-	}
-	
 	@Inject(
 		method = "pingLegacyServer",
 		at = @At("HEAD"),
@@ -35,13 +26,13 @@ public abstract class ServerStatusPingerMixin
 		require = 0
 	)
 	void pingLegacyServer(
-		final InetSocketAddress inetSocketAddress,
-		final ServerAddress serverAddress,
-		final ServerData serverData,
+		final InetSocketAddress resolvedAddress,
+		final ServerAddress rawAddress,
+		final ServerData data,
 		final EventLoopGroupHolder eventLoopGroupHolder,
 		final CallbackInfo ci)
 	{
-		if(this.preventLegacyServerPing)
+		if(AuthBackClient.instance().config().preventLegacyServerPing().value())
 		{
 			ci.cancel();
 		}

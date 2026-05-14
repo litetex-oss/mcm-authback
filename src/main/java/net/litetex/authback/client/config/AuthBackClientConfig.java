@@ -20,7 +20,7 @@ public record AuthBackClientConfig(
 	UserAPIConfig userAPIConfig,
 	// Disables sending a legacy ping (for servers running 1.6.4 or lower) in the server list
 	// when the normal ping fails or times out
-	boolean preventLegacyServerPing,
+	ConfigValueContainer<Boolean> preventLegacyServerPing,
 	// Compacts the title screen by repositioning or removing redundant buttons
 	ConfigValueContainer<Boolean> compactTitleScreen
 )
@@ -34,7 +34,7 @@ public record AuthBackClientConfig(
 			ConfigValueContainer.bool(config, "suppress-all-server-join-errors", false),
 			ConfigValueContainer.bool(config, "force-secure-skin-download", false),
 			new UserAPIConfig(config),
-			config.getBoolean("prevent-legacy-server-ping", true),
+			ConfigValueContainer.bool(config, "prevent-legacy-server-ping", true),
 			ConfigValueContainer.bool(config, "compact-title-screen", false)
 		);
 	}
