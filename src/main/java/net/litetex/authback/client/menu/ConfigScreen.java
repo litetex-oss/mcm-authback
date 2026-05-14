@@ -170,7 +170,7 @@ public class ConfigScreen extends OptionsSubScreen
 				* No telemetry will be available
 				* Profile/Chat-signing keys will not be fetched
 				* Abuse reporting is unavailable""")
-			.createButton(dummyMode -> detailBtns.forEach(btn -> btn.visible = !dummyMode));
+			.createButton(dummyMode -> detailBtns.forEach(btn -> btn.active = !dummyMode));
 		
 		Stream.concat(Stream.of(dummyModeBtn), detailBtns.stream())
 			.map(btn -> new BigEntry(this.list, btn))
