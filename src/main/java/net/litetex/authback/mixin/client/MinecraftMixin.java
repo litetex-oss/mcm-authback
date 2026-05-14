@@ -28,9 +28,9 @@ public abstract class MinecraftMixin
 		at = @At("HEAD"),
 		cancellable = true
 	)
-	void createUserApiService(
-		final YggdrasilAuthenticationService yggdrasilAuthenticationService,
-		final GameConfig gameConfig,
+	private static void createUserApiService(
+		final YggdrasilAuthenticationService authService,
+		final GameConfig config,
 		final CallbackInfoReturnable<UserApiService> cir)
 	{
 		// Otherwise this will be done too late and config will not be available
