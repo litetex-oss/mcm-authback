@@ -59,7 +59,7 @@ public class ConfigScreen extends OptionsSubScreen
 			Button.builder(
 					Component.literal("Regenerate keys"),
 					ignored ->
-						this.minecraft.setScreen(
+						this.minecraft.setScreenAndShow(
 							new ConfirmScreen(
 								yes -> {
 									if(yes)
@@ -67,7 +67,7 @@ public class ConfigScreen extends OptionsSubScreen
 										this.abClient.regenerateKeys();
 										this.showToast(Component.literal("Regenerated keys"), 4000L);
 									}
-									this.minecraft.setScreen(this);
+									this.minecraft.setScreenAndShow(this);
 								},
 								Component.literal("Confirm Regeneration"),
 								Component.literal(
@@ -184,7 +184,7 @@ public class ConfigScreen extends OptionsSubScreen
 	
 	private void showToast(final Component component, final long displayTime)
 	{
-		this.minecraft.getToastManager().addToast(new SystemToast(
+		this.minecraft.gui.toastManager().addToast(new SystemToast(
 			new SystemToast.SystemToastId(displayTime),
 			component,
 			null
