@@ -1,18 +1,16 @@
 package net.litetex.authback.mixin.client;
 
-import java.util.List;
-
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.Unique;
 
 import net.litetex.authback.client.menu.ConfigScreen;
 import net.minecraft.client.Options;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.layouts.LinearLayout;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.options.OnlineOptionsScreen;
 import net.minecraft.client.gui.screens.options.OptionsSubScreen;
+import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 
 
@@ -27,20 +25,32 @@ public abstract class OnlineOptionsScreenMixin extends OptionsSubScreen
 		super(screen, options, component);
 	}
 	
-	@Inject(
-		method = "addOptions",
-		at = @At("RETURN")
-	)
-	void addOptions(final CallbackInfo ci)
+	@Unique
+	private void openConfigScreen()
 	{
-		this.list.addSmall(List.of(
-			Button.builder(
-					Component.literal("AuthBack..."),
-					ignored -> this.minecraft.setScreenAndShow(
-						new ConfigScreen(
-							this,
-							this.options
-						)))
-				.build()));
+		this.minecraft.setScreenAndShow(
+			new ConfigScreen(
+				this,
+				this.options
+			));
+	}
+	
+	@Override
+	protected void addFooter()
+	{
+		final LinearLayout footerLayout = this.layout.addToFooter(LinearLayout.horizontal().spacing(8));
+		
+		// To individual volume options screen
+		addLayoutButton(
+			footerLayout,
+			Component.literal("AuthBack..."),
+			_ -> this.openConfigScreen());
+		addLayoutButton(footerLayout, CommonComponents.GUI_DONE, b -> this.onClose());
+	}
+	
+	@Unique
+	private static void addLayoutButton(final LinearLayout layout, final Component text, final Button.OnPress onPress)
+	{
+		layout.addChild(Button.builder(text, onPress).build());
 	}
 }
