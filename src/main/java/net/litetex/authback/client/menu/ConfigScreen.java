@@ -189,8 +189,14 @@ public class ConfigScreen extends OptionsSubScreen
 					"Prevent legacy server ping",
 					"""
 						Disables sending a legacy ping (for servers running 1.6.4 or lower) in the server list \
-						if the normal ping fails or times out
-						"""
+						if the normal ping fails or times out"""
+				),
+				new BooleanConfigData(
+					config.integratedServerDisableEnforceSecureProfile(),
+					"Disable enforce-secure-profile",
+					"""
+						Disables enforce-secure-profile on the integrated server.
+						Currently this only affects the P2P host ('Join a friend')"""
 				),
 				new BooleanConfigData(
 					config.compactTitleScreen(),

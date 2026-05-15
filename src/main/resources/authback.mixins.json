@@ -13,6 +13,7 @@
     "client.AddressCheckMixin",
     "client.ClientHandshakePacketListenerImplMixin",
     "client.ConnectScreenMixin",
+    "client.IntegratedServerMixin",
     "client.MinecraftMixin",
     "client.OnlineOptionsScreenMixin",
     "client.OptionsMixin",
