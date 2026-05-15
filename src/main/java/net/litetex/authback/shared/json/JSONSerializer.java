@@ -21,7 +21,7 @@ import com.mojang.authlib.yggdrasil.response.ProfileSearchResultsResponse;
 import com.mojang.util.ByteBufferTypeAdapter;
 import com.mojang.util.UUIDTypeAdapter;
 
-import net.litetex.authback.shared.collections.ConcurrentReferenceHashMap;
+import net.litetex.authback.shared.external.org.springframework.util.ConcurrentReferenceHashMap;
 
 
 public final class JSONSerializer

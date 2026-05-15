@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.litetex.authback.shared.collections;
+package net.litetex.authback.shared.external.org.springframework.util;
 
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.SoftReference;
