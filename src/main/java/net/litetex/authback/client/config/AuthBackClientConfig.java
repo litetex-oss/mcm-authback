@@ -21,6 +21,9 @@ public record AuthBackClientConfig(
 	// Disables sending a legacy ping (for servers running 1.6.4 or lower) in the server list
 	// when the normal ping fails or times out
 	ConfigValueContainer<Boolean> preventLegacyServerPing,
+	// Always disables secure-profile (chat signing keys) on the integrated server.
+	// On the client this is currently only relevant for P2P
+	ConfigValueContainer<Boolean> integratedServerDisableEnforceSecureProfile,
 	// Compacts the title screen by repositioning or removing redundant buttons
 	ConfigValueContainer<Boolean> compactTitleScreen
 )
@@ -35,6 +38,7 @@ public record AuthBackClientConfig(
 			ConfigValueContainer.bool(config, "force-secure-skin-download", false),
 			new UserAPIConfig(config),
 			ConfigValueContainer.bool(config, "prevent-legacy-server-ping", true),
+			ConfigValueContainer.bool(config, "integrated-server-disable-enforce-secure-profile", true),
 			ConfigValueContainer.bool(config, "compact-title-screen", false)
 		);
 	}

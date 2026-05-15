@@ -5,6 +5,7 @@
     * Reposition configuration button in Online settings
     * Provide an option to compact the title screen (reposition elements / remove redundant buttons)
     * Skip friendlist promotion
+    * Integrated server: Disable `enforce-secure-profile` by default
 * Minor performance improvements and tweaks
 
 # 1.7.0
