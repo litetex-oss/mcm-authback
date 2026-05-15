@@ -1,6 +1,11 @@
 # 1.8.0
 * Updated to 26.2
-* Fix realms not being displayed as expected
+* [Client]
+    * Fix realms not being displayed as expected
+    * Reposition configuration button in Online settings
+    * Provide an option to compact the title screen (reposition elements / remove redundant buttons)
+    * Skip friendlist promotion
+* Minor performance improvements and tweaks
 
 # 1.7.0
 * [Client] Added
