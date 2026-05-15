@@ -18,6 +18,7 @@ import java.util.Objects;
 import java.util.function.Supplier;
 
 
+// NOTE: Might be replaced in the future with "LazyConstant" or similar; see https://openjdk.org/jeps/526
 @SuppressWarnings("all")
 public final class Suppliers
 {

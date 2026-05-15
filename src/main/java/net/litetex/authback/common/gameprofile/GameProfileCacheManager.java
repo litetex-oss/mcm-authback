@@ -28,8 +28,8 @@ import org.slf4j.LoggerFactory;
 
 import com.mojang.authlib.GameProfile;
 
-import net.litetex.authback.shared.collections.ConcurrentReferenceHashMap;
 import net.litetex.authback.shared.external.com.google.common.base.Suppliers;
+import net.litetex.authback.shared.external.org.springframework.util.ConcurrentReferenceHashMap;
 import net.litetex.authback.shared.io.Persister;
 import net.litetex.authback.shared.json.JSONSerializer;
 import net.litetex.authback.shared.sync.SynchronizedContainer;

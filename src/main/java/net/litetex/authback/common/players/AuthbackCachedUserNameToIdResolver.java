@@ -40,8 +40,8 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.GameProfileRepository;
 
 import net.litetex.authback.common.gameprofile.GameProfileCacheManager;
-import net.litetex.authback.shared.collections.ConcurrentReferenceHashMap;
 import net.litetex.authback.shared.collections.MaxSizedLinkedHashMap;
+import net.litetex.authback.shared.external.org.springframework.util.ConcurrentReferenceHashMap;
 import net.litetex.authback.shared.io.Persister;
 import net.litetex.authback.shared.sync.SynchronizedContainer;
 import net.minecraft.server.players.NameAndId;

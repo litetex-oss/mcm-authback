@@ -22,8 +22,8 @@ import net.litetex.authback.server.fallbackauth.FallbackUserAuthenticationAdapte
 import net.litetex.authback.server.keys.ServerProfilePublicKeysManager;
 import net.litetex.authback.server.network.AuthBackServerNetworking;
 import net.litetex.authback.shared.AuthBack;
-import net.litetex.authback.shared.collections.ConcurrentReferenceHashMap;
 import net.litetex.authback.shared.external.com.google.common.base.Suppliers;
+import net.litetex.authback.shared.external.org.springframework.util.ConcurrentReferenceHashMap;
 import net.minecraft.network.Connection;
 import net.minecraft.server.network.ServerLoginPacketListenerImpl;
 
