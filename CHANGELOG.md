@@ -3,9 +3,11 @@
 * [Client]
     * Fix realms not being displayed as expected
     * Reposition configuration button in Online settings
-    * Provide an option to compact the title screen (reposition elements / remove redundant buttons)
+    * New advanced options
+        * Integrated server: Disable `enforce-secure-profile` by default
+        * Compact the title screen (reposition elements / remove redundant buttons)
+        * "Lock down"
     * Skip friendlist promotion
-    * Integrated server: Disable `enforce-secure-profile` by default
 * Removed legacy configuration directory migration
 * Minor performance improvements and tweaks
 

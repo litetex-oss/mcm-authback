@@ -7,8 +7,10 @@ import java.util.stream.Stream;
 import net.litetex.authback.client.AuthBackClient;
 import net.litetex.authback.client.config.AuthBackClientConfig;
 import net.litetex.authback.shared.config.ConfigValueContainer;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
+import net.minecraft.client.PresenceSharing;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
@@ -21,6 +23,7 @@ import net.minecraft.client.gui.components.toasts.SystemToast;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.ConfirmScreen;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.options.OnlineOptionsScreen;
 import net.minecraft.client.gui.screens.options.OptionsSubScreen;
 import net.minecraft.network.chat.Component;
 
@@ -43,7 +46,7 @@ public class ConfigScreen extends OptionsSubScreen
 		this.addKeyManagementOptions();
 		this.addAPIInteractionOptions();
 		this.addUserAPIInteractionOptions();
-		this.addOtherOptions();
+		this.addAdvancedOptions();
 	}
 	
 	private void addKeyManagementOptions()
@@ -178,11 +181,11 @@ public class ConfigScreen extends OptionsSubScreen
 			.forEach(this.list::addEntry);
 	}
 	
-	private void addOtherOptions()
+	private void addAdvancedOptions()
 	{
 		final AuthBackClientConfig config = this.abClient.config();
 		
-		this.addCategory(Component.literal("Other"));
+		this.addCategory(Component.literal("Advanced"));
 		Stream.of(
 				new BooleanConfigData(
 					config.preventLegacyServerPing(),
@@ -207,13 +210,94 @@ public class ConfigScreen extends OptionsSubScreen
 			.map(BooleanConfigData::createButton)
 			.map(btn -> new BigEntry(this.list, btn))
 			.forEach(this.list::addEntry);
+		
+		this.addLockDownButton();
+	}
+	
+	private void addLockDownButton()
+	{
+		this.list.addEntry(new BigEntry(
+			this.list, Button.builder(
+				Component.literal("")
+					.append(Component.literal("\uD83D\uDD12").withStyle(ChatFormatting.GOLD))
+					.append(" Lock down ")
+					.append(Component.literal("\uD83D\uDD12").withStyle(ChatFormatting.GOLD)),
+				_ -> this.minecraft.setScreenAndShow(
+					new ConfirmScreen(
+						confirmed -> {
+							if(!confirmed)
+							{
+								this.minecraft.setScreenAndShow(this);
+								return;
+							}
+							this.lockDown();
+						},
+						Component.literal("Lock down")
+							.withStyle(ChatFormatting.BOLD),
+						Component.literal("""
+								Enabling this changes the client's setting to forcibly \
+								minimize network communication and improve privacy at all cost.
+								""")
+							.append("\n")
+							.append(Component.literal(
+									"""
+										Please note that you might no longer be able to join servers \
+										that have 'enforce-secure-profile' enabled (default).
+										""")
+								.withStyle(ChatFormatting.GOLD))
+							.append("\n")
+							.append(Component.literal(
+									"""
+										If you want to undo this you have to manually revert/reset the settings!
+										""")
+								.withStyle(ChatFormatting.RED)
+							)
+							.append("\n")
+							.append("Proceed?")
+					)
+				))
+			.build()
+		));
+	}
+	
+	private void lockDown()
+	{
+		this.abClient.config().lockDown();
+		this.lockDownBuiltInOptions();
+		
+		// Rebuild current screen
+		this.minecraft.setScreenAndShow(new ConfigScreen(
+			// Rebuild online options screen if required
+			this.lastScreen instanceof final OnlineOptionsScreen onlineOptionsScreen
+				? new OnlineOptionsScreen(onlineOptionsScreen.lastScreen, this.options)
+				: this.lastScreen,
+			this.options));
+	}
+	
+	private void lockDownBuiltInOptions()
+	{
+		final Options options = this.minecraft.options;
+		
+		options.realmsNotifications().set(false);
+		options.allowServerListing().set(false);
+		options.sharePresence().set(PresenceSharing.NONE);
+		
+		options.hideMatchedNames().set(false);
+		options.onlyShowSecureChat().set(false);
+		
+		options.telemetryOptInExtra().set(false);
+		
+		// Marker for lock down mode
+		options.darkMojangStudiosBackground().set(true);
+		
+		options.save();
 	}
 	
 	private void addCategory(final Component category)
 	{
 		this.list.addEntry(new CategoryEntry(this.list, category));
 	}
-	
+
 	private void showToast(final Component component, final long displayTime)
 	{
 		this.minecraft.gui.toastManager().addToast(new SystemToast(
@@ -320,15 +404,15 @@ public class ConfigScreen extends OptionsSubScreen
 				builder.withTooltip(ignored -> Tooltip.create(Component.literal(this.tooltip)));
 			}
 			return builder.create(
-					Component.literal(this.name),
-					(btn, value) ->
+				Component.literal(this.name),
+				(_, value) ->
+				{
+					this.container.set(value);
+					if(onChanged != null)
 					{
-						this.container.set(value);
-						if(onChanged != null)
-						{
-							onChanged.accept(value);
-						}
-					});
+						onChanged.accept(value);
+					}
+				});
 		}
 	}
 }
