@@ -43,6 +43,20 @@ public record AuthBackClientConfig(
 		);
 	}
 	
+	public void lockDown()
+	{
+		this.blockAddressCheck().setWithoutSave(true);
+		this.blockFetchingProfileKeys().setWithoutSave(true);
+		this.blockRealmsFetching().setWithoutSave(true);
+		this.forceSecureSkinDownload().setWithoutSave(true);
+		
+		this.userAPIConfig().lockDown();
+		
+		this.preventLegacyServerPing().setWithoutSave(true);
+		this.integratedServerDisableEnforceSecureProfile().setWithoutSave(true);
+		this.compactTitleScreen().set(true);
+	}
+	
 	public record UserAPIConfig(
 		// Simulates that the user API is in offline/dummy mode. This means that
 		// * No user properties (like SERVERS_ALLOWED, CHAT_ALLOWED, TELEMETRY_ENABLED) will be fetched.
@@ -67,6 +81,12 @@ public record AuthBackClientConfig(
 				ConfigValueContainer.bool(config, "userapi-block-telemetry", false),
 				ConfigValueContainer.bool(config, "userapi-block-report-abuse", false)
 			);
+		}
+		
+		public void lockDown()
+		{
+			this.dummyMode().setWithoutSave(true);
+			this.blockTelemetry().setWithoutSave(true);
 		}
 	}
 }
