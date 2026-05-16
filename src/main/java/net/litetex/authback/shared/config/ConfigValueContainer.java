@@ -49,7 +49,7 @@ public class ConfigValueContainer<T>
 		return this.value;
 	}
 	
-	public void set(final T value)
+	public void setWithoutSave(final T value)
 	{
 		this.value = value;
 		
@@ -61,6 +61,11 @@ public class ConfigValueContainer<T>
 		{
 			this.setIntoConfig.accept(this.config, this.path, value);
 		}
+	}
+	
+	public void set(final T value)
+	{
+		this.setWithoutSave(value);
 		this.config.save();
 	}
 }

@@ -7,8 +7,10 @@ import java.util.stream.Stream;
 import net.litetex.authback.client.AuthBackClient;
 import net.litetex.authback.client.config.AuthBackClientConfig;
 import net.litetex.authback.shared.config.ConfigValueContainer;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
+import net.minecraft.client.PresenceSharing;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
@@ -21,6 +23,7 @@ import net.minecraft.client.gui.components.toasts.SystemToast;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.client.gui.screens.ConfirmScreen;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.options.OnlineOptionsScreen;
 import net.minecraft.client.gui.screens.options.OptionsSubScreen;
 import net.minecraft.network.chat.Component;
 
@@ -43,6 +46,7 @@ public class ConfigScreen extends OptionsSubScreen
 		this.addKeyManagementOptions();
 		this.addAPIInteractionOptions();
 		this.addUserAPIInteractionOptions();
+		this.addAdvancedOptions();
 	}
 	
 	private void addKeyManagementOptions()
@@ -59,7 +63,7 @@ public class ConfigScreen extends OptionsSubScreen
 			Button.builder(
 					Component.literal("Regenerate keys"),
 					ignored ->
-						this.minecraft.setScreen(
+						this.minecraft.setScreenAndShow(
 							new ConfirmScreen(
 								yes -> {
 									if(yes)
@@ -67,7 +71,7 @@ public class ConfigScreen extends OptionsSubScreen
 										this.abClient.regenerateKeys();
 										this.showToast(Component.literal("Regenerated keys"), 4000L);
 									}
-									this.minecraft.setScreen(this);
+									this.minecraft.setScreenAndShow(this);
 								},
 								Component.literal("Confirm Regeneration"),
 								Component.literal(
@@ -170,21 +174,133 @@ public class ConfigScreen extends OptionsSubScreen
 				* No telemetry will be available
 				* Profile/Chat-signing keys will not be fetched
 				* Abuse reporting is unavailable""")
-			.createButton(dummyMode -> detailBtns.forEach(btn -> btn.visible = !dummyMode));
+			.createButton(dummyMode -> detailBtns.forEach(btn -> btn.active = !dummyMode));
 		
 		Stream.concat(Stream.of(dummyModeBtn), detailBtns.stream())
 			.map(btn -> new BigEntry(this.list, btn))
 			.forEach(this.list::addEntry);
 	}
 	
+	private void addAdvancedOptions()
+	{
+		final AuthBackClientConfig config = this.abClient.config();
+		
+		this.addCategory(Component.literal("Advanced"));
+		Stream.of(
+				new BooleanConfigData(
+					config.preventLegacyServerPing(),
+					"Prevent legacy server ping",
+					"""
+						Disables sending a legacy ping (for servers running 1.6.4 or lower) in the server list \
+						if the normal ping fails or times out"""
+				),
+				new BooleanConfigData(
+					config.integratedServerDisableEnforceSecureProfile(),
+					"Disable enforce-secure-profile",
+					"""
+						Disables enforce-secure-profile on the integrated server.
+						Currently this only affects the P2P host ('Join a friend')"""
+				),
+				new BooleanConfigData(
+					config.compactTitleScreen(),
+					"Compact title screen",
+					"Repositions or hides redundant elements like friends-list, language or narrator"
+				)
+			)
+			.map(BooleanConfigData::createButton)
+			.map(btn -> new BigEntry(this.list, btn))
+			.forEach(this.list::addEntry);
+		
+		this.addLockDownButton();
+	}
+	
+	private void addLockDownButton()
+	{
+		this.list.addEntry(new BigEntry(
+			this.list, Button.builder(
+				Component.literal("")
+					.append(Component.literal("\uD83D\uDD12").withStyle(ChatFormatting.GOLD))
+					.append(" Lock down ")
+					.append(Component.literal("\uD83D\uDD12").withStyle(ChatFormatting.GOLD)),
+				_ -> this.minecraft.setScreenAndShow(
+					new ConfirmScreen(
+						confirmed -> {
+							if(!confirmed)
+							{
+								this.minecraft.setScreenAndShow(this);
+								return;
+							}
+							this.lockDown();
+						},
+						Component.literal("Lock down")
+							.withStyle(ChatFormatting.BOLD),
+						Component.literal("""
+								Enabling this changes the client's setting to forcibly \
+								minimize network communication and improve privacy at all cost.
+								""")
+							.append("\n")
+							.append(Component.literal(
+									"""
+										Please note that you might no longer be able to join servers \
+										that have 'enforce-secure-profile' enabled (default).
+										""")
+								.withStyle(ChatFormatting.GOLD))
+							.append("\n")
+							.append(Component.literal(
+									"""
+										If you want to undo this you have to manually revert/reset the settings!
+										""")
+								.withStyle(ChatFormatting.RED)
+							)
+							.append("\n")
+							.append("Proceed?")
+					)
+				))
+			.build()
+		));
+	}
+	
+	private void lockDown()
+	{
+		this.abClient.config().lockDown();
+		this.lockDownBuiltInOptions();
+		
+		// Rebuild current screen
+		this.minecraft.setScreenAndShow(new ConfigScreen(
+			// Rebuild online options screen if required
+			this.lastScreen instanceof final OnlineOptionsScreen onlineOptionsScreen
+				? new OnlineOptionsScreen(onlineOptionsScreen.lastScreen, this.options)
+				: this.lastScreen,
+			this.options));
+	}
+	
+	private void lockDownBuiltInOptions()
+	{
+		final Options options = this.minecraft.options;
+		
+		options.realmsNotifications().set(false);
+		options.allowServerListing().set(false);
+		options.sharePresence().set(PresenceSharing.NONE);
+		
+		options.hideMatchedNames().set(false);
+		options.onlyShowSecureChat().set(false);
+		
+		options.telemetryOptInExtra().set(false);
+		
+		// Marker for lock down mode
+		options.darkMojangStudiosBackground().set(true);
+		
+		options.save();
+	}
+	
 	private void addCategory(final Component category)
 	{
 		this.list.addEntry(new CategoryEntry(this.list, category));
 	}
-	
+
 	private void showToast(final Component component, final long displayTime)
 	{
-		this.minecraft.getToastManager().addToast(new SystemToast(
+		this.minecraft.gui.toastManager().addToast(new SystemToast(
 			new SystemToast.SystemToastId(displayTime),
 			component,
 			null
@@ -288,15 +404,15 @@ public class ConfigScreen extends OptionsSubScreen
 				builder.withTooltip(ignored -> Tooltip.create(Component.literal(this.tooltip)));
 			}
 			return builder.create(
-					Component.literal(this.name),
-					(btn, value) ->
+				Component.literal(this.name),
+				(_, value) ->
+				{
+					this.container.set(value);
+					if(onChanged != null)
 					{
-						this.container.set(value);
-						if(onChanged != null)
-						{
-							onChanged.accept(value);
-						}
-					});
+						onChanged.accept(value);
+					}
+				});
 		}
 	}
 }
