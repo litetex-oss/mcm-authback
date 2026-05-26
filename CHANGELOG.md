@@ -8,6 +8,8 @@
         * Compact the title screen (reposition elements / remove redundant buttons)
         * "Lock down"
     * Skip friendlist promotion
+* [Server]
+    * Rate-limiting now correctly handles IPv6 ULA
 * Removed legacy configuration directory migration
 * Minor performance improvements and tweaks
 

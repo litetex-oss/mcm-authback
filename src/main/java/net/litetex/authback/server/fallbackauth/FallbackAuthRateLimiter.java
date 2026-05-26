@@ -1,5 +1,6 @@
 package net.litetex.authback.server.fallbackauth;
 
+import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.util.Arrays;
@@ -69,12 +70,19 @@ public class FallbackAuthRateLimiter
 			config.getInteger(prefix + "ipv6-network-prefix-bytes", 8));
 	}
 	
+	@SuppressWarnings("checkstyle:MagicNumber")
 	public boolean isAddressRateLimited(final InetAddress address)
 	{
 		if(this.ignoreLocalAddresses
 			&& (address.isLoopbackAddress() // e.g. 127.0.0.1
 			|| address.isLinkLocalAddress() // e.g. fe80:...
-			|| address.isSiteLocalAddress())) // e.g. 192.168...
+			// IPv4 site local (was removed from IPv6 in 2004)
+			// e.g. 192.168...
+			|| address instanceof Inet4Address && address.isSiteLocalAddress()
+			// IPv6 ULA e.g. fd00:...
+			// https://bugs.openjdk.org/browse/JDK-8375307
+			|| address instanceof Inet6Address && (address.getAddress()[0] & 0xfe) == 0xfc
+		))
 		{
 			LOG.debug("Will not rate limit local address: {}", address);
 			return false;
