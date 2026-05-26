@@ -3,9 +3,12 @@
 * [Client]
     * Fix realms not being displayed as expected
     * Reposition configuration button in Online settings
+      > _The Online settings screen got reworked and the button was no longer easily accessible_
     * New advanced options
         * Compact the title screen (reposition elements / remove redundant buttons)
+          > _This was added due to the addition of the friends button_
         * "Lock down"
+          > _There are now so many network related settings that it can get quiet tedious configuring them all_
 * [Server]
     * Rate-limiting now correctly handles IPv6 ULA
 * Removed legacy configuration directory migration
