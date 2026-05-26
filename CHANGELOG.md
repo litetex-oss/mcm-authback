@@ -4,10 +4,8 @@
     * Fix realms not being displayed as expected
     * Reposition configuration button in Online settings
     * New advanced options
-        * Integrated server: Disable `enforce-secure-profile` by default
         * Compact the title screen (reposition elements / remove redundant buttons)
         * "Lock down"
-    * Skip friendlist promotion
 * [Server]
     * Rate-limiting now correctly handles IPv6 ULA
 * Removed legacy configuration directory migration

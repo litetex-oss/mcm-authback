@@ -13,6 +13,7 @@ import com.llamalad7.mixinextras.sugar.Local;
 import com.llamalad7.mixinextras.sugar.ref.LocalIntRef;
 
 import net.litetex.authback.client.AuthBackClient;
+import net.minecraft.client.gui.components.FriendsButton;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.TitleScreen;
 
@@ -23,7 +24,10 @@ public abstract class TitleScreenCompactMixin
 	// NOTE: As of 2026-05 unable to modify topPos+=24 (Opcode: IADD) to 36 because OpCode is not accessible
 	@Inject(
 		method = "init",
-		at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/TitleScreen;showFriendsListButton(Z)Z")
+		at = @At(
+			value = "INVOKE",
+			target = "Lnet/minecraft/client/gui/screens/social/PlayerSocialManager;isFriendListEnabled()Z"),
+		require = 0
 	)
 	void fixYPos1(
 		final CallbackInfo ci,
@@ -34,6 +38,53 @@ public abstract class TitleScreenCompactMixin
 			topPos.set(topPos.get() + 12);
 		}
 	}
+	
+	// region Hide friends button if friends-list is disabled
+	@WrapOperation(
+		method = "init",
+		at = @At(
+			value = "INVOKE",
+			target = "Lnet/minecraft/client/gui/screens/TitleScreen;addRenderableWidget"
+				+ "(Lnet/minecraft/client/gui/components/events/GuiEventListener;)"
+				+ "Lnet/minecraft/client/gui/components/events/GuiEventListener;",
+			ordinal = 0
+		),
+		require = 0
+	)
+	GuiEventListener addRenderableWidgetFriendList(
+		final TitleScreen instance,
+		final GuiEventListener guiEventListener,
+		final Operation<GuiEventListener> original,
+		@Local(name = "friendsListEnabled") final boolean friendsListEnabled)
+	{
+		if(this.isCompact() && !friendsListEnabled)
+		{
+			return null;
+		}
+		
+		return original.call(instance, guiEventListener);
+	}
+	
+	@WrapOperation(
+		method = "init",
+		at = @At(
+			value = "INVOKE",
+			target = "Lnet/minecraft/client/gui/components/FriendsButton;setPosition(II)V"
+		),
+		require = 0
+	)
+	void addRenderableWidgetFriendList(
+		final FriendsButton instance,
+		final int x,
+		final int y,
+		final Operation<Void> original)
+	{
+		if(instance != null)
+		{
+			original.call(instance, x, y);
+		}
+	}
+	// endregion
 	
 	@SuppressWarnings("checkstyle:MagicNumber")
 	@WrapOperation(
@@ -46,13 +97,14 @@ public abstract class TitleScreenCompactMixin
 		slice = @Slice(
 			from = @At(
 				value = "INVOKE",
-				target = "Lnet/minecraft/client/gui/screens/TitleScreen;showFriendsListButton(Z)Z"),
+				target = "Lnet/minecraft/client/gui/screens/social/PlayerSocialManager;isFriendListEnabled()Z"),
 			to = @At(
 				value = "INVOKE",
 				target = "Lnet/minecraft/client/gui/components/FriendsButton;setPosition(II)V",
 				ordinal = 0
 			)
-		)
+		),
+		require = 0
 	)
 	int correctFriendsButtonX(
 		final TitleScreen instance,
@@ -87,7 +139,8 @@ public abstract class TitleScreenCompactMixin
 				target = "Lnet/minecraft/client/gui/components/SpriteIconButton;setPosition(II)V",
 				ordinal = 1
 			)
-		)
+		),
+		require = 0
 	)
 	GuiEventListener hideLanguageAndAccessibilityIfRequired(
 		final TitleScreen instance,
@@ -108,7 +161,8 @@ public abstract class TitleScreenCompactMixin
 			value = "INVOKE",
 			target = "Lnet/minecraft/client/gui/screens/TitleScreen;getHorizontalPosition(III)I",
 			ordinal = 2
-		)
+		),
+		require = 0
 	)
 	void fixYPos2(
 		final CallbackInfo ci,

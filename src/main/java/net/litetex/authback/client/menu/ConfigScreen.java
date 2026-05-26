@@ -195,16 +195,9 @@ public class ConfigScreen extends OptionsSubScreen
 						if the normal ping fails or times out"""
 				),
 				new BooleanConfigData(
-					config.integratedServerDisableEnforceSecureProfile(),
-					"Disable enforce-secure-profile",
-					"""
-						Disables enforce-secure-profile on the integrated server.
-						Currently this only affects the P2P host ('Join a friend')"""
-				),
-				new BooleanConfigData(
 					config.compactTitleScreen(),
 					"Compact title screen",
-					"Repositions or hides redundant elements like friends-list, language or narrator"
+					"Repositions or hides redundant elements like friends list, language or narrator."
 				)
 			)
 			.map(BooleanConfigData::createButton)
@@ -262,7 +255,11 @@ public class ConfigScreen extends OptionsSubScreen
 	
 	private void lockDown()
 	{
+		OnlineOptionsScreen.applyFriendSettings(
+			this.minecraft, false, false, _ -> { /* Nothing */ });
+		
 		this.abClient.config().lockDown();
+		
 		this.lockDownBuiltInOptions();
 		
 		// Rebuild current screen
