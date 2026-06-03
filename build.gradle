@@ -199,7 +199,6 @@ modrinth {
     versionType = System.getenv("MODRINTH_VERSION_TYPE")
     uploadFile = jar
     additionalFiles = [sourcesJar]
-    syncBodyFrom = rootProject.file("README.md").text
     syncBodyFrom = provider {
         rootProject.file("README.md").text
     }
