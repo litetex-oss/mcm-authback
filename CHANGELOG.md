@@ -1,12 +1,7 @@
 # 1.7.1
-
-_THIS IS A TEST_
-
 * [Client]
     * Fix realms not being displayed as expected
 * Updated dependencies
-
-MORE TEST TEXT
 
 # 1.7.0
 * [Client] Added
