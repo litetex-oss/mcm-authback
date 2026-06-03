@@ -27,7 +27,7 @@ public abstract class RealmsClientMixin
 	private static final Logger LOG = MixinLogger.client("RealmsClientMixin");
 	
 	@Unique
-	private Runnable fetchRealmsFeatureFlagsAction;
+	private Supplier<CompletableFuture<Set<String>>> fetchRealmsFeatureFlagsAction;
 	
 	@WrapOperation(
 		method = "<init>",
@@ -36,10 +36,10 @@ public abstract class RealmsClientMixin
 			target = "Ljava/util/concurrent/CompletableFuture;supplyAsync(Ljava/util/function/Supplier;"
 				+ "Ljava/util/concurrent/Executor;)Ljava/util/concurrent/CompletableFuture;")
 	)
-	<U> CompletableFuture<U> init(
-		final Supplier<U> supplier,
+	CompletableFuture<Set<String>> init(
+		final Supplier<Set<String>> supplier,
 		final Executor executor,
-		final Operation<CompletableFuture<U>> original)
+		final Operation<CompletableFuture<Set<String>>> original)
 	{
 		if(AuthBackClient.instance().config().blockRealmsFetching().value())
 		{
@@ -53,13 +53,14 @@ public abstract class RealmsClientMixin
 	
 	@Inject(
 		method = "getFeatureFlags",
-		at = @At("HEAD")
+		at = @At("HEAD"),
+		cancellable = true
 	)
 	void getFeatureFlags(final CallbackInfoReturnable<Set<String>> cir)
 	{
 		if(this.fetchRealmsFeatureFlagsAction != null)
 		{
-			this.fetchRealmsFeatureFlagsAction.run();
+			cir.setReturnValue(this.fetchRealmsFeatureFlagsAction.get().join());
 		}
 	}
 }
