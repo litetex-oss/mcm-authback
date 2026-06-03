@@ -1,7 +1,6 @@
 # 1.8.0
 * Updated to 26.2
 * [Client]
-    * Fix realms not being displayed as expected
     * Reposition configuration button in Online settings
       > _The Online settings screen got reworked and the button was no longer easily accessible_
     * New advanced options
