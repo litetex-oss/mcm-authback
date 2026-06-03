@@ -1,5 +1,5 @@
 plugins {
-    id 'net.fabricmc.fabric-loom' version '1.16.1'
+    id 'net.fabricmc.fabric-loom' version '1.16.3'
     id 'maven-publish'
     id 'signing'
     id 'io.github.gradle-nexus.publish-plugin' version '2.0.0'
@@ -9,9 +9,9 @@ plugins {
 }
 
 ext {
-    checkstyleVersion = '13.4.0'
+    checkstyleVersion = '13.5.0'
 
-    pmdVersion = '7.23.0'
+    pmdVersion = '7.25.0'
 }
 
 version = project.mod_version
@@ -80,7 +80,7 @@ dependencies {
     // Only needed during development
     localRuntime "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
     localRuntime "com.terraformersmc:modmenu:${project.modmenu_version}"
-    localRuntime "net.litetex.mcm:dev-auth-neo:1.1.0"
+    localRuntime "net.litetex.mcm:dev-auth-neo:1.1.1"
     localRuntime "maven.modrinth:no-chat-reports:Fabric-26.1-v2.19.0"
 }
 
@@ -200,7 +200,15 @@ modrinth {
     uploadFile = jar
     additionalFiles = [sourcesJar]
     syncBodyFrom = rootProject.file("README.md").text
-    changelog = System.getenv("MODRINTH_CHANGELOG_TEXT")
+    syncBodyFrom = provider {
+        rootProject.file("README.md").text
+    }
+    changelog = provider {
+        def changelogFile = System.getenv("MODRINTH_CHANGELOG_FILE")
+        return changelogFile != null
+                ? rootProject.file(changelogFile).text
+                : System.getenv("MODRINTH_CHANGELOG_TEXT")
+    }
     dependencies {
         required.project 'fabric-api'
         optional.project 'modmenu'

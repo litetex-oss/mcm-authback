@@ -1,3 +1,8 @@
+# 1.7.1
+* [Client]
+    * Fix realms not being displayed as expected
+* Updated dependencies
+
 # 1.7.0
 * [Client] Added
     * `force-secure-skin-download`: Forces the skin to be downloaded using a secure (https) connection
