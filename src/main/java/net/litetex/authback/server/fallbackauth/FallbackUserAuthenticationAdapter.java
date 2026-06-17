@@ -114,7 +114,7 @@ public class FallbackUserAuthenticationAdapter
 		ServerLoginNetworking.registerReceiver(
 			loginPacketListener,
 			ChannelNames.FALLBACK_AUTH,
-			(server, handler, understood, buf, synchronizer, responseSender) -> {
+			(_, _, understood, buf, _, _) -> {
 				if(!understood)
 				{
 					LOG.info("Client[id={}] did not understand fallback auth - disconnecting", gameProfile.id());

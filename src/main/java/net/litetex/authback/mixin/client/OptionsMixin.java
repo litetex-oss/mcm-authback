@@ -25,6 +25,7 @@ public abstract class OptionsMixin
 		// Replace default values with ones that are not annoying (during debugging)
 		
 		// There is no reason to annoy 99.999% of players with the narrator because they will NEVER need it
+		// Also just go to settings -> accessibility? Shouldn't be that hard...
 		this.onboardAccessibility = false;
 		// Number of accidentally enabled? YES!
 		this.narratorHotkey.set(false);
@@ -37,7 +38,7 @@ public abstract class OptionsMixin
 		// The first thing you see when joining a server is,
 		// how you can block or report other players/your friends.
 		// Isn't that nice?
-		// Same thing is also in ESC menu
+		// Same thing is also already in ESC menu
 		this.joinedFirstServer = true;
 	}
 	

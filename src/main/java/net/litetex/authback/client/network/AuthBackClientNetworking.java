@@ -36,7 +36,7 @@ public class AuthBackClientNetworking
 	{
 		ClientLoginNetworking.registerGlobalReceiver(
 			ChannelNames.FALLBACK_AUTH,
-			(client, handler, buf, callbacksConsumer) -> {
+			(_, _, buf, _) -> {
 				
 				LOG.info("Fallback auth request from server");
 				

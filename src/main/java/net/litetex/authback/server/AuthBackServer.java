@@ -3,7 +3,6 @@ package net.litetex.authback.server;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.Set;
-import java.util.WeakHashMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -24,6 +23,7 @@ import net.litetex.authback.server.keys.ServerProfilePublicKeysManager;
 import net.litetex.authback.server.network.AuthBackServerNetworking;
 import net.litetex.authback.shared.AuthBack;
 import net.litetex.authback.shared.external.com.google.common.base.Suppliers;
+import net.litetex.authback.shared.external.org.springframework.util.ConcurrentReferenceHashMap;
 import net.minecraft.network.Connection;
 import net.minecraft.server.network.ServerLoginPacketListenerImpl;
 
@@ -60,7 +60,7 @@ public class AuthBackServer extends AuthBack
 		super("server");
 		
 		this.connectionsToSkipUpToDateCheck =
-			Collections.synchronizedSet(Collections.newSetFromMap(new WeakHashMap<>()));
+			Collections.newSetFromMap(new ConcurrentReferenceHashMap<>(ConcurrentReferenceHashMap.ReferenceType.WEAK));
 		
 		final CompletableFuture<ServerProfilePublicKeysManager> cfServerProfilePublicKeysManager =
 			CompletableFuture.supplyAsync(() -> new ServerProfilePublicKeysManager(

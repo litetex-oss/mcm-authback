@@ -20,7 +20,9 @@ public record AuthBackClientConfig(
 	UserAPIConfig userAPIConfig,
 	// Disables sending a legacy ping (for servers running 1.6.4 or lower) in the server list
 	// when the normal ping fails or times out
-	boolean preventLegacyServerPing
+	ConfigValueContainer<Boolean> preventLegacyServerPing,
+	// Compacts the title screen by repositioning or removing redundant buttons
+	ConfigValueContainer<Boolean> compactTitleScreen
 )
 {
 	public AuthBackClientConfig(final Configuration config)
@@ -32,8 +34,22 @@ public record AuthBackClientConfig(
 			ConfigValueContainer.bool(config, "suppress-all-server-join-errors", false),
 			ConfigValueContainer.bool(config, "force-secure-skin-download", false),
 			new UserAPIConfig(config),
-			config.getBoolean("prevent-legacy-server-ping", true)
+			ConfigValueContainer.bool(config, "prevent-legacy-server-ping", true),
+			ConfigValueContainer.bool(config, "compact-title-screen", false)
 		);
+	}
+	
+	public void lockDown()
+	{
+		this.blockAddressCheck().setWithoutSave(true);
+		this.blockFetchingProfileKeys().setWithoutSave(true);
+		this.blockRealmsFetching().setWithoutSave(true);
+		this.forceSecureSkinDownload().setWithoutSave(true);
+		
+		this.userAPIConfig().lockDown();
+		
+		this.preventLegacyServerPing().setWithoutSave(true);
+		this.compactTitleScreen().set(true);
 	}
 	
 	public record UserAPIConfig(
@@ -60,6 +76,12 @@ public record AuthBackClientConfig(
 				ConfigValueContainer.bool(config, "userapi-block-telemetry", false),
 				ConfigValueContainer.bool(config, "userapi-block-report-abuse", false)
 			);
+		}
+		
+		public void lockDown()
+		{
+			this.dummyMode().setWithoutSave(true);
+			this.blockTelemetry().setWithoutSave(true);
 		}
 	}
 }
