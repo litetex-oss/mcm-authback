@@ -11,6 +11,7 @@
   "client": [
     "client.AccountProfileKeyPairManagerMixin",
     "client.AddressCheckMixin",
+    "client.ChatListenerMixin",
     "client.ClientHandshakePacketListenerImplMixin",
     "client.ConnectScreenMixin",
     "client.MinecraftMixin",
@@ -19,6 +20,7 @@
     "client.RealmsClientMixin",
     "client.ServerStatusPingerMixin",
     "client.SkinTextureDownloaderMixin",
+    "client.TitleScreenCompactMixin",
     "client.TitleScreenMixin",
     "client.YggdrasilUserApiServiceMixin"
   ],

@@ -4,10 +4,8 @@ import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
-import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
-import java.util.WeakHashMap;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -22,6 +20,8 @@ import com.mojang.authlib.properties.PropertyMap;
 import com.mojang.authlib.yggdrasil.response.ProfileSearchResultsResponse;
 import com.mojang.util.ByteBufferTypeAdapter;
 import com.mojang.util.UUIDTypeAdapter;
+
+import net.litetex.authback.shared.external.org.springframework.util.ConcurrentReferenceHashMap;
 
 
 public final class JSONSerializer
@@ -52,7 +52,8 @@ public final class JSONSerializer
 		static final DateTimeFormatter FORMATTER = DateTimeFormatter.ISO_INSTANT;
 		
 		// Using a cache speeds up repeated the serialization of Instant by 4-10x
-		private final Map<Instant, String> formatCache = Collections.synchronizedMap(new WeakHashMap<>());
+		private final Map<Instant, String> formatCache = new ConcurrentReferenceHashMap<>(
+			ConcurrentReferenceHashMap.ReferenceType.WEAK);
 		
 		private InstantConverter()
 		{

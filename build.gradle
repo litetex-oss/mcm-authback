@@ -1,5 +1,5 @@
 plugins {
-    id 'net.fabricmc.fabric-loom' version '1.16.3'
+    id 'net.fabricmc.fabric-loom' version '1.17.11'
     id 'maven-publish'
     id 'signing'
     id 'io.github.gradle-nexus.publish-plugin' version '2.0.0'
@@ -9,7 +9,7 @@ plugins {
 }
 
 ext {
-    checkstyleVersion = '13.5.0'
+    checkstyleVersion = '13.6.0'
 
     pmdVersion = '7.25.0'
 }
@@ -72,6 +72,11 @@ dependencies {
 
     implementation fabricApi.module("fabric-networking-api-v1", project.fabric_api_version)
     implementation fabricApi.module("fabric-command-api-v2", project.fabric_api_version)
+    // Possible Fabric Bug:
+    // FabricAPI 0.152.1+26.2 - ChatListenerMixin / AuthbackCommand reports
+    // class file for net.fabricmc.fabric.api.event.lifecycle.v1.EntityLoadData not found
+    // however the class is never used
+    implementation fabricApi.module("fabric-lifecycle-events-v1", project.fabric_api_version)
 
     compileOnly "com.terraformersmc:modmenu:${project.modmenu_version}"
     // Temporary added to fix compilation because modmenu ships an outdated version that fails compilation
@@ -81,7 +86,7 @@ dependencies {
     localRuntime "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
     localRuntime "com.terraformersmc:modmenu:${project.modmenu_version}"
     localRuntime "net.litetex.mcm:dev-auth-neo:1.1.1"
-    localRuntime "maven.modrinth:no-chat-reports:Fabric-26.1-v2.19.0"
+//    localRuntime "maven.modrinth:no-chat-reports:Fabric-26.1-v2.19.0"
 }
 
 processResources {
@@ -135,9 +140,15 @@ java {
 }
 
 javadoc {
-    options.addBooleanOption('html5', true)
-    options.addBooleanOption('Xdoclint:none', true)
-    options.addBooleanOption('quiet', true)
+    def opts = (options as StandardJavadocDocletOptions)
+    opts.addBooleanOption('html5', true)
+    opts.addBooleanOption('Xdoclint:none', true)
+    opts.addBooleanOption('quiet', true)
+    opts.tags(
+            "apiNote:a:API Note:",
+            "implSpec:a:Implementation Requirements:",
+            "implNote:a:Implementation Note:"
+    )
 }
 
 jar {
@@ -199,7 +210,6 @@ modrinth {
     versionType = System.getenv("MODRINTH_VERSION_TYPE")
     uploadFile = jar
     additionalFiles = [sourcesJar]
-    syncBodyFrom = rootProject.file("README.md").text
     syncBodyFrom = provider {
         rootProject.file("README.md").text
     }

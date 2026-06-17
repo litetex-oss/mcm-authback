@@ -4,8 +4,10 @@ accessible field net/minecraft/server/network/ServerLoginPacketListenerImpl requ
 accessible field net/minecraft/server/network/ServerLoginPacketListenerImpl connection Lnet/minecraft/network/Connection;
 accessible field net/minecraft/server/network/ServerLoginPacketListenerImpl server Lnet/minecraft/server/MinecraftServer;
 accessible field net/minecraft/server/network/ServerCommonPacketListenerImpl connection Lnet/minecraft/network/Connection;
+accessible method net/minecraft/server/dedicated/Settings get (Ljava/lang/String;Z)Z
 accessible method net/minecraft/client/gui/components/AbstractSelectionList addEntry (Lnet/minecraft/client/gui/components/AbstractSelectionList$Entry;)I
 accessible class net/minecraft/client/gui/components/OptionsList$Entry
 accessible method net/minecraft/client/gui/components/OptionsList$Entry <init> (Ljava/util/List;Lnet/minecraft/client/gui/screens/Screen;)V
 accessible field net/minecraft/client/gui/components/OptionsList screen Lnet/minecraft/client/gui/screens/options/OptionsSubScreen;
-accessible method net/minecraft/server/dedicated/Settings get (Ljava/lang/String;Z)Z
+accessible field net/minecraft/client/gui/screens/options/OptionsSubScreen lastScreen Lnet/minecraft/client/gui/screens/Screen;
+accessible method net/minecraft/client/gui/screens/options/OnlineOptionsScreen applyFriendSettings (Lnet/minecraft/client/Minecraft;ZZLjava/util/function/Consumer;)V
