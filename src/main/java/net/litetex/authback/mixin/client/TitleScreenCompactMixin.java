@@ -13,30 +13,60 @@ import com.llamalad7.mixinextras.sugar.Local;
 import com.llamalad7.mixinextras.sugar.ref.LocalIntRef;
 
 import net.litetex.authback.client.AuthBackClient;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.components.FriendsButton;
 import net.minecraft.client.gui.components.events.GuiEventListener;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.TitleScreen;
+import net.minecraft.network.chat.Component;
 
 
 @Mixin(TitleScreen.class)
-public abstract class TitleScreenCompactMixin
+public abstract class TitleScreenCompactMixin extends Screen
 {
 	// NOTE: As of 2026-05 unable to modify topPos+=24 (Opcode: IADD) to 36 because OpCode is not accessible
-	@Inject(
+	@WrapOperation(
 		method = "init",
 		at = @At(
 			value = "INVOKE",
-			target = "Lnet/minecraft/client/gui/screens/social/PlayerSocialManager;isFriendListEnabled()Z"),
+			target = "Lnet/minecraft/client/gui/screens/TitleScreen;createDemoMenuOptions(II)I"),
 		require = 0
 	)
-	void fixYPos1(
-		final CallbackInfo ci,
-		@Local(name = "topPos") final LocalIntRef topPos)
+	int fixYPos1Demo(
+		final TitleScreen instance,
+		final int topPos,
+		final int spacing,
+		final Operation<Integer> original)
 	{
-		if(this.isCompact())
-		{
-			topPos.set(topPos.get() + 12);
-		}
+		return this.fixYPos1(instance, topPos, spacing, original);
+	}
+	
+	@WrapOperation(
+		method = "init",
+		at = @At(
+			value = "INVOKE",
+			target = "Lnet/minecraft/client/gui/screens/TitleScreen;createNormalMenuOptions(II)I"),
+		require = 0
+	)
+	int fixYPos1Normal(
+		final TitleScreen instance,
+		final int topPos,
+		final int spacing,
+		final Operation<Integer> original)
+	{
+		return this.fixYPos1(instance, topPos, spacing, original);
+	}
+	
+	@Unique
+	private int fixYPos1(
+		final TitleScreen instance,
+		final int topPos,
+		final int spacing,
+		final Operation<Integer> original)
+	{
+		return original.call(instance, topPos, spacing)
+			+ (this.isCompact() ? 12 : 0);
 	}
 	
 	// region Hide friends button if friends-list is disabled
@@ -54,10 +84,9 @@ public abstract class TitleScreenCompactMixin
 	GuiEventListener addRenderableWidgetFriendList(
 		final TitleScreen instance,
 		final GuiEventListener guiEventListener,
-		final Operation<GuiEventListener> original,
-		@Local(name = "friendsListEnabled") final boolean friendsListEnabled)
+		final Operation<GuiEventListener> original)
 	{
-		if(this.isCompact() && !friendsListEnabled)
+		if(this.isCompact() && !this.minecraft.getPlayerSocialManager().isFriendListEnabled())
 		{
 			return null;
 		}
@@ -96,8 +125,8 @@ public abstract class TitleScreenCompactMixin
 		),
 		slice = @Slice(
 			from = @At(
-				value = "INVOKE",
-				target = "Lnet/minecraft/client/gui/screens/social/PlayerSocialManager;isFriendListEnabled()Z"),
+				value = "HEAD"
+			),
 			to = @At(
 				value = "INVOKE",
 				target = "Lnet/minecraft/client/gui/components/FriendsButton;setPosition(II)V",
@@ -178,5 +207,18 @@ public abstract class TitleScreenCompactMixin
 	private boolean isCompact()
 	{
 		return AuthBackClient.instance().config().compactTitleScreen().value();
+	}
+	
+	public TitleScreenCompactMixin(final Component title)
+	{
+		super(title);
+	}
+	
+	public TitleScreenCompactMixin(
+		final Minecraft minecraft,
+		final Font font,
+		final Component title)
+	{
+		super(minecraft, font, title);
 	}
 }
