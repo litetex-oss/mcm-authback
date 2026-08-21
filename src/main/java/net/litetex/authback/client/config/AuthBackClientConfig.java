@@ -22,7 +22,10 @@ public record AuthBackClientConfig(
 	// when the normal ping fails or times out
 	ConfigValueContainer<Boolean> preventLegacyServerPing,
 	// Compacts the title screen by repositioning or removing redundant buttons
-	ConfigValueContainer<Boolean> compactTitleScreen
+	ConfigValueContainer<Boolean> compactTitleScreen,
+	// Disables fade in of some screens
+	// Game starts 2s faster which is a lot when you're debugging it often
+	ConfigValueContainer<Boolean> immediatelyShowScreens
 )
 {
 	public AuthBackClientConfig(final Configuration config)
@@ -35,7 +38,8 @@ public record AuthBackClientConfig(
 			ConfigValueContainer.bool(config, "force-secure-skin-download", false),
 			new UserAPIConfig(config),
 			ConfigValueContainer.bool(config, "prevent-legacy-server-ping", true),
-			ConfigValueContainer.bool(config, "compact-title-screen", false)
+			ConfigValueContainer.bool(config, "compact-title-screen", false),
+			ConfigValueContainer.bool(config, "immediately-show-screens", false)
 		);
 	}
 	
@@ -49,6 +53,7 @@ public record AuthBackClientConfig(
 		this.userAPIConfig().lockDown();
 		
 		this.preventLegacyServerPing().setWithoutSave(true);
+		this.immediatelyShowScreens().setWithoutSave(true);
 		this.compactTitleScreen().set(true);
 	}
 	

@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.mojang.authlib.minecraft.UserApiService;
-import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
+import com.mojang.authlib.services.MinecraftServicesDiscoveryService;
 
 import net.litetex.authback.client.AuthBackClient;
 import net.litetex.authback.client.init.AuthBackClientPreInitializer;
@@ -29,7 +29,7 @@ public abstract class MinecraftMixin
 		cancellable = true
 	)
 	private static void createUserApiService(
-		final YggdrasilAuthenticationService authService,
+		final MinecraftServicesDiscoveryService discoveryService,
 		final GameConfig config,
 		final CallbackInfoReturnable<UserApiService> cir)
 	{

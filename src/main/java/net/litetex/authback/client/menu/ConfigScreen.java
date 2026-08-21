@@ -195,6 +195,13 @@ public class ConfigScreen extends OptionsSubScreen
 						if the normal ping fails or times out"""
 				),
 				new BooleanConfigData(
+					config.immediatelyShowScreens(),
+					"Immediately show screens",
+					"""
+						Removes fade-in animations from some screens.
+						For example the title screen will be available 2s sooner"""
+				),
+				new BooleanConfigData(
 					config.compactTitleScreen(),
 					"Compact title screen",
 					"Repositions or hides redundant elements like friends list, language or narrator."
