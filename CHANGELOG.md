@@ -1,3 +1,8 @@
+# 1.9.0
+* Updated to 26.3
+* [Client]
+  * Added advanced option to immediately show screens
+
 # 1.8.0
 * Updated to 26.2
 * [Client]

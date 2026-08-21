@@ -14,16 +14,18 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.mojang.authlib.GameProfile;
-import com.mojang.authlib.HttpAuthenticationService;
+import com.mojang.authlib.HttpDiscoveryService;
 import com.mojang.authlib.SignatureState;
 import com.mojang.authlib.exceptions.MinecraftClientException;
 import com.mojang.authlib.minecraft.client.MinecraftClient;
 import com.mojang.authlib.properties.Property;
-import com.mojang.authlib.yggdrasil.ProfileActionType;
-import com.mojang.authlib.yggdrasil.ProfileResult;
-import com.mojang.authlib.yggdrasil.YggdrasilMinecraftSessionService;
-import com.mojang.authlib.yggdrasil.response.MinecraftProfilePropertiesResponse;
-import com.mojang.authlib.yggdrasil.response.ProfileAction;
+import com.mojang.authlib.services.MinecraftServicesDiscoveryService;
+import com.mojang.authlib.services.MinecraftServicesSessionService;
+import com.mojang.authlib.services.ProfileActionType;
+import com.mojang.authlib.services.ProfileResult;
+import com.mojang.authlib.services.response.MinecraftProfilePropertiesResponse;
+import com.mojang.authlib.services.response.ProfileAction;
+import com.mojang.authlib.services.response.discovery.Service;
 import com.mojang.util.UndashedUuid;
 
 import net.litetex.authback.common.AuthBackCommon;
@@ -31,19 +33,19 @@ import net.litetex.authback.common.gameprofile.GameProfileCacheManager;
 import net.litetex.authback.shared.mixin.log.MixinLogger;
 
 
-@Mixin(value = YggdrasilMinecraftSessionService.class, remap = false)
-public abstract class YggdrasilMinecraftSessionServiceMixin
+@Mixin(value = MinecraftServicesSessionService.class, remap = false)
+public abstract class MinecraftServicesSessionServiceMixin
 {
 	@Unique
-	private static final Logger LOG = MixinLogger.common("YggdrasilMinecraftSessionServiceMixin");
+	private static final Logger LOG = MixinLogger.common("MinecraftServicesSessionServiceMixin");
 	
 	@Final
 	@Shadow
 	private MinecraftClient client;
 	
-	@Final
 	@Shadow
-	private String baseUrl;
+	@Final
+	private MinecraftServicesDiscoveryService discoveryService;
 	
 	@Shadow
 	private static Set<ProfileActionType> extractProfileActionTypes(final Set<ProfileAction> response)
@@ -63,9 +65,10 @@ public abstract class YggdrasilMinecraftSessionServiceMixin
 	{
 		try
 		{
-			final URL url = HttpAuthenticationService.concatenateURL(
-				HttpAuthenticationService.constantURL(
-					this.baseUrl + "profile/" + UndashedUuid.toString(profileId)),
+			final URL url = HttpDiscoveryService.concatenateURL(
+				MinecraftServicesDiscoveryService.constantURL(
+					this.discoveryService.getUrl(Service.SESSION, "getProfileById")
+						.replace("{profileId}", UndashedUuid.toString(profileId))),
 				"unsigned=" + !requireSecure);
 			
 			final long startMs = System.currentTimeMillis();
@@ -143,12 +146,15 @@ public abstract class YggdrasilMinecraftSessionServiceMixin
 	// "Failed to verify signature on property... <StackTrace>"
 	@Inject(
 		method = "getPropertySignatureState",
-		at = @At(value = "INVOKE", target = "Lcom/mojang/authlib/yggdrasil/ServicesKeySet;keys"
-			+ "(Lcom/mojang/authlib/yggdrasil/ServicesKeyType;)Ljava/util/Collection;"),
+		at = @At(
+			value = "INVOKE",
+			target = "Lcom/mojang/authlib/services/ServicesKeySet;keys(Lcom/mojang/authlib/services/ServicesKeyType;)"
+				+ "Ljava/util/Collection;"),
 		cancellable = true
 	)
 	void hasSignatureFixed(final Property property, final CallbackInfoReturnable<SignatureState> cir)
 	{
+		// noinspection ConstantConditions - Already checked by hasSignature before (Optional is for professionals)
 		if(property.signature().isEmpty())
 		{
 			LOG.warn("Prevented signer crash due to empty signature (should be null) on property {}", property);
