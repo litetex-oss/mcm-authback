@@ -14,8 +14,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.mojang.authlib.minecraft.TelemetrySession;
 import com.mojang.authlib.minecraft.UserApiService;
-import com.mojang.authlib.yggdrasil.request.AbuseReportRequest;
-import com.mojang.authlib.yggdrasil.response.KeyPairResponse;
+import com.mojang.authlib.services.request.AbuseReportRequest;
+import com.mojang.authlib.services.response.KeyPairResponse;
 
 import net.litetex.authback.client.AuthBackClient;
 import net.litetex.authback.client.config.AuthBackClientConfig;
@@ -24,12 +24,12 @@ import net.litetex.authback.shared.mixin.log.MixinLogger;
 
 // Is not in core client and can be updated on the fly -> everything is optional
 @Mixin(
-	targets = "com.mojang.authlib.yggdrasil.YggdrasilUserApiService",
+	targets = "com.mojang.authlib.services.MinecraftServicesUserApiService",
 	remap = false)
-public abstract class YggdrasilUserApiServiceMixin
+public abstract class MinecraftServicesUserApiServiceMixin
 {
 	@Unique
-	private static final Logger LOG = MixinLogger.client("YggdrasilUserApiServiceMixin");
+	private static final Logger LOG = MixinLogger.client("MinecraftServicesUserApiServiceMixin");
 	
 	@Unique
 	private AuthBackClientConfig.UserAPIConfig userAPIConfig()

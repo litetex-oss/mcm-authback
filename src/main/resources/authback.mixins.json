@@ -4,9 +4,9 @@
   "package": "net.litetex.authback.mixin",
   "compatibilityLevel": "JAVA_25",
   "mixins": [
-    "common.ServicesMixin",
-    "common.YggdrasilMinecraftSessionServiceMixin",
-    "common.YggdrasilServicesKeyInfoMixin"
+    "common.MinecraftServicesKeyInfoMixin",
+    "common.MinecraftServicesSessionServiceMixin",
+    "common.ServicesMixin"
   ],
   "client": [
     "client.AccountProfileKeyPairManagerMixin",
@@ -14,15 +14,16 @@
     "client.ChatListenerMixin",
     "client.ClientHandshakePacketListenerImplMixin",
     "client.ConnectScreenMixin",
+    "client.LoadingOverlayMixin",
     "client.MinecraftMixin",
+    "client.MinecraftServicesUserApiServiceMixin",
     "client.OnlineOptionsScreenMixin",
     "client.OptionsMixin",
     "client.RealmsClientMixin",
     "client.ServerStatusPingerMixin",
     "client.SkinTextureDownloaderMixin",
     "client.TitleScreenCompactMixin",
-    "client.TitleScreenMixin",
-    "client.YggdrasilUserApiServiceMixin"
+    "client.TitleScreenMixin"
   ],
   "server": [
     "server.DedicatedServerMixin",

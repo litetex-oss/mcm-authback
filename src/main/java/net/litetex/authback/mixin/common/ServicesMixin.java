@@ -8,8 +8,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.mojang.authlib.GameProfileRepository;
-import com.mojang.authlib.minecraft.MinecraftSessionService;
-import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
+import com.mojang.authlib.minecraft.SessionService;
+import com.mojang.authlib.services.MinecraftServicesDiscoveryService;
 
 import net.litetex.authback.common.AuthBackCommon;
 import net.minecraft.server.Services;
@@ -28,21 +28,20 @@ public abstract class ServicesMixin
 		cancellable = true
 	)
 	private static void create(
-		final YggdrasilAuthenticationService yggdrasilAuthenticationService,
-		final File gameDir,
+		final MinecraftServicesDiscoveryService serviceAccess,
+		final File nameCacheDir,
 		final CallbackInfoReturnable<Services> cir)
 	{
-		final MinecraftSessionService minecraftSessionService =
-			yggdrasilAuthenticationService.createMinecraftSessionService();
-		final GameProfileRepository gameProfileRepository = yggdrasilAuthenticationService.createProfileRepository();
+		final SessionService minecraftSessionService = serviceAccess.createMinecraftSessionService();
+		final GameProfileRepository gameProfileRepository = serviceAccess.createProfileRepository();
 		final UserNameToIdResolver userNameToIdResolver =
-			AuthBackCommon.instance().createUserNameToIdResolver(gameProfileRepository, gameDir);
+			AuthBackCommon.instance().createUserNameToIdResolver(gameProfileRepository, nameCacheDir);
 		final ProfileResolver profileResolver = new ProfileResolver.Cached(
 			minecraftSessionService,
 			userNameToIdResolver);
 		cir.setReturnValue(new Services(
 			minecraftSessionService,
-			yggdrasilAuthenticationService.getServicesKeySet(),
+			serviceAccess.getServicesKeySet(),
 			gameProfileRepository,
 			userNameToIdResolver,
 			profileResolver));

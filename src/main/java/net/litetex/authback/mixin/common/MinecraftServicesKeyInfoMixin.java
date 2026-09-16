@@ -12,18 +12,18 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 
 import com.mojang.authlib.exceptions.MinecraftClientException;
 import com.mojang.authlib.minecraft.client.MinecraftClient;
-import com.mojang.authlib.yggdrasil.YggdrasilServicesKeyInfo;
+import com.mojang.authlib.services.MinecraftServicesKeyInfo;
 
 import net.litetex.authback.common.AuthBackCommon;
 import net.litetex.authback.common.GlobalPublicKeysCache;
 import net.litetex.authback.shared.mixin.log.MixinLogger;
 
 
-@Mixin(value = YggdrasilServicesKeyInfo.class, remap = false)
-public abstract class YggdrasilServicesKeyInfoMixin
+@Mixin(value = MinecraftServicesKeyInfo.class, remap = false)
+public abstract class MinecraftServicesKeyInfoMixin
 {
 	@Unique
-	private static final Logger LOG = MixinLogger.common("YggdrasilServicesKeyInfoMixin");
+	private static final Logger LOG = MixinLogger.common("MinecraftServicesKeyInfoMixin");
 	
 	@Redirect(
 		method = "fetch",
@@ -52,7 +52,7 @@ public abstract class YggdrasilServicesKeyInfoMixin
 					.map(r.createdAt()::isAfter)
 					.orElse(false))
 				.flatMap(GlobalPublicKeysCache.CachedResponse::response)
-				.map(YggdrasilServicesKeyInfoMixin::logUseCachedResponse)
+				.map(MinecraftServicesKeyInfoMixin::logUseCachedResponse)
 				.orElseGet(() ->
 				{
 					try
@@ -70,7 +70,7 @@ public abstract class YggdrasilServicesKeyInfoMixin
 							
 							return optCachedResponse
 								.flatMap(GlobalPublicKeysCache.CachedResponse::response)
-								.map(YggdrasilServicesKeyInfoMixin::logUseCachedResponse)
+								.map(MinecraftServicesKeyInfoMixin::logUseCachedResponse)
 								.orElse(null);
 						}
 						
@@ -83,7 +83,7 @@ public abstract class YggdrasilServicesKeyInfoMixin
 						
 						return optCachedResponse
 							.flatMap(GlobalPublicKeysCache.CachedResponse::response)
-							.map(YggdrasilServicesKeyInfoMixin::logUseCachedResponse)
+							.map(MinecraftServicesKeyInfoMixin::logUseCachedResponse)
 							.orElseThrow(() -> ex);
 					}
 				});
