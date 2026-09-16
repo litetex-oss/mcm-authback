@@ -1,5 +1,7 @@
 # 1.9.0
 * Updated to 26.3
+* Cache new `discovery` endpoint
+* Prevent duplicate fetching of global public keys
 * [Client]
   * Added advanced option to immediately show screens
 

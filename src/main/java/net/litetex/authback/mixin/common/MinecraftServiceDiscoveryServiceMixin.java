@@ -10,20 +10,20 @@ import org.spongepowered.asm.mixin.injection.At;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.mojang.authlib.minecraft.client.MinecraftClient;
-import com.mojang.authlib.services.MinecraftServicesKeyInfo;
+import com.mojang.authlib.services.MinecraftServicesDiscoveryService;
 
 import net.litetex.authback.common.AuthBackCommon;
 import net.litetex.authback.shared.mixin.log.MixinLogger;
 
 
-@Mixin(value = MinecraftServicesKeyInfo.class, remap = false)
-public abstract class MinecraftServicesKeyInfoMixin
+@Mixin(value = MinecraftServicesDiscoveryService.class, remap = false)
+public abstract class MinecraftServiceDiscoveryServiceMixin
 {
 	@Unique
-	private static final Logger LOG = MixinLogger.common("MinecraftServicesKeyInfoMixin");
+	private static final Logger LOG = MixinLogger.common("MinecraftServiceDiscoveryServiceMixin");
 	
 	@WrapOperation(
-		method = "fetch",
+		method = "lambda$createDiscoverySupplier$1",
 		at = @At(value = "INVOKE",
 			target = "Lcom/mojang/authlib/minecraft/client/MinecraftClient;get(Ljava/net/URL;"
 				+ "Ljava/lang/Class;)Ljava/lang/Object;",
@@ -32,6 +32,6 @@ public abstract class MinecraftServicesKeyInfoMixin
 	private static <T> T get(
 		final MinecraftClient instance, final URL url, final Class<T> responseClass, final Operation<T> original)
 	{
-		return AuthBackCommon.instance().publicKeysCache().handleGetCall(LOG, instance, url, responseClass, original);
+		return AuthBackCommon.instance().discoveryCache().handleGetCall(LOG, instance, url, responseClass, original);
 	}
 }

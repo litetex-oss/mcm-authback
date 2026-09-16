@@ -35,6 +35,7 @@ public class AuthBackCommon extends AuthBack
 		AuthBackCommon.instance = instance;
 	}
 	
+	private final DiscoveryCache discoveryCache;
 	private final GlobalPublicKeysCache globalPublicKeysCache;
 	private final CompletableFuture<GameProfileCacheManager> cfGameProfileCacheManager;
 	private final Supplier<GameProfileCacheManager> gameProfileCacheManagerSupplier;
@@ -46,6 +47,9 @@ public class AuthBackCommon extends AuthBack
 	{
 		super(envType);
 		
+		this.discoveryCache = new DiscoveryCache(
+			this.authbackDir.resolve("discovery.json"),
+			this.lowLevelConfig.getInteger("discovery-cache.default-reuse-minutes", 120));
 		this.globalPublicKeysCache = new GlobalPublicKeysCache(
 			this.authbackDir.resolve("global-public-keys.json"),
 			this.lowLevelConfig.getInteger("global-public-keys-cache.default-reuse-minutes", 120));
@@ -60,6 +64,11 @@ public class AuthBackCommon extends AuthBack
 		this.config = new AuthBackCommonConfig(this.lowLevelConfig);
 		
 		LOG.debug("Initialized");
+	}
+	
+	public DiscoveryCache discoveryCache()
+	{
+		return this.discoveryCache;
 	}
 	
 	public GlobalPublicKeysCache publicKeysCache()
