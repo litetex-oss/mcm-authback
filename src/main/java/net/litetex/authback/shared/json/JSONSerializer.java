@@ -17,7 +17,7 @@ import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import com.mojang.authlib.minecraft.client.ObjectMapper;
 import com.mojang.authlib.properties.PropertyMap;
-import com.mojang.authlib.yggdrasil.response.ProfileSearchResultsResponse;
+import com.mojang.authlib.services.response.ProfileSearchResultsResponse;
 import com.mojang.util.ByteBufferTypeAdapter;
 import com.mojang.util.UUIDTypeAdapter;
 

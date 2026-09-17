@@ -8,15 +8,18 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.mojang.authlib.GameProfileRepository;
-import com.mojang.authlib.minecraft.MinecraftSessionService;
-import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
+import com.mojang.authlib.minecraft.SessionService;
+import com.mojang.authlib.services.MinecraftServicesDiscoveryService;
+import com.mojang.authlib.services.ServicesKeySet;
 
 import net.litetex.authback.common.AuthBackCommon;
+import net.litetex.authback.common.access.MinecraftServicesSessionServiceExt;
 import net.minecraft.server.Services;
 import net.minecraft.server.players.ProfileResolver;
 import net.minecraft.server.players.UserNameToIdResolver;
 
 
+@SuppressWarnings("checkstyle:IllegalIdentifierName")
 @Mixin(Services.class)
 public abstract class ServicesMixin
 {
@@ -28,21 +31,27 @@ public abstract class ServicesMixin
 		cancellable = true
 	)
 	private static void create(
-		final YggdrasilAuthenticationService yggdrasilAuthenticationService,
-		final File gameDir,
+		final MinecraftServicesDiscoveryService serviceAccess,
+		final File nameCacheDir,
 		final CallbackInfoReturnable<Services> cir)
 	{
-		final MinecraftSessionService minecraftSessionService =
-			yggdrasilAuthenticationService.createMinecraftSessionService();
-		final GameProfileRepository gameProfileRepository = yggdrasilAuthenticationService.createProfileRepository();
+		// As of 26.3 this is no longer a getter but creates/queries the backend!
+		final ServicesKeySet servicesKeySet = serviceAccess.getServicesKeySet();
+		
+		// 26.3
+		// Do not use createMinecraftSessionService as this calls getServicesKeySet again
+		// -> The fetch is executed twice
+		final SessionService minecraftSessionService =
+			new MinecraftServicesSessionServiceExt(servicesKeySet, serviceAccess.getProxy(), serviceAccess);
+		final GameProfileRepository gameProfileRepository = serviceAccess.createProfileRepository();
 		final UserNameToIdResolver userNameToIdResolver =
-			AuthBackCommon.instance().createUserNameToIdResolver(gameProfileRepository, gameDir);
+			AuthBackCommon.instance().createUserNameToIdResolver(gameProfileRepository, nameCacheDir);
 		final ProfileResolver profileResolver = new ProfileResolver.Cached(
 			minecraftSessionService,
 			userNameToIdResolver);
 		cir.setReturnValue(new Services(
 			minecraftSessionService,
-			yggdrasilAuthenticationService.getServicesKeySet(),
+			servicesKeySet,
 			gameProfileRepository,
 			userNameToIdResolver,
 			profileResolver));

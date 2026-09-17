@@ -1,5 +1,6 @@
 package net.litetex.authback.mixin.client;
 
+import org.objectweb.asm.Opcodes;
 import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -35,5 +36,19 @@ public abstract class TitleScreenMixin
 		}
 		
 		return original.call();
+	}
+	
+	@WrapOperation(
+		method = "<init>(ZLnet/minecraft/client/gui/components/LogoRenderer;)V",
+		at = @At(value = "FIELD",
+			target = "Lnet/minecraft/client/gui/screens/TitleScreen;fading:Z",
+			opcode = Opcodes.PUTFIELD),
+		// Improve compatibility with other mods
+		order = 1042,
+		expect = 0
+	)
+	void init(final TitleScreen instance, final boolean value, final Operation<Void> original)
+	{
+		original.call(instance, !AuthBackClient.instance().config().immediatelyShowScreens().value() && value);
 	}
 }

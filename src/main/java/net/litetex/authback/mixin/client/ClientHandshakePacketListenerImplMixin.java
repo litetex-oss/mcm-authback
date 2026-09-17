@@ -14,7 +14,7 @@ import com.mojang.authlib.exceptions.ForcedUsernameChangeException;
 import com.mojang.authlib.exceptions.InsufficientPrivilegesException;
 import com.mojang.authlib.exceptions.InvalidCredentialsException;
 import com.mojang.authlib.exceptions.UserBannedException;
-import com.mojang.authlib.minecraft.MinecraftSessionService;
+import com.mojang.authlib.minecraft.SessionService;
 
 import net.litetex.authback.client.AuthBackClient;
 import net.litetex.authback.shared.mixin.log.MixinLogger;
@@ -31,10 +31,10 @@ public abstract class ClientHandshakePacketListenerImplMixin
 		method = "authenticateServer",
 		at = @At(
 			value = "INVOKE",
-			target = "Lcom/mojang/authlib/minecraft/MinecraftSessionService;joinServer"
+			target = "Lcom/mojang/authlib/minecraft/SessionService;joinServer"
 				+ "(Ljava/util/UUID;Ljava/lang/String;Ljava/lang/String;)V"))
 	private void redirectJoinServer(
-		final MinecraftSessionService sessionService,
+		final SessionService sessionService,
 		final UUID uuid,
 		final String authToken,
 		final String serverId) throws AuthenticationException

@@ -306,10 +306,10 @@ public class GameProfileCacheManager
 	{
 		this.cleanUpIfRequired();
 		
-		final LinkedHashMap<UUID, ProfileContainer> uuidProfileContainerSaveMap =
+		final LinkedHashMap<UUID, ProfileContainer> uuidProfileContainersToSave =
 			this.uuidProfileContainersSC.supplyWithLock(LinkedHashMap::new);
 		
-		LOG.debug("Saving {}x profiles", uuidProfileContainerSaveMap.size());
+		LOG.debug("Saving {}x profiles", uuidProfileContainersToSave.size());
 		Persister.trySave(
 			LOG,
 			this.file,
@@ -320,7 +320,7 @@ public class GameProfileCacheManager
 						e -> e.getKey().toString(),
 						Map.Entry::getValue
 					)),
-				uuidProfileContainerSaveMap.entrySet()
+				uuidProfileContainersToSave.entrySet()
 					.stream()
 					.collect(toLinkedHashMap(
 						e -> e.getKey().toString(),

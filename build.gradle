@@ -1,17 +1,16 @@
 plugins {
-    id 'net.fabricmc.fabric-loom' version '1.17.11'
+    id 'net.fabricmc.fabric-loom' version '1.17.21'
     id 'maven-publish'
     id 'signing'
-    id 'io.github.gradle-nexus.publish-plugin' version '2.0.0'
     id 'checkstyle'
     id 'pmd'
-    id 'com.modrinth.minotaur' version '2.9.0'
+    id 'com.modrinth.minotaur' version '2.10.0'
 }
 
 ext {
-    checkstyleVersion = '13.6.0'
+    checkstyleVersion = '14.1.0'
 
-    pmdVersion = '7.25.0'
+    pmdVersion = '7.27.0'
 }
 
 version = project.mod_version
@@ -73,7 +72,7 @@ dependencies {
     implementation fabricApi.module("fabric-networking-api-v1", project.fabric_api_version)
     implementation fabricApi.module("fabric-command-api-v2", project.fabric_api_version)
     // Possible Fabric Bug:
-    // FabricAPI 0.152.1+26.2 - ChatListenerMixin / AuthbackCommand reports
+    // FabricAPI 0.160.5+26.3 - ChatListenerMixin / AuthbackCommand reports
     // class file for net.fabricmc.fabric.api.event.lifecycle.v1.EntityLoadData not found
     // however the class is never used
     implementation fabricApi.module("fabric-lifecycle-events-v1", project.fabric_api_version)
@@ -85,7 +84,7 @@ dependencies {
     // Only needed during development
     localRuntime "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
     localRuntime "com.terraformersmc:modmenu:${project.modmenu_version}"
-    localRuntime "net.litetex.mcm:dev-auth-neo:1.1.1"
+    localRuntime "net.litetex.mcm:dev-auth-neo:1.2.0"
 //    localRuntime "maven.modrinth:no-chat-reports:Fabric-26.1-v2.19.0"
 }
 
@@ -96,7 +95,8 @@ processResources {
                 "name": project.mod_name,
                 "desc": project.mod_desc,
                 "license_spdx_id": project.mod_license_spdx_id,
-                "minecraft_version": project.minecraft_version,
+                // split on '-' to correctly target versions on non-releases (Snapshots, Prereleases, RC, etc)
+                "minecraft_version": project.minecraft_version.split('-')[0],
                 "loader_version": project.loader_version,
                 "fabric_api_version": project.fabric_api_version,
                 "modmenu_version": project.modmenu_version
@@ -231,17 +231,4 @@ signing {
     def signingPassword = System.getenv("MAVEN_GPG_PASSPHRASE")
     useInMemoryPgpKeys(signingKey, signingPassword)
     sign publishing.publications.mavenJava
-}
-
-// Docs: https://github.com/gradle-nexus/publish-plugin
-// Publish using publishToSonatype closeAndReleaseSonatypeStagingRepository
-nexusPublishing {
-    repositories {
-        sonatype {
-            nexusUrl.set(uri("https://ossrh-staging-api.central.sonatype.com/service/local/"))
-            snapshotRepositoryUrl.set(uri("https://central.sonatype.com/repository/maven-snapshots/"))
-            username = System.getenv("SONATYPE_MAVEN_CENTRAL_PORTAL_USERNAME")
-            password = System.getenv("SONATYPE_MAVEN_CENTRAL_PORTAL_TOKEN")
-        }
-    }
 }

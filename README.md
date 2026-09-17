@@ -64,7 +64,8 @@ _You should know exactly what you're doing when doing modifications._
 
 | Property | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `global-public-keys-cache.default-reuse-minutes` | `int` | `120` (2h) | The response for the global public keys of the Mojang's API barely ever changes. As of writing this documentation it has stayed the same the past 2+ years. This option instructs the mod to re-use the last saved response for the specified amount of minutes instead of contacting the API again. Using the cached response is a lot faster and saves network traffic during frequent game restarts. |
+| `discovery-cache.default-reuse-minutes` | `int` | `120` (2h) | The response for the `discovery` endpoint of Mojang's API barely ever changes. This option instructs the mod to re-use the last saved response for the specified amount of minutes instead of contacting the API again. Using the cached response is a lot faster and saves network traffic during frequent game restarts. |
+| `global-public-keys-cache.default-reuse-minutes` | `int` | `120` (2h) | Same as `discovery-cache` above but for `global-public-keys`. As of writing this documentation the keys were not changed in the past 3+ years. |
 | `game-profiles.delete-after-days` | `int` | `36` | 36 days was choosen as the default because when a player changes their username the name will be unavailable for 37 days |
 | `game-profiles.max-cache-size` | `int` | `250` | Maximum amount of game profiles to keep in the cache. If the size exceeds the maximum the oldest entries will be removed until the list is at 90% of the configured maximum. |
 | `username-to-id-resolver.use-vanilla` | `bool` | `false` | Use the original/"vanilla" username-to-id resolver |
@@ -150,20 +151,6 @@ In the game directory (e.g. `%APPDATA%\.minecraft`) inside the ``.mods\authback`
 
 ## Installation
 [Installation guide for the latest release](https://github.com/litetex-oss/mcm-authback/releases/latest#Installation)
-
-### Usage in other mods
-
-Add the following to ``build.gradle``:
-```groovy
-dependencies {
-    implementation 'net.litetex.mcm:authback:<version>'
-    // Further documentation: https://wiki.fabricmc.net/documentation:fabric_loom
-}
-```
-
-> [!NOTE]
-> The contents are hosted on [Maven Central](https://repo.maven.apache.org/maven2/net/litetex/mcm/). You shouldn't have to change anything as this is the default maven repo.<br/>
-> If this somehow shouldn't work you can also try [Modrinth Maven](https://support.modrinth.com/en/articles/8801191-modrinth-maven).
 
 ## Contributing
 See the [contributing guide](./CONTRIBUTING.md) for detailed instructions on how to get started with our project.
