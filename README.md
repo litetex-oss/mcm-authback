@@ -64,7 +64,8 @@ _You should know exactly what you're doing when doing modifications._
 
 | Property | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `global-public-keys-cache.default-reuse-minutes` | `int` | `120` (2h) | The response for the global public keys of the Mojang's API barely ever changes. As of writing this documentation it has stayed the same the past 2+ years. This option instructs the mod to re-use the last saved response for the specified amount of minutes instead of contacting the API again. Using the cached response is a lot faster and saves network traffic during frequent game restarts. |
+| `discovery-cache.default-reuse-minutes` | `int` | `120` (2h) | The response for the `discovery` endpoint of Mojang's API barely ever changes. This option instructs the mod to re-use the last saved response for the specified amount of minutes instead of contacting the API again. Using the cached response is a lot faster and saves network traffic during frequent game restarts. |
+| `global-public-keys-cache.default-reuse-minutes` | `int` | `120` (2h) | Same as `discovery-cache` above but for `global-public-keys`. As of writing this documentation the keys were not changed in the past 3+ years. |
 | `game-profiles.delete-after-days` | `int` | `36` | 36 days was choosen as the default because when a player changes their username the name will be unavailable for 37 days |
 | `game-profiles.max-cache-size` | `int` | `250` | Maximum amount of game profiles to keep in the cache. If the size exceeds the maximum the oldest entries will be removed until the list is at 90% of the configured maximum. |
 | `username-to-id-resolver.use-vanilla` | `bool` | `false` | Use the original/"vanilla" username-to-id resolver |
