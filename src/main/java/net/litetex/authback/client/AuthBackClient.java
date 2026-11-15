@@ -1,9 +1,12 @@
 package net.litetex.authback.client;
 
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import net.litetex.authback.client.config.AuthBackClientConfig;
+import net.litetex.authback.client.config.compat.AuthBackClientConfigCompat;
 import net.litetex.authback.client.keys.ClientKeysManager;
 import net.litetex.authback.client.network.AuthBackClientNetworking;
 import net.litetex.authback.shared.AuthBack;
@@ -21,24 +24,20 @@ public class AuthBackClient extends AuthBack
 		return instance;
 	}
 	
-	public static AuthBackClient ensureInstance()
+	public static void setInstance(final AuthBackClient authBackClient)
 	{
-		if(AuthBackClient.instance == null)
-		{
-			AuthBackClient.instance = new AuthBackClient();
-		}
-		return AuthBackClient.instance;
+		instance = authBackClient;
 	}
 	
 	private final ClientKeysManager clientKeysManager;
 	private final AuthBackClientConfig config;
 	
-	protected AuthBackClient()
+	public AuthBackClient(final List<AuthBackClientConfigCompat> configCompats)
 	{
 		super("client");
 		this.clientKeysManager = new ClientKeysManager(this.authbackDir);
 		
-		this.config = new AuthBackClientConfig(this.lowLevelConfig);
+		this.config = new AuthBackClientConfig(this.lowLevelConfig, configCompats);
 		
 		LOG.debug("Created");
 	}

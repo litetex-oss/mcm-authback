@@ -1,3 +1,7 @@
+# 1.9.1
+* Fix default modmenu layout when compating title screen
+* Updated dependencies
+
 # 1.9.0
 * Updated to 26.3
 * Cache new `discovery` endpoint

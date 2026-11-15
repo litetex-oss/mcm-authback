@@ -27,31 +27,31 @@ However if one side lacks the mod joining a server will be impossible when Mojan
 
 ### Command
 
-You can use the ``/authback`` command on servers with the mod to manage your public keys or those of other players if you are an admin.
+You can use the `/authback` command on servers with the mod to manage your public keys or those of other players if you are an admin.
 
 ### Configuration
 
 #### Client
 
 You can configure the mod via
-* ``Options > Online... > AuthBack...``
-* or if ModMenu is installed: ``Mods > AuthBack > Click Icon/Settings``
+* `Options > Online... > AuthBack...`
+* or if ModMenu is installed: `Mods > AuthBack > Click Icon/Settings`
 
 #### General
 
 <details><summary>The configuration is dynamically loaded from (sorted by highest priority)</summary>
 
 * Environment variables 
-    * prefixed with ``AUTHBACK_<variant>`` 
-        * where ``variant`` is either ``SERVER`` OR ``CLIENT``
-    * prefixed with ``AUTHBACK_``
+    * prefixed with `AUTHBACK_<variant>` 
+        * where `variant` is either `SERVER` OR `CLIENT`
+    * prefixed with `AUTHBACK_`
     * all properties are in UPPERCASE and use `_` instead of `.` or `-`
 * System properties
-    * prefixed with ``authback.<variant>`` 
-        * where ``variant`` is either ``server`` OR ``client``
-    * prefixed with ``authback.``
-* A configuration file located in ``.config/authback-<variant>.json``
-    * where ``variant`` is either ``server`` OR ``client``
+    * prefixed with `authback.<variant>` 
+        * where `variant` is either `server` OR `client`
+    * prefixed with `authback.`
+* A configuration file located in `.config/authback-<variant>.json`
+    * where `variant` is either `server` OR `client`
 
 </details>
 
@@ -72,7 +72,7 @@ _You should know exactly what you're doing when doing modifications._
 | `username-to-id-resolver.expire-after-days` | `int` | `36` | Days after which the cache entry will be deleted.<br/>36 days was choosen as the default because when a player changes their username the name will be unavailable for 37 days.<br/>The vanilla implementation uses 1 month. |
 | `username-to-id-resolver.refresh-before-expire-days` | `int` | `14` | Days before the expiration when a cached entry will be refreshed when it's accessed. |
 | `username-to-id-resolver.max-cache-size` | `int` | `1000` | Maximum amount of usernames and ids to keep in the cache. If the size exceeds the maximum the oldest entries will be removed until the list is at 90% of the configured maximum.  |
-| `username-to-id-resolver.resolve-offline-users-by-default` | `bool` | `true` | Should offline users (e.g. unvalidated accounts) be cached?.<br/>Please note <ul><li>the offline-user cache is completely separated from the online-user cache and will never be persisted.</li> <li>This is only the initial value</li> <li>Clients will always resolve offline users and server will only do so when `online-mode` was disabled</li> </ul> |
+| `username-to-id-resolver.resolve-offline-users-by-default` | `bool` | `true` | Should offline users (e.g. unvalidated accounts) be cached?<br/>Please note <ul><li>the offline-user cache is completely separated from the online-user cache and will never be persisted</li> <li>this is only the initial value</li> <li>clients will always resolve offline users and server will only do so when `online-mode` was disabled</li> </ul> |
 | `username-to-id-resolver.update-on-game-profile-fetch` | `bool` | `true` | When a gameprofile is fetched: Should the information be relayed to the username-to-id-resolver/cache?<br/> The cache will only be updated if required (e.g. unknown username/id or non-existing entry) |
 | `username-to-id-resolver.use-game-profile-cache` | `bool` | `true` | Uses  GameProfileCacheManager as secondary cache when all primary caches fail.<br/>Usage should be extremely rare but can happen if the cache was e.g. corrupted |
 | `skip-extract-profile-action-types` | `bool` | `false` | Debug-Option |
@@ -104,8 +104,8 @@ All client specific options can be changed / are described in the game options U
 ### Where can I find my public key?
 
 The public key can be found/copied under
-* ``Options > Online... > AuthBack... > Key management``
-* or if ModMenu is installed: ``Mods > AuthBack > Click Icon/Settings > Key management``
+* `Options > Online... > AuthBack... > Key management`
+* or if ModMenu is installed: `Mods > AuthBack > Click Icon/Settings > Key management`
 
 ### The authentification servers are down, I installed the mod on my server but I can't join
 
@@ -145,7 +145,7 @@ You can fix this in the following way if you are an Admin:
 
 ### Where does the mod store it's data?
 
-In the game directory (e.g. `%APPDATA%\.minecraft`) inside the ``.mods\authback`` directory.
+In the game directory (e.g. `%APPDATA%\.minecraft`) inside the `.mods\authback` directory.
 
 <!-- modrinth_exclude.start -->
 
