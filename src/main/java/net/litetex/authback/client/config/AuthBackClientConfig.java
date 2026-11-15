@@ -1,5 +1,8 @@
 package net.litetex.authback.client.config;
 
+import java.util.List;
+
+import net.litetex.authback.client.config.compat.AuthBackClientConfigCompat;
 import net.litetex.authback.shared.config.ConfigValueContainer;
 import net.litetex.authback.shared.config.Configuration;
 
@@ -28,7 +31,7 @@ public record AuthBackClientConfig(
 	ConfigValueContainer<Boolean> immediatelyShowScreens
 )
 {
-	public AuthBackClientConfig(final Configuration config)
+	public AuthBackClientConfig(final Configuration config, final List<AuthBackClientConfigCompat> compats)
 	{
 		this(
 			ConfigValueContainer.bool(config, "block-address-check", true),
@@ -38,7 +41,15 @@ public record AuthBackClientConfig(
 			ConfigValueContainer.bool(config, "force-secure-skin-download", false),
 			new UserAPIConfig(config),
 			ConfigValueContainer.bool(config, "prevent-legacy-server-ping", true),
-			ConfigValueContainer.bool(config, "compact-title-screen", false),
+			new ConfigValueContainer<>(
+				config,
+				"compact-title-screen",
+				false,
+				Configuration::getBoolean,
+				(c, path, b) -> {
+					c.setBoolean(path, b);
+					compats.forEach(compat -> compat.onCompatTitleScreenSetIntoConfig(b));
+				}),
 			ConfigValueContainer.bool(config, "immediately-show-screens", false)
 		);
 	}
