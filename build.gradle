@@ -80,7 +80,7 @@ dependencies {
     // however the class is never used
     implementation fabricApi.module("fabric-lifecycle-events-v1", project.fabric_api_version)
 
-//    compileOnly "com.terraformersmc:modmenu:${project.modmenu_version}"
+    compileOnly "com.terraformersmc:modmenu:${project.modmenu_version}"
     // Temporary added to fix compilation because modmenu ships an outdated version that fails compilation
     compileOnly fabricApi.module("fabric-resource-loader-v1", project.fabric_api_version)
 
