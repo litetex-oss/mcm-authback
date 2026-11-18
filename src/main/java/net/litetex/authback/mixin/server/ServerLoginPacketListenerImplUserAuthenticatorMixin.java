@@ -12,12 +12,14 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.authlib.GameProfile;
 
 import net.litetex.authback.server.AuthBackServer;
 import net.litetex.authback.shared.mixin.log.MixinLogger;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.network.ServerLoginPacketListenerImpl;
+import net.minecraft.util.crypto.SessionKeys;
 
 
 @Mixin(targets = "net/minecraft/server/network/ServerLoginPacketListenerImpl$1")
@@ -33,19 +35,20 @@ public abstract class ServerLoginPacketListenerImplUserAuthenticatorMixin
 		method = "run",
 		at = @At(
 			value = "INVOKE",
-			target = "Lnet/minecraft/server/network/ServerLoginPacketListenerImpl;startClientVerification"
-				+ "(Lcom/mojang/authlib/GameProfile;)V",
+			target = "Lnet/minecraft/server/network/ServerLoginPacketListenerImpl;applyConnectionEncryption"
+				+ "(Lcom/mojang/authlib/GameProfile;Lnet/minecraft/util/crypto/SessionKeys;)V",
 			ordinal = 0
 		)
 	)
 	void handleHasJoinedSuccess(
 		final ServerLoginPacketListenerImpl instance,
-		final GameProfile gameProfile,
+		final GameProfile authenticatedGameProfile,
+		final SessionKeys secretKey,
 		final Operation<Void> original)
 	{
-		original.call(instance, gameProfile);
+		original.call(instance, authenticatedGameProfile, secretKey);
 		
-		AuthBackServer.instance().handleJoinSuccess(gameProfile);
+		AuthBackServer.instance().handleJoinSuccess(authenticatedGameProfile);
 	}
 	
 	@Inject(
@@ -57,7 +60,7 @@ public abstract class ServerLoginPacketListenerImplUserAuthenticatorMixin
 		),
 		cancellable = true
 	)
-	void handleNotJoined(final CallbackInfo ci)
+	void handleNotJoined(final CallbackInfo ci, @Local(name = "sessionKeys") final SessionKeys sessionKeys)
 	{
 		if(!AuthBackServer.instance().config().alwaysAllowFallbackAuth())
 		{
@@ -67,6 +70,7 @@ public abstract class ServerLoginPacketListenerImplUserAuthenticatorMixin
 		
 		this.doFallbackAuth(
 			"UnverifiedClient",
+			sessionKeys,
 			loginPacketListener -> {
 				loginPacketListener.disconnect(Component.translatable("multiplayer.disconnect.unverified_username"));
 				LOG.warn("Couldn't verify username '{}'", loginPacketListener.getUserName());
@@ -84,10 +88,11 @@ public abstract class ServerLoginPacketListenerImplUserAuthenticatorMixin
 		),
 		cancellable = true
 	)
-	void handleAuthServersFailed(final CallbackInfo ci)
+	void handleAuthServersFailed(final CallbackInfo ci, @Local(name = "sessionKeys") final SessionKeys sessionKeys)
 	{
 		this.doFallbackAuth(
 			"AuthServersDown",
+			sessionKeys,
 			loginPacketListener -> {
 				loginPacketListener.disconnect(Component.translatable("multiplayer.disconnect.authservers_down"));
 				LOG.warn(
@@ -101,6 +106,7 @@ public abstract class ServerLoginPacketListenerImplUserAuthenticatorMixin
 	@Unique
 	private void doFallbackAuth(
 		final String variant,
+		final SessionKeys sessionKeys,
 		final Consumer<ServerLoginPacketListenerImpl> defaultDisconnectAction
 	)
 	{
@@ -113,7 +119,7 @@ public abstract class ServerLoginPacketListenerImplUserAuthenticatorMixin
 				LOG.info("[AuthBack/{}] Disconnected client: {}", variant, msg);
 			},
 			gameProfile -> {
-				loginPacketListener.startClientVerification(gameProfile);
+				loginPacketListener.applyConnectionEncryption(gameProfile, sessionKeys);
 				LOG.info(
 					"[AuthBack/{}] Fallback was successful - Proceeding with login of player[name={},uuid={}]",
 					variant,
