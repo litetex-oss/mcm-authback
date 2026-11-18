@@ -28,10 +28,11 @@ import net.litetex.authback.server.keys.ServerProfilePublicKeysManager;
 import net.litetex.authback.shared.crypto.Ed25519KeyDecoder;
 import net.litetex.authback.shared.external.org.apache.commons.codec.binary.Hex;
 import net.minecraft.ChatFormatting;
+import net.minecraft.commands.CommandPermissionLevels;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
-import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.UuidArgument;
+import net.minecraft.commands.suggestions.SuggestionContext;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
@@ -88,7 +89,7 @@ public class AuthbackCommand
 			.requires(permissionAdmin())
 			.then(cmdId()
 				.then(cmdArgId()
-					.suggests((ctx, builder) -> SharedSuggestionProvider.suggest(
+					.suggests((_, builder) -> SuggestionContext.suggest(
 						this.gameProfileCacheManager().uuids()
 							.stream()
 							.map(UUID::toString),
@@ -101,7 +102,7 @@ public class AuthbackCommand
 							resolveArgPKH(ctx))))))
 			.then(cmdName()
 				.then(cmdArgName()
-					.suggests((ctx, builder) -> SharedSuggestionProvider.suggest(
+					.suggests((_, builder) -> SuggestionContext.suggest(
 						this.gameProfileCacheManager().names(),
 						builder
 					))
@@ -389,7 +390,7 @@ public class AuthbackCommand
 	
 	private SuggestionProvider<CommandSourceStack> suggestExistingPublicKeyUserUUIDs()
 	{
-		return (ctx, builder) -> SharedSuggestionProvider.suggest(
+		return (_, builder) -> SuggestionContext.suggest(
 			this.serverProfilePublicKeysManager().profileUUIDs()
 				.stream()
 				.map(UUID::toString)
@@ -400,8 +401,7 @@ public class AuthbackCommand
 	
 	private SuggestionProvider<CommandSourceStack> suggestExistingPublicKeyUserNames()
 	{
-		return (ctx, builder) -> SharedSuggestionProvider.suggest(
-			
+		return (ctx, builder) -> SuggestionContext.suggest(
 			this.serverProfilePublicKeysManager().profileUUIDs()
 				.stream()
 				.map(uuid -> this.findNameForUUID(ctx, uuid))
@@ -484,7 +484,7 @@ public class AuthbackCommand
 	
 	private static PermissionProviderCheck<CommandSourceStack> permissionAdmin()
 	{
-		return Commands.hasPermission(Commands.LEVEL_ADMINS);
+		return Commands.hasPermission(CommandPermissionLevels.LEVEL_ADMINS);
 	}
 	
 	// endregion
