@@ -8,13 +8,9 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-
 import io.netty.channel.Channel;
 import net.litetex.authback.server.AuthBackServer;
 import net.litetex.authback.shared.mixin.log.MixinLogger;
-import net.minecraft.server.MinecraftServer;
 
 
 @SuppressWarnings("PMD.MoreThanOneLogger") // Expected
@@ -22,25 +18,7 @@ import net.minecraft.server.MinecraftServer;
 public abstract class ServerConnectionListenerMixin
 {
 	@Unique
-	private static final Logger LOG = MixinLogger.server("ServerConnectionListenerMixin");
-	
-	@Unique
 	private static final Logger LOG_IP = MixinLogger.server("LogConnectionInitIPs");
-	
-	@WrapOperation(
-		method = "initChannel",
-		at = @At(value = "INVOKE", target = "Lnet/minecraft/server/MinecraftServer;repliesToStatus()Z")
-	)
-	boolean disableLegacyQueryHandler(final MinecraftServer instance, final Operation<Boolean> original)
-	{
-		if(AuthBackServer.instance().config().disableLegacyQueryHandler())
-		{
-			LOG.debug("Disabled legacy query handler");
-			return false;
-		}
-		
-		return original.call(instance);
-	}
 	
 	@Inject(
 		method = "initChannel",

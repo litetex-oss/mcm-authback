@@ -1,3 +1,9 @@
+# 1.10.0
+* Updated to 26.4
+  * Adopted networking stack
+  * Adopted commands
+* Migrated `disable-legacy-query-handler` to overwrite the new `enable-legacy-status​` server property
+
 # 1.9.2
 * Fix client classloading crash when modmenu is not present
 
