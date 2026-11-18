@@ -12,7 +12,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.authlib.GameProfile;
 
 import net.litetex.authback.server.AuthBackServer;
@@ -30,6 +29,9 @@ public abstract class ServerLoginPacketListenerImplUserAuthenticatorMixin
 	
 	@Accessor("this$0")
 	abstract ServerLoginPacketListenerImpl serverLoginPacketListener();
+	
+	@Accessor("val$sessionKeys")
+	abstract SessionKeys sessionKeys();
 	
 	@WrapOperation(
 		method = "run",
@@ -60,7 +62,7 @@ public abstract class ServerLoginPacketListenerImplUserAuthenticatorMixin
 		),
 		cancellable = true
 	)
-	void handleNotJoined(final CallbackInfo ci, @Local(name = "sessionKeys") final SessionKeys sessionKeys)
+	void handleNotJoined(final CallbackInfo ci)
 	{
 		if(!AuthBackServer.instance().config().alwaysAllowFallbackAuth())
 		{
@@ -70,7 +72,7 @@ public abstract class ServerLoginPacketListenerImplUserAuthenticatorMixin
 		
 		this.doFallbackAuth(
 			"UnverifiedClient",
-			sessionKeys,
+			this.sessionKeys(),
 			loginPacketListener -> {
 				loginPacketListener.disconnect(Component.translatable("multiplayer.disconnect.unverified_username"));
 				LOG.warn("Couldn't verify username '{}'", loginPacketListener.getUserName());
@@ -88,11 +90,11 @@ public abstract class ServerLoginPacketListenerImplUserAuthenticatorMixin
 		),
 		cancellable = true
 	)
-	void handleAuthServersFailed(final CallbackInfo ci, @Local(name = "sessionKeys") final SessionKeys sessionKeys)
+	void handleAuthServersFailed(final CallbackInfo ci)
 	{
 		this.doFallbackAuth(
 			"AuthServersDown",
-			sessionKeys,
+			this.sessionKeys(),
 			loginPacketListener -> {
 				loginPacketListener.disconnect(Component.translatable("multiplayer.disconnect.authservers_down"));
 				LOG.warn(
