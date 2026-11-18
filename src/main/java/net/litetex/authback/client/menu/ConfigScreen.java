@@ -325,20 +325,14 @@ public class ConfigScreen extends OptionsSubScreen
 			this.widget = widget;
 		}
 		
-		@SuppressWarnings("checkstyle:MagicNumber")
 		@Override
-		public void extractContent(
-			final GuiGraphicsExtractor graphics,
-			final int mouseX,
-			final int mouseY,
-			final boolean hovered,
-			final float a)
+		public void extractContent(final GuiGraphicsExtractor graphics, final boolean hovered)
 		{
 			this.widget.setWidth(this.list.getRowWidth());
 			this.widget.setPosition(
 				this.list.screen.width / 2 - 155,
 				this.getContentY());
-			this.widget.extractRenderState(graphics, mouseX, mouseY, a);
+			this.widget.extractRenderState(graphics);
 		}
 		
 		@Override
@@ -364,17 +358,12 @@ public class ConfigScreen extends OptionsSubScreen
 		}
 		
 		@Override
-		public void extractContent(
-			final GuiGraphicsExtractor graphics,
-			final int mouseX,
-			final int mouseY,
-			final boolean hovered,
-			final float a)
+		public void extractContent(final GuiGraphicsExtractor graphics, final boolean hovered)
 		{
 			this.widget.setPosition(
 				this.list.getWidth() / 2 - this.widget.getWidth() / 2,
 				this.getContentBottom() - 12);
-			this.widget.extractRenderState(graphics, mouseX, mouseY, a);
+			this.widget.extractRenderState(graphics);
 		}
 	}
 	
