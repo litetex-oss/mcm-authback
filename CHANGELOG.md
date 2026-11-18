@@ -1,3 +1,6 @@
+# 1.9.2
+* Fix client classloading crash when modmenu is not present
+
 # 1.9.1
 * Fix default modmenu layout when compating title screen
 * Updated dependencies

@@ -39,7 +39,11 @@ public class AuthBackClient extends AuthBack
 		
 		this.config = new AuthBackClientConfig(this.lowLevelConfig, configCompats);
 		
-		LOG.debug("Created");
+		LOG.debug(
+			"Created, configCompats={}",
+			configCompats.stream()
+				.map(c -> c.getClass().getName())
+				.toList());
 	}
 	
 	public void initialize()
