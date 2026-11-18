@@ -331,6 +331,7 @@ public class ConfigScreen extends OptionsSubScreen
 			this.widget = widget;
 		}
 		
+		@SuppressWarnings("checkstyle:MagicNumber")
 		@Override
 		public void extractContent(final GuiGraphicsExtractor graphics, final boolean hovered)
 		{
