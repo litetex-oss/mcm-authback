@@ -1,7 +1,9 @@
-package net.litetex.authback.client.config.compat;
+package net.litetex.authback.client.config.compat.modmenu;
 
 import com.terraformersmc.modmenu.config.ModMenuConfig;
 import com.terraformersmc.modmenu.config.ModMenuConfigManager;
+
+import net.litetex.authback.client.config.compat.AuthBackClientConfigCompat;
 
 
 public class ModMenuAuthBackClientConfigCompat implements AuthBackClientConfigCompat
