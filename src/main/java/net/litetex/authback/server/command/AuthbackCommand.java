@@ -16,7 +16,6 @@ import org.slf4j.LoggerFactory;
 
 import com.mojang.authlib.GameProfile;
 import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
@@ -31,13 +30,16 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandPermissionLevels;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.arguments.StringArgument;
 import net.minecraft.commands.arguments.UuidArgument;
 import net.minecraft.commands.suggestions.SuggestionContext;
+import net.minecraft.commands.suggestions.SuggestionProviders;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.contents.objects.PlayerSprite;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.permissions.PermissionProviderCheck;
 import net.minecraft.server.players.NameAndId;
 import net.minecraft.world.item.component.ResolvableProfile;
@@ -89,12 +91,12 @@ public class AuthbackCommand
 			.requires(permissionAdmin())
 			.then(cmdId()
 				.then(cmdArgId()
-					.suggests((_, builder) -> SuggestionContext.suggest(
+					.suggests(SuggestionProviders.serverOnly((_, _, builder) -> SuggestionContext.suggest(
 						this.gameProfileCacheManager().uuids()
 							.stream()
 							.map(UUID::toString),
 						builder
-					))
+					)))
 					.then(cmdArgPKH()
 						.executes(ctx -> this.execAdd(
 							ctx,
@@ -102,10 +104,10 @@ public class AuthbackCommand
 							resolveArgPKH(ctx))))))
 			.then(cmdName()
 				.then(cmdArgName()
-					.suggests((_, builder) -> SuggestionContext.suggest(
+					.suggests(SuggestionProviders.serverOnly((_, _, builder) -> SuggestionContext.suggest(
 						this.gameProfileCacheManager().names(),
 						builder
-					))
+					)))
 					.then(cmdArgPKH()
 						.executes(ctx -> this.execAdd(
 							ctx,
@@ -390,31 +392,36 @@ public class AuthbackCommand
 	
 	private SuggestionProvider<CommandSourceStack> suggestExistingPublicKeyUserUUIDs()
 	{
-		return (_, builder) -> SuggestionContext.suggest(
+		return SuggestionProviders.serverOnly((_, _, builder) -> SuggestionContext.suggest(
 			this.serverProfilePublicKeysManager().profileUUIDs()
 				.stream()
 				.map(UUID::toString)
 				.sorted(),
 			builder
-		);
+		));
 	}
 	
 	private SuggestionProvider<CommandSourceStack> suggestExistingPublicKeyUserNames()
 	{
-		return (ctx, builder) -> SuggestionContext.suggest(
+		return SuggestionProviders.serverOnly((server, ctx, builder) -> SuggestionContext.suggest(
 			this.serverProfilePublicKeysManager().profileUUIDs()
 				.stream()
-				.map(uuid -> this.findNameForUUID(ctx, uuid))
+				.map(uuid -> this.findNameForUUID(server, uuid))
 				.filter(Optional::isPresent)
 				.map(Optional::get)
 				.sorted(),
 			builder
-		);
+		));
 	}
 	
 	private Optional<String> findNameForUUID(final CommandContext<CommandSourceStack> ctx, final UUID uuid)
 	{
-		return ctx.getSource().getServer().services().nameToIdCache().get(uuid)
+		return this.findNameForUUID(ctx.getSource().getServer(), uuid);
+	}
+	
+	private Optional<String> findNameForUUID(final MinecraftServer server, final UUID uuid)
+	{
+		return server.services().nameToIdCache().get(uuid)
 			.map(NameAndId::name);
 	}
 	
@@ -454,12 +461,12 @@ public class AuthbackCommand
 	
 	private static String resolveArgName(final CommandContext<CommandSourceStack> ctx)
 	{
-		return StringArgumentType.getString(ctx, "name");
+		return StringArgument.getString(ctx, "name");
 	}
 	
 	private static RequiredArgumentBuilder<CommandSourceStack, String> cmdArgName()
 	{
-		return Commands.argument("name", StringArgumentType.word());
+		return Commands.argument("name", StringArgument.word());
 	}
 	
 	private static UUID resolveArgId(final CommandContext<CommandSourceStack> ctx)
@@ -474,12 +481,12 @@ public class AuthbackCommand
 	
 	private static String resolveArgPKH(final CommandContext<CommandSourceStack> ctx)
 	{
-		return StringArgumentType.getString(ctx, "publicKeyHex");
+		return StringArgument.getString(ctx, "publicKeyHex");
 	}
 	
 	private static RequiredArgumentBuilder<CommandSourceStack, String> cmdArgPKH()
 	{
-		return Commands.argument("publicKeyHex", StringArgumentType.word());
+		return Commands.argument("publicKeyHex", StringArgument.word());
 	}
 	
 	private static PermissionProviderCheck<CommandSourceStack> permissionAdmin()
