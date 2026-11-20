@@ -1,4 +1,4 @@
-package net.litetex.authback.mixin.client;
+package net.litetex.authback.mixin.client.block_fetching_profile_keys;
 
 import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Mixin;

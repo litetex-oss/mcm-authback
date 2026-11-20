@@ -1,4 +1,4 @@
-package net.litetex.authback.mixin.client;
+package net.litetex.authback.mixin.client.user_api;
 
 import java.util.Set;
 import java.util.UUID;

@@ -32,14 +32,27 @@ public abstract class DedicatedServerPropertiesMixin
 		final Operation<Boolean> original)
 	{
 		final boolean resolvedValue = original.call(instance, key, defaultValue);
-		if("enforce-secure-profile".equals(key)
-			&& resolvedValue
-			&& AuthBackServer.instance().config().forceDisableEnforceSecureProfile())
+		if(resolvedValue)
 		{
-			LOG.info("enforce-secure-profile was enabled - force disabling it. "
-				+ "You should disable it in the server.properties!");
-			return false;
+			if("enforce-secure-profile".equals(key)
+				&& AuthBackServer.instance().config().forceDisableEnforceSecureProfile())
+			{
+				logForceDisabled(key);
+				return false;
+			}
+			else if("enable-legacy-status".equals(key)
+				&& AuthBackServer.instance().config().disableLegacyQueryHandler())
+			{
+				logForceDisabled(key);
+				return false;
+			}
 		}
 		return resolvedValue;
+	}
+	
+	@Unique
+	private static void logForceDisabled(final String key)
+	{
+		LOG.info("{} was enabled - force disabling it. You should disable it in the server.properties!", key);
 	}
 }

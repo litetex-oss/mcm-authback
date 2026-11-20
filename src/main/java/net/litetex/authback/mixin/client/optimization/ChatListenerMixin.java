@@ -1,4 +1,4 @@
-package net.litetex.authback.mixin.client;
+package net.litetex.authback.mixin.client.optimization;
 
 import java.time.Instant;
 import java.util.UUID;

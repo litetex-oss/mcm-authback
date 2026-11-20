@@ -1,3 +1,14 @@
+# 1.10.0
+* Updated to 26.4
+  * Adopted networking stack
+  * Adopted commands
+* [Client]
+  * LAN Server Detection
+    * Added option to disable LAN server detection
+    * Improvements when preferring IPv6 addresses
+* [Server]
+  * Migrated `disable-legacy-query-handler` to overwrite the new `enable-legacy-status​` server property
+
 # 1.9.2
 * Fix client classloading crash when modmenu is not present
 
