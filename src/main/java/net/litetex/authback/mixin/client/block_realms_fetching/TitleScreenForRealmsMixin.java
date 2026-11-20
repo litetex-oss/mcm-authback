@@ -1,6 +1,5 @@
-package net.litetex.authback.mixin.client;
+package net.litetex.authback.mixin.client.block_realms_fetching;
 
-import org.objectweb.asm.Opcodes;
 import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -16,10 +15,10 @@ import net.minecraft.client.gui.screens.TitleScreen;
 
 
 @Mixin(TitleScreen.class)
-public abstract class TitleScreenMixin
+public abstract class TitleScreenForRealmsMixin
 {
 	@Unique
-	private static final Logger LOG = MixinLogger.client("TitleScreenMixin");
+	private static final Logger LOG = MixinLogger.client("TitleScreenForRealmsMixin");
 	
 	@WrapOperation(
 		method = "init",
@@ -36,19 +35,5 @@ public abstract class TitleScreenMixin
 		}
 		
 		return original.call();
-	}
-	
-	@WrapOperation(
-		method = "<init>(ZLnet/minecraft/client/gui/components/LogoRenderer;)V",
-		at = @At(value = "FIELD",
-			target = "Lnet/minecraft/client/gui/screens/TitleScreen;fading:Z",
-			opcode = Opcodes.PUTFIELD),
-		// Improve compatibility with other mods
-		order = 1042,
-		expect = 0
-	)
-	void init(final TitleScreen instance, final boolean value, final Operation<Void> original)
-	{
-		original.call(instance, !AuthBackClient.instance().config().immediatelyShowScreens().value() && value);
 	}
 }

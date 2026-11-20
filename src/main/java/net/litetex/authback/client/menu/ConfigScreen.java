@@ -195,6 +195,12 @@ public class ConfigScreen extends OptionsSubScreen
 						if the normal ping fails or times out"""
 				),
 				new BooleanConfigData(
+					config.disableLANServerDetection(),
+					"Disable LAN server detection",
+					"""
+						Disables searching for LAN servers when opening the MultiPlayer/Server selection screen"""
+				),
+				new BooleanConfigData(
 					config.immediatelyShowScreens(),
 					"Immediately show screens",
 					"""
