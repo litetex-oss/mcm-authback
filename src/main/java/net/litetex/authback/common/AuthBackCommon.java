@@ -2,6 +2,7 @@ package net.litetex.authback.common;
 
 import java.io.File;
 import java.time.Duration;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
@@ -42,6 +43,9 @@ public class AuthBackCommon extends AuthBack
 	private final CompletableFuture<GameProfileCacheManager> cfGameProfileCacheManager;
 	private final Supplier<GameProfileCacheManager> gameProfileCacheManagerSupplier;
 	
+	private final Optional<Boolean> globalPublicKeysFetchingEnabled;
+	private boolean globalPublicKeysFetchingEnabledAutoDetect = true;
+	
 	private final AuthBackCommonConfig config;
 	
 	@SuppressWarnings("checkstyle:MagicNumber")
@@ -63,6 +67,9 @@ public class AuthBackCommon extends AuthBack
 			this.lowLevelConfig.getInteger("game-profiles.max-cache-size").orElse(250)));
 		this.gameProfileCacheManagerSupplier = Suppliers.memoize(this.cfGameProfileCacheManager::join);
 		
+		this.globalPublicKeysFetchingEnabled =
+			this.lowLevelConfig.getBoolean("global-public-keys.fetching.enabled");
+		
 		this.config = new AuthBackCommonConfig(this.lowLevelConfig);
 		
 		LOG.debug("Initialized");
@@ -76,6 +83,27 @@ public class AuthBackCommon extends AuthBack
 	public GlobalPublicKeysCache publicKeysCache()
 	{
 		return this.globalPublicKeysCache;
+	}
+	
+	public void globalPublicKeysFetchingEnabledAutoDetect(
+		final Supplier<Boolean> valueSupplier)
+	{
+		if(this.globalPublicKeysFetchingEnabled.isEmpty())
+		{
+			final Boolean autoDetected = valueSupplier.get();
+			LOG.debug(
+				"Auto detected globalPublicKeysFetchingEnabled as {}",
+				autoDetected);
+			if(autoDetected != null)
+			{
+				this.globalPublicKeysFetchingEnabledAutoDetect = autoDetected;
+			}
+		}
+	}
+	
+	public boolean globalPublicKeysFetchingEnabled()
+	{
+		return this.globalPublicKeysFetchingEnabled.orElse(this.globalPublicKeysFetchingEnabledAutoDetect);
 	}
 	
 	@SuppressWarnings("checkstyle:MagicNumber")

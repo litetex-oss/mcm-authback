@@ -1,13 +1,16 @@
 # 1.10.0
 * Updated to 26.4
-  * Adopted networking stack
-  * Adopted commands
+* Added control over the fetching of global public keys
+  * New common override option `global-public-keys.fetching.enabled`
+  * Keys will no longer be fetched on servers if `enforce-secure-profile` is disabled because they will never be used anyway
+    * Can be controlled with `global-public-keys.fetching.disable-if-possible`
 * [Client]
   * LAN Server Detection
     * Added option to disable LAN server detection
     * Improvements when preferring IPv6 addresses
 * [Server]
   * Migrated `disable-legacy-query-handler` to overwrite the new `enable-legacy-status​` server property
+* Improved internal configuration logic
 
 # 1.9.2
 * Fix client classloading crash when modmenu is not present

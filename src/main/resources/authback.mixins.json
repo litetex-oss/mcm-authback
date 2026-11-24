@@ -7,7 +7,8 @@
     "common.MinecraftServicesDiscoveryServiceMixin",
     "common.MinecraftServicesKeyInfoMixin",
     "common.MinecraftServicesSessionServiceMixin",
-    "common.ServicesMixin"
+    "common.ServicesMixin",
+    "server.MainMixin"
   ],
   "client": [
     "client.auth.ClientHandshakePacketListenerImplMixin",
