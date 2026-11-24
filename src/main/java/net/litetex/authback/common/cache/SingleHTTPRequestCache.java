@@ -1,4 +1,4 @@
-package net.litetex.authback.common;
+package net.litetex.authback.common.cache;
 
 import java.net.URL;
 import java.nio.file.Path;
