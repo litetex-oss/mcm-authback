@@ -5,7 +5,6 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Optional;
 
 import net.fabricmc.loader.api.FabricLoader;
 import net.litetex.authback.shared.config.Configuration;
@@ -15,7 +14,7 @@ public final class AuthBackDirEnsurer
 {
 	public static Path ensureAuthbackDir(final Configuration config, final String variant)
 	{
-		final Path dir = Optional.ofNullable(config.getString("dir", null))
+		final Path dir = config.getString("dir")
 			.map(Paths::get)
 			.orElseGet(() -> FabricLoader.getInstance().getGameDir()
 				.resolve(".mods")

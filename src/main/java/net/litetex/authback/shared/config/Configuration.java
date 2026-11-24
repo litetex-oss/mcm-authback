@@ -1,6 +1,7 @@
 package net.litetex.authback.shared.config;
 
 import java.util.List;
+import java.util.Optional;
 
 import net.fabricmc.loader.api.FabricLoader;
 
@@ -26,13 +27,13 @@ public interface Configuration
 	
 	void save();
 	
-	String getString(String path, String def);
+	Optional<String> getString(String path);
 	
-	boolean getBoolean(String path, boolean def);
+	Optional<Boolean> getBoolean(String path);
 	
-	int getInteger(String path, int def);
+	Optional<Integer> getInteger(String path);
 	
-	List<String> getStringList(String path);
+	Optional<List<String>> getStringList(String path);
 	
 	void setString(String path, String value);
 	

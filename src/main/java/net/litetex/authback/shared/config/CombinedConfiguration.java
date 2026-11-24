@@ -1,7 +1,8 @@
 package net.litetex.authback.shared.config;
 
-import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.BiFunction;
 
 import com.google.common.collect.ImmutableList;
 
@@ -12,7 +13,7 @@ class CombinedConfiguration implements Configuration
 	
 	CombinedConfiguration(final Configuration... configurations)
 	{
-		this.configurations = ImmutableList.copyOf(configurations).reverse();
+		this.configurations = ImmutableList.copyOf(configurations);
 	}
 	
 	@Override
@@ -33,51 +34,37 @@ class CombinedConfiguration implements Configuration
 		}
 	}
 	
-	@Override
-	public String getString(final String path, final String def)
+	protected <T> Optional<T> get(final String path, final BiFunction<Configuration, String, Optional<T>> extractor)
 	{
-		String result = def;
-		for(final Configuration configuration : this.configurations)
-		{
-			result = configuration.getString(path, result);
-		}
-		return result;
+		return this.configurations.stream()
+			.map(c -> extractor.apply(c, path))
+			.filter(Optional::isPresent)
+			.map(Optional::orElseThrow)
+			.findFirst();
 	}
 	
 	@Override
-	public boolean getBoolean(final String path, final boolean def)
+	public Optional<String> getString(final String path)
 	{
-		boolean result = def;
-		for(final Configuration configuration : this.configurations)
-		{
-			result = configuration.getBoolean(path, result);
-		}
-		return result;
+		return this.get(path, Configuration::getString);
 	}
 	
 	@Override
-	public int getInteger(final String path, final int def)
+	public Optional<Boolean> getBoolean(final String path)
 	{
-		int result = def;
-		for(final Configuration configuration : this.configurations)
-		{
-			result = configuration.getInteger(path, result);
-		}
-		return result;
+		return this.get(path, Configuration::getBoolean);
 	}
 	
 	@Override
-	public List<String> getStringList(final String path)
+	public Optional<Integer> getInteger(final String path)
 	{
-		for(final Configuration configuration : this.configurations)
-		{
-			final List<String> result = configuration.getStringList(path);
-			if(!result.isEmpty())
-			{
-				return result;
-			}
-		}
-		return Collections.emptyList();
+		return this.get(path, Configuration::getInteger);
+	}
+	
+	@Override
+	public Optional<List<String>> getStringList(final String path)
+	{
+		return this.get(path, Configuration::getStringList);
 	}
 	
 	@Override
