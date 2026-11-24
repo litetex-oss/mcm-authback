@@ -20,11 +20,11 @@ public record AuthBackServerConfig(
 	public AuthBackServerConfig(final Configuration conf)
 	{
 		this(
-			conf.getBoolean("fallback-auth.allow-always", true),
-			conf.getBoolean("force-disable-enforce-secure-profile", true),
-			conf.getBoolean("skip-old-user-conversion", true),
-			conf.getBoolean("disable-legacy-query-handler", true),
-			conf.getBoolean("log-connection-init-ips", false)
+			conf.getBoolean("fallback-auth.allow-always").orElse(true),
+			conf.getBoolean("force-disable-enforce-secure-profile").orElse(true),
+			conf.getBoolean("skip-old-user-conversion").orElse(true),
+			conf.getBoolean("disable-legacy-query-handler").orElse(true),
+			conf.getBoolean("log-connection-init-ips").orElse(false)
 		);
 	}
 }

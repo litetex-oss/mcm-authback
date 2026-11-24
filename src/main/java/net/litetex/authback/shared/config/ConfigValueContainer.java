@@ -1,9 +1,10 @@
 package net.litetex.authback.shared.config;
 
 import java.util.Objects;
+import java.util.Optional;
+import java.util.function.BiFunction;
 
 import org.apache.commons.lang3.function.TriConsumer;
-import org.apache.commons.lang3.function.TriFunction;
 
 
 public class ConfigValueContainer<T>
@@ -20,7 +21,7 @@ public class ConfigValueContainer<T>
 		final Configuration config,
 		final String path,
 		final T defaultValue,
-		final TriFunction<Configuration, String, T, T> getFromConfig,
+		final BiFunction<Configuration, String, Optional<T>> getFromConfig,
 		final TriConsumer<Configuration, String, T> setIntoConfig)
 	{
 		this.config = config;
@@ -28,7 +29,7 @@ public class ConfigValueContainer<T>
 		this.defaultValue = defaultValue;
 		this.setIntoConfig = setIntoConfig;
 		
-		this.value = getFromConfig.apply(config, path, defaultValue);
+		this.value = getFromConfig.apply(config, path).orElse(defaultValue);
 	}
 	
 	public static ConfigValueContainer<Boolean> bool(
