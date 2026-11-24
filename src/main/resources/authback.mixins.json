@@ -4,7 +4,7 @@
   "package": "net.litetex.authback.mixin",
   "compatibilityLevel": "JAVA_25",
   "mixins": [
-    "common.MinecraftServiceDiscoveryServiceMixin",
+    "common.MinecraftServicesDiscoveryServiceMixin",
     "common.MinecraftServicesKeyInfoMixin",
     "common.MinecraftServicesSessionServiceMixin",
     "common.ServicesMixin"

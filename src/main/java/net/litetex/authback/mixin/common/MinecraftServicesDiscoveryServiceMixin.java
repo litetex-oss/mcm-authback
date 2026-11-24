@@ -17,10 +17,10 @@ import net.litetex.authback.shared.mixin.log.MixinLogger;
 
 
 @Mixin(value = MinecraftServicesDiscoveryService.class, remap = false)
-public abstract class MinecraftServiceDiscoveryServiceMixin
+public abstract class MinecraftServicesDiscoveryServiceMixin
 {
 	@Unique
-	private static final Logger LOG = MixinLogger.common("MinecraftServiceDiscoveryServiceMixin");
+	private static final Logger LOG = MixinLogger.common("MinecraftServicesDiscoveryServiceMixin");
 	
 	@WrapOperation(
 		method = "lambda$createDiscoverySupplier$1",
