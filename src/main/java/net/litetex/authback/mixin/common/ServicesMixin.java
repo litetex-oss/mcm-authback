@@ -68,7 +68,7 @@ public abstract class ServicesMixin
 	{
 		if(!AuthBackCommon.instance().globalPublicKeysFetchingEnabled())
 		{
-			LOG.info("Will not fetch global public keys");
+			LOG.debug("Will not fetch global public keys");
 			return ServicesKeySet.EMPTY;
 		}
 		return serviceAccess.getServicesKeySet();

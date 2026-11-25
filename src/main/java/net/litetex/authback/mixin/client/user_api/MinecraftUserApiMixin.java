@@ -18,10 +18,10 @@ import net.minecraft.client.main.GameConfig;
 
 
 @Mixin(Minecraft.class)
-public abstract class MinecraftMixin
+public abstract class MinecraftUserApiMixin
 {
 	@Unique
-	private static final Logger LOG = MixinLogger.client("MinecraftMixin");
+	private static final Logger LOG = MixinLogger.client("MinecraftUserApiMixin");
 	
 	@Inject(
 		method = "createUserApiService",

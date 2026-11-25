@@ -20,6 +20,8 @@ public record AuthBackClientConfig(
 	ConfigValueContainer<Boolean> suppressAllServerJoinErrors,
 	// Forces the skin to be downloaded using a secure (https) connection
 	ConfigValueContainer<Boolean> forceSecureSkinDownload,
+	// Disable the signaling client (constant websocket connection)
+	ConfigValueContainer<SignalingState> signalingState,
 	UserAPIConfig userAPIConfig,
 	// Disables sending a legacy ping (for servers running 1.6.4 or lower) in the server list
 	// when the normal ping fails or times out
@@ -41,6 +43,22 @@ public record AuthBackClientConfig(
 			ConfigValueContainer.bool(config, "block-realms-fetching", false),
 			ConfigValueContainer.bool(config, "suppress-all-server-join-errors", false),
 			ConfigValueContainer.bool(config, "force-secure-skin-download", false),
+			new ConfigValueContainer<>(
+				config,
+				"signaling",
+				SignalingState.AUTO_DISABLE,
+				(c, path) -> c.getString(path)
+					// Prevent exception when value is not found
+					.map(SignalingState.VALUES::get),
+				(c, path, val) -> {
+					if(val == SignalingState.AUTO_DISABLE)
+					{
+						c.remove(path);
+						return;
+					}
+					c.setString(path, val.name());
+				}
+			),
 			new UserAPIConfig(config),
 			ConfigValueContainer.bool(config, "prevent-legacy-server-ping", true),
 			ConfigValueContainer.bool(config, "disable-lan-server-detection", false),
@@ -63,6 +81,7 @@ public record AuthBackClientConfig(
 		this.blockFetchingProfileKeys().setWithoutSave(true);
 		this.blockRealmsFetching().setWithoutSave(true);
 		this.forceSecureSkinDownload().setWithoutSave(true);
+		this.signalingState().setWithoutSave(SignalingState.DISABLE);
 		
 		this.userAPIConfig().lockDown();
 		

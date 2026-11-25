@@ -2,10 +2,12 @@ package net.litetex.authback.client.menu;
 
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import net.litetex.authback.client.AuthBackClient;
 import net.litetex.authback.client.config.AuthBackClientConfig;
+import net.litetex.authback.client.config.SignalingState;
 import net.litetex.authback.shared.config.ConfigValueContainer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -25,6 +27,7 @@ import net.minecraft.client.gui.screens.ConfirmScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.options.OnlineOptionsScreen;
 import net.minecraft.client.gui.screens.options.OptionsSubScreen;
+import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 
 
@@ -128,8 +131,45 @@ public class ConfigScreen extends OptionsSubScreen
 					"Forces player skins to be download via secure HTTPS instead of HTTP"
 				))
 			.map(BooleanConfigData::createButton)
-			.map(btn -> new BigEntry(this.list, btn))
-			.forEach(this.list::addEntry);
+			.forEach(this::addBigEntry);
+		
+		this.addSignalingOption(config);
+	}
+	
+	private void addSignalingOption(final AuthBackClientConfig config)
+	{
+		final boolean signalingCurrentlyEnabled = this.minecraft.signalingClient != null;
+		this.addBigEntry(CycleButton.builder(
+				state ->
+					switch(state)
+					{
+						case DEFAULT -> CommonComponents.OPTION_ON;
+						case AUTO_DISABLE -> Component.literal("Disable when not needed");
+						case DISABLE -> CommonComponents.OPTION_OFF;
+					},
+				config.signalingState().value())
+			.withValues(SignalingState.values())
+			.withTooltip(_ -> Tooltip.create(Component.empty()
+				.append("""
+					On startup the "signaling" client establishes a PERMANENT connection \
+					to Mojang to "instantly" receive e.g. friend requests or presence updates.
+					When disabling this you will only receive updates periodically or after restarting the game.
+					""")
+				.append(Component.literal("""
+						The established connection can be used to exactly track how long you play.
+						""")
+					.withStyle(ChatFormatting.YELLOW))
+				.append(Component.literal("Current state: "))
+				.append(Component.literal(signalingCurrentlyEnabled ? "Active" : "Disabled")
+					.withStyle(signalingCurrentlyEnabled ? ChatFormatting.RED : ChatFormatting.GREEN))
+				.append(this.requiresRestartComponent())))
+			.create(
+				Component.literal("Signaling"),
+				(_, value) -> {
+					config.signalingState().set(value);
+				}
+			)
+		);
 	}
 	
 	private void addUserAPIInteractionOptions()
@@ -167,18 +207,19 @@ public class ConfigScreen extends OptionsSubScreen
 		final CycleButton<Boolean> dummyModeBtn = new BooleanConfigData(
 			config.dummyMode(),
 			"Dummy/offline mode",
-			"""
-				Replaces the default implementation with the one used for offline mode:
-				* User properties won't be fetched / defaults will be used
-				* Player blocklist will not work
-				* No telemetry will be available
-				* Profile/Chat-signing keys will not be fetched
-				* Abuse reporting is unavailable""")
+			() -> Component.empty()
+				.append("""
+					Replaces the default implementation with the one used for offline mode:
+					* User properties won't be fetched / defaults will be used
+					* Player blocklist will not work
+					* No telemetry will be available
+					* Profile/Chat-signing keys will not be fetched
+					* Abuse reporting is unavailable""")
+				.append(this.requiresRestartComponent()))
 			.createButton(dummyMode -> detailBtns.forEach(btn -> btn.active = !dummyMode));
 		
 		Stream.concat(Stream.of(dummyModeBtn), detailBtns.stream())
-			.map(btn -> new BigEntry(this.list, btn))
-			.forEach(this.list::addEntry);
+			.forEach(this::addBigEntry);
 	}
 	
 	private void addAdvancedOptions()
@@ -214,8 +255,7 @@ public class ConfigScreen extends OptionsSubScreen
 				)
 			)
 			.map(BooleanConfigData::createButton)
-			.map(btn -> new BigEntry(this.list, btn))
-			.forEach(this.list::addEntry);
+			.forEach(this::addBigEntry);
 		
 		this.addLockDownButton();
 	}
@@ -317,6 +357,17 @@ public class ConfigScreen extends OptionsSubScreen
 		));
 	}
 	
+	private void addBigEntry(final AbstractWidget widget)
+	{
+		this.list.addEntry(new BigEntry(this.list, widget));
+	}
+	
+	private Component requiresRestartComponent()
+	{
+		return Component.literal("\nRequires restart to take effect")
+			.withStyle(ChatFormatting.ITALIC);
+	}
+	
 	static class BigEntry extends OptionsList.Entry
 	{
 		protected final OptionsList list;
@@ -378,11 +429,16 @@ public class ConfigScreen extends OptionsSubScreen
 	record BooleanConfigData(
 		ConfigValueContainer<Boolean> container,
 		String name,
-		String tooltip)
+		Supplier<Component> tooltipSupplier)
 	{
 		BooleanConfigData(final ConfigValueContainer<Boolean> container, final String name)
 		{
-			this(container, name, null);
+			this(container, name, (Supplier<Component>)null);
+		}
+		
+		BooleanConfigData(final ConfigValueContainer<Boolean> container, final String name, final String tooltip)
+		{
+			this(container, name, () -> Component.literal(tooltip));
 		}
 		
 		CycleButton<Boolean> createButton()
@@ -399,9 +455,9 @@ public class ConfigScreen extends OptionsSubScreen
 			}
 			
 			final CycleButton.Builder<Boolean> builder = CycleButton.onOffBuilder(val);
-			if(this.tooltip != null)
+			if(this.tooltipSupplier != null)
 			{
-				builder.withTooltip(ignored -> Tooltip.create(Component.literal(this.tooltip)));
+				builder.withTooltip(ignored -> Tooltip.create(this.tooltipSupplier.get()));
 			}
 			return builder.create(
 				Component.literal(this.name),

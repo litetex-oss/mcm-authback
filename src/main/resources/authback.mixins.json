@@ -28,8 +28,9 @@
     "client.options.OptionsMixin",
     "client.prevent_legacy_ping.ServerStatusPingerMixin",
     "client.secure_skin_download.SkinTextureDownloaderMixin",
-    "client.user_api.MinecraftMixin",
-    "client.user_api.MinecraftServicesUserApiServiceMixin"
+    "client.signaling.MinecraftSignalingMixin",
+    "client.user_api.MinecraftServicesUserApiServiceMixin",
+    "client.user_api.MinecraftUserApiMixin"
   ],
   "server": [
     "server.DedicatedServerMixin",

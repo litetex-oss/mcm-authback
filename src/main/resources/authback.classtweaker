@@ -11,3 +11,4 @@ accessible method net/minecraft/client/gui/components/OptionsList$Entry <init> (
 accessible field net/minecraft/client/gui/components/OptionsList screen Lnet/minecraft/client/gui/screens/options/OptionsSubScreen;
 accessible field net/minecraft/client/gui/screens/options/OptionsSubScreen lastScreen Lnet/minecraft/client/gui/screens/Screen;
 accessible method net/minecraft/client/gui/screens/options/OnlineOptionsScreen applyFriendSettings (Lnet/minecraft/client/Minecraft;ZZLjava/util/function/Consumer;)V
+accessible field net/minecraft/client/Minecraft signalingClient Lcom/mojang/authlib/services/signaling/MinecraftServicesSignalingService;
