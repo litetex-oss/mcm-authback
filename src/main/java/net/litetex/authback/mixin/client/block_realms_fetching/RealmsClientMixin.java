@@ -1,4 +1,4 @@
-package net.litetex.authback.mixin.client;
+package net.litetex.authback.mixin.client.block_realms_fetching;
 
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;

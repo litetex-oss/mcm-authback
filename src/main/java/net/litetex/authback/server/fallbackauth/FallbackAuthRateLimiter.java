@@ -57,7 +57,7 @@ public class FallbackAuthRateLimiter
 		final String prefix = "fallback-auth.rate-limit.";
 		
 		final int requestsPerMinutePerIP =
-			config.getInteger(prefix + "requests-per-ip-per-minute", 20); // every 3s
+			config.getInteger(prefix + "requests-per-ip-per-minute").orElse(20); // every 3s
 		if(requestsPerMinutePerIP <= 0)
 		{
 			return null;
@@ -65,9 +65,9 @@ public class FallbackAuthRateLimiter
 		
 		return new FallbackAuthRateLimiter(
 			requestsPerMinutePerIP,
-			config.getInteger(prefix + "bucket-size", 1000),
-			config.getBoolean(prefix + "ignore-private-addresses", true),
-			config.getInteger(prefix + "ipv6-network-prefix-bytes", 8));
+			config.getInteger(prefix + "bucket-size").orElse(1000),
+			config.getBoolean(prefix + "ignore-private-addresses").orElse(true),
+			config.getInteger(prefix + "ipv6-network-prefix-bytes").orElse(8));
 	}
 	
 	@SuppressWarnings("checkstyle:MagicNumber")

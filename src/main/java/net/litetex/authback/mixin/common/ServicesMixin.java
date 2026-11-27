@@ -2,7 +2,9 @@ package net.litetex.authback.mixin.common;
 
 import java.io.File;
 
+import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -14,6 +16,7 @@ import com.mojang.authlib.services.ServicesKeySet;
 
 import net.litetex.authback.common.AuthBackCommon;
 import net.litetex.authback.common.access.MinecraftServicesSessionServiceExt;
+import net.litetex.authback.shared.mixin.log.MixinLogger;
 import net.minecraft.server.Services;
 import net.minecraft.server.players.ProfileResolver;
 import net.minecraft.server.players.UserNameToIdResolver;
@@ -23,6 +26,9 @@ import net.minecraft.server.players.UserNameToIdResolver;
 @Mixin(Services.class)
 public abstract class ServicesMixin
 {
+	@Unique
+	private static final Logger LOG = MixinLogger.common("ServicesMixin");
+	
 	// Can't replace CachedUserNameToIdResolver because it's not using the underlying interface
 	// -> Replace entire method
 	@Inject(
@@ -36,7 +42,7 @@ public abstract class ServicesMixin
 		final CallbackInfoReturnable<Services> cir)
 	{
 		// As of 26.3 this is no longer a getter but creates/queries the backend!
-		final ServicesKeySet servicesKeySet = serviceAccess.getServicesKeySet();
+		final ServicesKeySet servicesKeySet = getServicesKeySet(serviceAccess);
 		
 		// 26.3
 		// Do not use createMinecraftSessionService as this calls getServicesKeySet again
@@ -55,5 +61,16 @@ public abstract class ServicesMixin
 			gameProfileRepository,
 			userNameToIdResolver,
 			profileResolver));
+	}
+	
+	@Unique
+	private static ServicesKeySet getServicesKeySet(final MinecraftServicesDiscoveryService serviceAccess)
+	{
+		if(!AuthBackCommon.instance().globalPublicKeysFetchingEnabled())
+		{
+			LOG.debug("Will not fetch global public keys");
+			return ServicesKeySet.EMPTY;
+		}
+		return serviceAccess.getServicesKeySet();
 	}
 }

@@ -1,4 +1,4 @@
-package net.litetex.authback.mixin.client;
+package net.litetex.authback.mixin.client.prevent_legacy_ping;
 
 import java.net.InetSocketAddress;
 

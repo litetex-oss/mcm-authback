@@ -1,6 +1,7 @@
 package net.litetex.authback.shared.config;
 
 import java.util.List;
+import java.util.Optional;
 
 
 public abstract class RuntimeConfiguration implements Configuration
@@ -10,11 +11,11 @@ public abstract class RuntimeConfiguration implements Configuration
 		return new RuntimeConfiguration()
 		{
 			@Override
-			public String getString(final String path, final String def)
+			public Optional<String> getString(final String path)
 			{
-				final String name = prefix + "_" + path.replace(".", "_").replace("-", "_").toUpperCase();
-				final String value = System.getenv(name);
-				return value != null ? value : def;
+				return Optional.ofNullable(System.getenv(
+					prefix + "_" + path.replace(".", "_").replace("-", "_").toUpperCase()
+				));
 			}
 		};
 	}
@@ -24,44 +25,49 @@ public abstract class RuntimeConfiguration implements Configuration
 		return new RuntimeConfiguration()
 		{
 			@Override
-			public String getString(final String path, final String def)
+			public Optional<String> getString(final String path)
 			{
-				return System.getProperty(prefix + "." + path, def);
+				return Optional.ofNullable(System.getProperty(prefix + "." + path, null));
 			}
 		};
 	}
 	
 	@Override
-	public boolean getBoolean(final String path, final boolean def)
+	public Optional<Boolean> getBoolean(final String path)
 	{
-		final String val = this.getString(path, Boolean.toString(def));
-		return "1".equals(val) || Boolean.parseBoolean(val);
+		return this.getString(path)
+			.filter(val -> !val.isEmpty())
+			.map(val -> "1".equals(val) || Boolean.parseBoolean(val));
 	}
 	
 	@Override
-	public int getInteger(final String path, final int def)
+	public Optional<Integer> getInteger(final String path)
 	{
-		try
-		{
-			return Integer.parseInt(this.getString(path, Integer.toString(def)));
-		}
-		catch(final NumberFormatException e)
-		{
-			return def;
-		}
+		return this.getString(path)
+			.map(val -> {
+				try
+				{
+					return Integer.parseInt(val);
+				}
+				catch(NumberFormatException _)
+				{
+					return null;
+				}
+			});
 	}
 	
 	@Override
-	public List<String> getStringList(final String path)
+	public Optional<List<String>> getStringList(final String path)
 	{
-		final String value = this.getString(path, "");
-		return value.isEmpty() ? List.of() : List.of(value.split(","));
+		return this.getString(path)
+			.filter(val -> !val.isEmpty())
+			.map(val -> List.of(val.split(",")));
 	}
 	
 	@Override
 	public boolean contains(final String path)
 	{
-		return this.getString(path, null) != null;
+		return this.getString(path).isPresent();
 	}
 	
 	@Override

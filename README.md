@@ -66,6 +66,7 @@ _You should know exactly what you're doing when doing modifications._
 | --- | --- | --- | --- |
 | `discovery-cache.default-reuse-minutes` | `int` | `120` (2h) | The response for the `discovery` endpoint of Mojang's API barely ever changes. This option instructs the mod to re-use the last saved response for the specified amount of minutes instead of contacting the API again. Using the cached response is a lot faster and saves network traffic during frequent game restarts. |
 | `global-public-keys-cache.default-reuse-minutes` | `int` | `120` (2h) | Same as `discovery-cache` above but for `global-public-keys`. As of writing this documentation the keys were not changed in the past 3+ years. |
+| `global-public-keys.fetching.enabled` | `boolean` | `true`<br>Unless determined otherwise | Override if the fetching of global public keys during startup is enabled.<br>Fetching is disabled for servers that have `enforce-secure-profile` disabled as it's not needed by them.  |
 | `game-profiles.delete-after-days` | `int` | `36` | 36 days was choosen as the default because when a player changes their username the name will be unavailable for 37 days |
 | `game-profiles.max-cache-size` | `int` | `250` | Maximum amount of game profiles to keep in the cache. If the size exceeds the maximum the oldest entries will be removed until the list is at 90% of the configured maximum. |
 | `username-to-id-resolver.use-vanilla` | `bool` | `false` | Use the original/"vanilla" username-to-id resolver |
@@ -89,8 +90,9 @@ _You should know exactly what you're doing when doing modifications._
 | `fallback-auth.rate-limit.ignore-private-addresses` | `bool` | `true` | Should [private IP addresses](https://en.wikipedia.org/wiki/Private_network) NOT be rate limited? |
 | `fallback-auth.rate-limit.ipv6-network-prefix-bytes` | `int` | `8` | Network prefix bytes (not bits!) for IPv6. The default `8` resolves to `/64`. |
 | `force-disable-enforce-secure-profile` | `bool` | `true` | Forces `enforce-secure-profile` to be disabled |
+| `global-public-keys.fetching.disable-if-possible` | `bool` | `true` | Tries to disable fetching the global public keys when `enforce-secure-profile`  is disabled; see `global-public-keys.fetching.enabled` for details |
 | `skip-old-user-conversion` | `bool` | `true` | Skips the migration of user files used by servers before `1.7.6` (released 2014-04). It's extremely unlikely that this is needed by a server and requires contacting Mojang's API. Therefore the migration is skipped by default |
-| `disable-legacy-query-handler` | `bool` | `true` | Disables the legacy/pre 1.7 (released 2013-10) query/ping handler |
+| `disable-legacy-query-handler` | `bool` | `true` | Disables the legacy/pre 1.7 (released 2013-10) query/ping handler.<br/>As of 26.4 this can also controlled with `enable-legacy-status​` server property. |
 | `log-connection-init-ips` | `bool` | `false` | Logs all remote IPs that initialize/start a connection to level INFO |
 
 ##### Client

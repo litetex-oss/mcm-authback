@@ -8,6 +8,8 @@ public record AuthBackServerConfig(
 	boolean alwaysAllowFallbackAuth,
 	// Force disable enforce-secure-profile
 	boolean forceDisableEnforceSecureProfile,
+	// Disable fetching the public key when possible (only used for chat signing keys)
+	boolean globalPublicKeysFetchingDisableIfPossible,
 	// Requires calling the API
 	// Only needed when updating extremely ancient server versions (before 1.7.6 - 2014-04)
 	boolean skipOldUserConversion,
@@ -20,11 +22,12 @@ public record AuthBackServerConfig(
 	public AuthBackServerConfig(final Configuration conf)
 	{
 		this(
-			conf.getBoolean("fallback-auth.allow-always", true),
-			conf.getBoolean("force-disable-enforce-secure-profile", true),
-			conf.getBoolean("skip-old-user-conversion", true),
-			conf.getBoolean("disable-legacy-query-handler", true),
-			conf.getBoolean("log-connection-init-ips", false)
+			conf.getBoolean("fallback-auth.allow-always").orElse(true),
+			conf.getBoolean("force-disable-enforce-secure-profile").orElse(true),
+			conf.getBoolean("global-public-keys.fetching.disable-if-possible").orElse(true),
+			conf.getBoolean("skip-old-user-conversion").orElse(true),
+			conf.getBoolean("disable-legacy-query-handler").orElse(true),
+			conf.getBoolean("log-connection-init-ips").orElse(false)
 		);
 	}
 }

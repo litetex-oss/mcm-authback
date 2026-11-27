@@ -1,4 +1,4 @@
-package net.litetex.authback.mixin.client;
+package net.litetex.authback.mixin.client.user_api;
 
 import org.slf4j.Logger;
 import org.spongepowered.asm.mixin.Mixin;
@@ -18,10 +18,10 @@ import net.minecraft.client.main.GameConfig;
 
 
 @Mixin(Minecraft.class)
-public abstract class MinecraftMixin
+public abstract class MinecraftUserApiMixin
 {
 	@Unique
-	private static final Logger LOG = MixinLogger.client("MinecraftMixin");
+	private static final Logger LOG = MixinLogger.client("MinecraftUserApiMixin");
 	
 	@Inject(
 		method = "createUserApiService",

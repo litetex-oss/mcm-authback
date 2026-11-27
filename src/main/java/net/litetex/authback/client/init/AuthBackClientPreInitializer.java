@@ -16,6 +16,11 @@ public class AuthBackClientPreInitializer extends Initializer
 {
 	public void onInitializeClient()
 	{
+		if(AuthBackClient.instance() != null)
+		{
+			return;
+		}
+		
 		this.doInit(() -> {
 			final FabricLoader fabricLoader = FabricLoader.getInstance();
 			AuthBackClient.setInstance(new AuthBackClient(

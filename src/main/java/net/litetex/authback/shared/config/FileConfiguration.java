@@ -6,9 +6,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import org.slf4j.LoggerFactory;
 
@@ -81,62 +80,44 @@ public class FileConfiguration implements Configuration
 		}
 	}
 	
-	@Override
-	public String getString(final String path, final String def)
+	private Optional<JsonPrimitive> getJsonPrimitive(final String path)
 	{
-		final JsonElement el = this.root.get(path);
-		if(el == null || !el.isJsonPrimitive())
-		{
-			return def;
-		}
-		
-		return el.getAsJsonPrimitive().getAsString();
+		return Optional.ofNullable(this.root.get(path))
+			.filter(JsonElement::isJsonPrimitive)
+			.map(JsonElement::getAsJsonPrimitive);
 	}
 	
 	@Override
-	public boolean getBoolean(final String path, final boolean def)
+	public Optional<String> getString(final String path)
 	{
-		final JsonElement el = this.root.get(path);
-		if(el == null || !el.isJsonPrimitive())
-		{
-			return def;
-		}
-		
-		final JsonPrimitive val = el.getAsJsonPrimitive();
-		return val.isBoolean() ? val.getAsBoolean() : def;
+		return this.getJsonPrimitive(path).map(JsonPrimitive::getAsString);
 	}
 	
 	@Override
-	public int getInteger(final String path, final int def)
+	public Optional<Boolean> getBoolean(final String path)
 	{
-		final JsonElement el = this.root.get(path);
-		if(el == null || !el.isJsonPrimitive())
-		{
-			return def;
-		}
-		
-		final JsonPrimitive val = el.getAsJsonPrimitive();
-		return val.isNumber() ? val.getAsInt() : def;
+		return this.getJsonPrimitive(path).map(JsonPrimitive::getAsBoolean);
 	}
 	
 	@Override
-	public List<String> getStringList(final String path)
+	public Optional<Integer> getInteger(final String path)
 	{
-		final JsonElement el = this.root.get(path);
-		if(el == null || !el.isJsonArray())
-		{
-			return Collections.emptyList();
-		}
-		
-		final List<String> list = new ArrayList<>();
-		for(final JsonElement child : el.getAsJsonArray())
-		{
-			if(child.isJsonPrimitive())
-			{
-				list.add(child.getAsJsonPrimitive().getAsString());
-			}
-		}
-		return list;
+		return this.getJsonPrimitive(path).map(JsonPrimitive::getAsInt);
+	}
+	
+	@Override
+	public Optional<List<String>> getStringList(final String path)
+	{
+		return Optional.ofNullable(this.root.get(path))
+			.filter(JsonElement::isJsonArray)
+			.map(JsonElement::getAsJsonArray)
+			.map(JsonArray::asList)
+			.map(elements -> elements.stream()
+				.filter(JsonElement::isJsonPrimitive)
+				.map(JsonElement::getAsJsonPrimitive)
+				.map(JsonPrimitive::getAsString)
+				.toList()
+			);
 	}
 	
 	@Override
